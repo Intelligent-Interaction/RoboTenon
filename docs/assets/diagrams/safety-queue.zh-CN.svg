@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="480" viewBox="0 0 1120 480" role="img" aria-labelledby="title desc">
+<title id="title">任务判断与动作停止是两条路径</title><desc id="desc">Evaluator 决定业务任务的下一步；Monitor / Safety 约束正在执行的动作。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="480" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">任务判断与动作停止是两条路径</text>
+<text x="36" y="78" class="sub" fill="#586779">Evaluator 决定业务任务的下一步；Monitor / Safety 约束正在执行的动作。</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="155" width="220" height="226" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 169 v198" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="187" class="head" fill="#3458a4">Environment</text>
+<text x="54" y="216" class="body" fill="#172b46">持续提供 Feedback</text>
+<text x="54" y="242" class="body" fill="#172b46">任务信号</text>
+<text x="54" y="268" class="body" fill="#172b46">健康状态</text>
+<text x="54" y="294" class="body" fill="#172b46">观测帧</text>
+<rect x="339" y="135" width="310" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M340 149 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="357" y="167" class="head" fill="#3458a4">Evaluator</text>
+<text x="357" y="196" class="body" fill="#172b46">继续 / 完成 / 重试 / 放弃</text>
+<text x="357" y="222" class="body" fill="#172b46">更新业务任务队列</text>
+<rect x="738" y="135" width="346" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M739 149 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="756" y="167" class="head" fill="#3458a4">TaskQueue / Graph</text>
+<text x="756" y="196" class="body" fill="#172b46">选择下一项业务任务</text>
+<text x="756" y="222" class="body" fill="#172b46">执行相应流程</text>
+<rect x="339" y="298" width="310" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M340 312 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="357" y="330" class="head" fill="#3458a4">Monitor / Safety</text>
+<text x="357" y="359" class="body" fill="#172b46">发布安全等级与锁存状态</text>
+<text x="357" y="385" class="body" fill="#172b46">Body watchdog 读取状态</text>
+<rect x="738" y="298" width="346" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M739 312 v84" stroke="#29735c" stroke-width="3"/>
+<text x="756" y="330" class="head" fill="#29735c">Body / 驱动</text>
+<text x="756" y="359" class="body" fill="#172b46">动作准入、interrupt</text>
+<text x="756" y="385" class="body" fill="#172b46">调用设备 hold / stop</text>
+<path d="M256 215 L297 215 L297 190 L339 190" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M256 325 L297 325 L297 353 L339 353" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M649 190 L738 190" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M649 353 L738 353" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="456" class="small" fill="#586779">TaskQueue 是业务队列；实验排队、Worker 调度队列和设备急停不属于同一个概念。</text>
+</svg>

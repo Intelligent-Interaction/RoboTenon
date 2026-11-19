@@ -1,0 +1,76 @@
+{
+  "benchmark": "rlbench",
+  "class": "robosys_rlbench.native.benchmark:RLBenchBenchmark",
+  "upstream_class": "vla_eval.benchmarks.rlbench.benchmark:RLBenchBenchmark",
+  "params": {
+    "tasks": [
+      "reach_target"
+    ],
+    "render_resolution": 256,
+    "max_steps": 200
+  },
+  "actions": [
+    {
+      "actions": [
+        0.05,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "actions": [
+        0.05,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "actions": [
+        -0.05,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "actions": [
+        0.05,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    }
+  ],
+  "seed": 0,
+  "render": "gpu"
+}

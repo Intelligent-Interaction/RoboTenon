@@ -1,0 +1,13 @@
+CANCEL {'status': 'interrupted', 'stop_calls': 0, 'driver_still_running': True}
+.SYNC_DRIVER {'timeout_ms': 25, 'elapsed_ms': 121, 'status': 'succeeded', 'events': ['driver_started', 'driver_finished', 'tick']}
+.VERIFIER {'input': 'false', 'success': True, 'completed': ['pick']}
+.IDEMPOTENCY {'executed': [{'target': 1}], 'second_status': 'succeeded', 'second_executed': 0}
+.CONFIG_DRIFT {'stored_module_prefix': 'before', 'first': 'before', 'second': 'after'}
+.CASE_KEYS {'entered': [0, 1], 'finished': [1], 'status': 'completed', 'completed': 1, 'total': 2, 'task_0_still_running': True}
+.PORTAL_ACCESS {'bind': '0.0.0.0', 'authorization_sent': False, 'control_accepted': True}
+.PORTAL_STOP {'released': True, 'coordinator_exit': -9, 'worker_still_alive': True, 'worker_state': 'Ss'}
+.INGEST_CLOSE {'idle_client': True, 'close_completed_after_150ms': False}
+.TOOL_REUSE {'events': ['start', 'cleanup_failed', 'cleanup_failed', 'close'], 'errors': 2}
+.RUN_OVERWRITE {'same_run_id': True, 'overwrite_rejected': False, 'attempt_changed': True}
+.
+11 passed in 4.40s

@@ -1,0 +1,331 @@
+{
+  "benchmark": "robocasa365",
+  "model": "Xiaomi-Robotics-1-RoboCasa365",
+  "protocol": {
+    "benchmark_id": "robocasa365_benchmark",
+    "episodes_per_task": 50,
+    "params": {
+      "split": "pretrain",
+      "seed": 7,
+      "camera_size": 256,
+      "episode_seed_stride": 50
+    }
+  },
+  "hardware": {
+    "gpus": 8,
+    "gpu_model": "H100 80GB HBM3",
+    "physical_cpu_cores": 96,
+    "logical_cpus": 192,
+    "memory_tib_approx": 2
+  },
+  "execution": {
+    "model_replicas": 8,
+    "workers": 224,
+    "workers_per_device": 28,
+    "batch_size": 8,
+    "wait_ms": 50,
+    "startup_parallelism": 16,
+    "recycle_after_tasks": 5,
+    "scheduler": "global_queue",
+    "shuffle": true,
+    "scheduler_seed": 7,
+    "rng_mode": "official_stream",
+    "trace_mode": "summary",
+    "history_cache_enabled": false,
+    "save_videos": false
+  },
+  "result": {
+    "num_episodes": 2500,
+    "num_completed": 2500,
+    "num_errors": 0,
+    "num_cancelled": 0,
+    "successes": 1439,
+    "episode_success_rate": 0.5756
+  },
+  "timing": {
+    "wall_sec": 6401.877834744984,
+    "episodes_per_minute": 23.430625180927898,
+    "central_window": {
+      "from_completed": 250,
+      "to_completed": 2250,
+      "elapsed_sec": 4448.80908,
+      "episodes_per_minute": 26.973510852481898
+    }
+  },
+  "batching": {
+    "requests": 206674,
+    "batches": 88766,
+    "average_batch_size": 2.328301376653223,
+    "batch_sizes": {
+      "1": 30049,
+      "2": 24787,
+      "3": 17670,
+      "4": 9925,
+      "5": 4306,
+      "6": 1507,
+      "7": 407,
+      "8": 115
+    },
+    "call_reduction_vs_one_call_per_request": 0.5705023370138479,
+    "all_services_closed": true
+  },
+  "per_task": {
+    "ArrangeBreadBasket": {
+      "episodes": 50,
+      "successes": 32,
+      "success_rate": 0.64
+    },
+    "ArrangeTea": {
+      "episodes": 50,
+      "successes": 26,
+      "success_rate": 0.52
+    },
+    "BreadSelection": {
+      "episodes": 50,
+      "successes": 12,
+      "success_rate": 0.24
+    },
+    "CategorizeCondiments": {
+      "episodes": 50,
+      "successes": 6,
+      "success_rate": 0.12
+    },
+    "CloseBlenderLid": {
+      "episodes": 50,
+      "successes": 17,
+      "success_rate": 0.34
+    },
+    "CloseFridge": {
+      "episodes": 50,
+      "successes": 47,
+      "success_rate": 0.94
+    },
+    "CloseToasterOvenDoor": {
+      "episodes": 50,
+      "successes": 44,
+      "success_rate": 0.88
+    },
+    "CoffeeSetupMug": {
+      "episodes": 50,
+      "successes": 25,
+      "success_rate": 0.5
+    },
+    "CuttingToolSelection": {
+      "episodes": 50,
+      "successes": 24,
+      "success_rate": 0.48
+    },
+    "DeliverStraw": {
+      "episodes": 50,
+      "successes": 19,
+      "success_rate": 0.38
+    },
+    "GarnishPancake": {
+      "episodes": 50,
+      "successes": 32,
+      "success_rate": 0.64
+    },
+    "GatherTableware": {
+      "episodes": 50,
+      "successes": 1,
+      "success_rate": 0.02
+    },
+    "GetToastedBread": {
+      "episodes": 50,
+      "successes": 23,
+      "success_rate": 0.46
+    },
+    "HeatKebabSandwich": {
+      "episodes": 50,
+      "successes": 0,
+      "success_rate": 0.0
+    },
+    "KettleBoiling": {
+      "episodes": 50,
+      "successes": 35,
+      "success_rate": 0.7
+    },
+    "LoadDishwasher": {
+      "episodes": 50,
+      "successes": 36,
+      "success_rate": 0.72
+    },
+    "MakeIceLemonade": {
+      "episodes": 50,
+      "successes": 23,
+      "success_rate": 0.46
+    },
+    "NavigateKitchen": {
+      "episodes": 50,
+      "successes": 42,
+      "success_rate": 0.84
+    },
+    "OpenCabinet": {
+      "episodes": 50,
+      "successes": 46,
+      "success_rate": 0.92
+    },
+    "OpenDrawer": {
+      "episodes": 50,
+      "successes": 48,
+      "success_rate": 0.96
+    },
+    "OpenStandMixerHead": {
+      "episodes": 50,
+      "successes": 48,
+      "success_rate": 0.96
+    },
+    "PackIdenticalLunches": {
+      "episodes": 50,
+      "successes": 15,
+      "success_rate": 0.3
+    },
+    "PanTransfer": {
+      "episodes": 50,
+      "successes": 0,
+      "success_rate": 0.0
+    },
+    "PickPlaceCounterToCabinet": {
+      "episodes": 50,
+      "successes": 40,
+      "success_rate": 0.8
+    },
+    "PickPlaceCounterToStove": {
+      "episodes": 50,
+      "successes": 42,
+      "success_rate": 0.84
+    },
+    "PickPlaceDrawerToCounter": {
+      "episodes": 50,
+      "successes": 45,
+      "success_rate": 0.9
+    },
+    "PickPlaceSinkToCounter": {
+      "episodes": 50,
+      "successes": 47,
+      "success_rate": 0.94
+    },
+    "PickPlaceToasterToCounter": {
+      "episodes": 50,
+      "successes": 43,
+      "success_rate": 0.86
+    },
+    "PortionHotDogs": {
+      "episodes": 50,
+      "successes": 10,
+      "success_rate": 0.2
+    },
+    "PreSoakPan": {
+      "episodes": 50,
+      "successes": 45,
+      "success_rate": 0.9
+    },
+    "PrepareCoffee": {
+      "episodes": 50,
+      "successes": 8,
+      "success_rate": 0.16
+    },
+    "RecycleBottlesByType": {
+      "episodes": 50,
+      "successes": 10,
+      "success_rate": 0.2
+    },
+    "RinseSinkBasin": {
+      "episodes": 50,
+      "successes": 31,
+      "success_rate": 0.62
+    },
+    "ScrubCuttingBoard": {
+      "episodes": 50,
+      "successes": 40,
+      "success_rate": 0.8
+    },
+    "SearingMeat": {
+      "episodes": 50,
+      "successes": 17,
+      "success_rate": 0.34
+    },
+    "SeparateFreezerRack": {
+      "episodes": 50,
+      "successes": 5,
+      "success_rate": 0.1
+    },
+    "SetUpCuttingStation": {
+      "episodes": 50,
+      "successes": 32,
+      "success_rate": 0.64
+    },
+    "SlideDishwasherRack": {
+      "episodes": 50,
+      "successes": 39,
+      "success_rate": 0.78
+    },
+    "StackBowlsCabinet": {
+      "episodes": 50,
+      "successes": 39,
+      "success_rate": 0.78
+    },
+    "SteamInMicrowave": {
+      "episodes": 50,
+      "successes": 32,
+      "success_rate": 0.64
+    },
+    "StirVegetables": {
+      "episodes": 50,
+      "successes": 18,
+      "success_rate": 0.36
+    },
+    "StoreLeftoversInBowl": {
+      "episodes": 50,
+      "successes": 42,
+      "success_rate": 0.84
+    },
+    "TurnOffStove": {
+      "episodes": 50,
+      "successes": 26,
+      "success_rate": 0.52
+    },
+    "TurnOnElectricKettle": {
+      "episodes": 50,
+      "successes": 48,
+      "success_rate": 0.96
+    },
+    "TurnOnMicrowave": {
+      "episodes": 50,
+      "successes": 31,
+      "success_rate": 0.62
+    },
+    "TurnOnSinkFaucet": {
+      "episodes": 50,
+      "successes": 43,
+      "success_rate": 0.86
+    },
+    "WaffleReheat": {
+      "episodes": 50,
+      "successes": 22,
+      "success_rate": 0.44
+    },
+    "WashFruitColander": {
+      "episodes": 50,
+      "successes": 30,
+      "success_rate": 0.6
+    },
+    "WashLettuce": {
+      "episodes": 50,
+      "successes": 36,
+      "success_rate": 0.72
+    },
+    "WeighIngredients": {
+      "episodes": 50,
+      "successes": 17,
+      "success_rate": 0.34
+    }
+  },
+  "measurement_notes": [
+    "End-to-end wall time is evaluator wall_sec; includes managed service startup and shutdown.",
+    "Central interval covers completion milestones 250 through 2250; not end-to-end throughput.",
+    "Call reduction is an accounting comparison to one model call per request, not a measured wall-time speedup.",
+    "No complete matched batch-size-1 baseline is available.",
+    "Runtime dependency versions differ from the repository default installation; exact upstream environment parity is not claimed."
+  ]
+}

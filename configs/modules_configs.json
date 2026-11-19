@@ -1,0 +1,28 @@
+{
+  "plugin_modules": [],
+  "modules": [
+    {
+      "id": "debug_echo",
+      "name": "echo",
+      "version": "1.0.0",
+      "kind": "debug",
+      "params": {
+        "prefix": "robotenon"
+      }
+    },
+    {
+      "id": "evaluator_main",
+      "name": "terminal-evaluator",
+      "version": "1.0.0",
+      "kind": "evaluator",
+      "params": {}
+    },
+    {
+      "id": "agent_main",
+      "name": "wait-agent",
+      "version": "1.0.0",
+      "kind": "agent",
+      "params": {}
+    }
+  ]
+}

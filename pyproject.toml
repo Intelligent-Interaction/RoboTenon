@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robotenon"
+version = "0.1.0"
+description = "A modular runtime for executing and evaluating robot policies."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["pydantic>=1.10,<3", "msgpack>=1.0.8,<2", "tomli>=2.0; python_version < '3.11'"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.9", "mypy>=1.10"]
+video = ["imageio[ffmpeg]>=2.34"]
+benchmarks = ["numpy>=1.22", "Pillow>=9.1", "anyio>=4"]
+
+[project.scripts]
+Tenon = "robotenon.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["robotenon*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["extensions/benchmarks/robocasa365/src", "extensions/benchmarks/robocasa-hlp/src"]
+
+[tool.setuptools.package-data]
+"robotenon.web" = ["static/*.html", "static/*.css", "static/*.js", "static/*.svg"]
+"robotenon.benchmarks" = ["LICENSE.upstream", "NOTICE.upstream"]

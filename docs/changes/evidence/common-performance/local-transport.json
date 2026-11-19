@@ -1,0 +1,29 @@
+{
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "python": "3.11.10",
+  "numpy": "2.4.6",
+  "baseline_commit": "014dad454912447ec7bd41055280f05006735ea6",
+  "repeats": 30,
+  "payload": "4 history frames x 3 cameras x 256x256 RGB uint8 + float32 state",
+  "old_bytes": 3147240,
+  "new_bytes": 2360359,
+  "results": {
+    "wire_roundtrip": {
+      "before_median_ms": 12.420063001627568,
+      "after_median_ms": 1.1335000090184622,
+      "speedup": 10.957267668998558
+    },
+    "observation_decode": {
+      "before_median_ms": 0.009728995792102069,
+      "after_median_ms": 0.0029579969123005867,
+      "speedup": 3.2890486638592624
+    },
+    "unix_socket_echo": {
+      "before_median_ms": 34.81931250280468,
+      "after_median_ms": 9.817812504479662,
+      "speedup": 3.546544862912931
+    }
+  },
+  "exact_roundtrip": true,
+  "scope": "CPU microbenchmark, not end-to-end simulator or model inference speedup"
+}

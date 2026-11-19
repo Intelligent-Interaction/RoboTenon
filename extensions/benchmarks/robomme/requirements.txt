@@ -1,0 +1,9 @@
+# Python 3.11; the pinned ManiSkill fork and benchmark are both runtime packages.
+setuptools==80.9.0
+torch==2.9.1
+torchvision==0.24.1
+opencv-python>=4.11.0.86
+h5py
+imageio
+git+https://github.com/YinpeiDai/ManiSkill.git@07be6fbc66350ddca200abfb0a11b692f078f7fd
+git+https://github.com/RoboMME/robomme_benchmark.git@f2b540e64034cf9afd0b51cf8ec491de09c74f58

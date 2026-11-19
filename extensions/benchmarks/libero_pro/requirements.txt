@@ -1,0 +1,17 @@
+# Rebuild on Python 3.10+ for RoboTenon; the upstream image used Python 3.8.
+torch==2.1.0
+numpy==1.22.4
+mujoco==3.2.3
+robosuite==1.4.0
+bddl==1.0.1
+Pillow
+scipy
+h5py
+PyYAML
+termcolor
+future
+easydict
+hydra-core
+gym>=0.21,<0.27
+matplotlib
+git+https://github.com/Zxy-MLlab/LIBERO-PRO.git@eafdb809426b13153aa1e4c42d6601844217dfec

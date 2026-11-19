@@ -1,0 +1,14 @@
+{
+  "episodes_per_task": 1,
+  "params": {
+    "tasks": [
+      "PnPCounterToCab"
+    ],
+    "camera_size": 256,
+    "seed": 0,
+    "max_steps": 5
+  },
+  "benchmark_id": "robocasa_benchmark",
+  "source_config": "configs/benchmarks/robocasa/smoke.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

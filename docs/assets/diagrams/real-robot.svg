@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="610" viewBox="0 0 1120 610" role="img" aria-labelledby="title desc">
+<title id="title">Physical robots: observation, control, and stop</title><desc id="desc">Site plugins connect the vendor SDK or ROS 2. The configuration selects and connects the plugins.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="610" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">Physical robots: observation, control, and stop</text>
+<text x="36" y="78" class="sub" fill="#586779">Site plugins connect the vendor SDK or ROS 2. The configuration selects and connects the plugins.</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="137" width="316" height="116" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 151 v88" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="169" class="head" fill="#3458a4">Model service</text>
+<text x="54" y="198" class="body" fill="#172b46">HLP / VLA inference</text>
+<text x="54" y="224" class="body" fill="#172b46">Match the device contract</text>
+<rect x="430" y="137" width="316" height="116" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M431 151 v88" stroke="#3458a4" stroke-width="3"/>
+<text x="448" y="169" class="head" fill="#3458a4">Runtime host</text>
+<text x="448" y="198" class="body" fill="#172b46">CLI / Portal and one Worker</text>
+<text x="448" y="224" class="body" fill="#172b46">Graph and site plugins</text>
+<path d="M430 174 L352 174" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="370" y="161" class="small" fill="#586779">Request</text>
+<path d="M352 222 L430 222" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="370" y="210" class="small" fill="#586779">Result</text>
+<rect x="36" y="333" width="280" height="121" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 347 v93" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="365" class="head" fill="#3458a4">Observation source</text>
+<text x="54" y="394" class="body" fill="#172b46">Images, joints, task signals</text>
+<text x="54" y="420" class="body" fill="#172b46">RealRobotAdapter</text>
+<rect x="410" y="333" width="280" height="121" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M411 347 v93" stroke="#3458a4" stroke-width="3"/>
+<text x="428" y="365" class="head" fill="#3458a4">Device driver</text>
+<text x="428" y="394" class="body" fill="#172b46">RealRobotBody + driver</text>
+<text x="428" y="420" class="body" fill="#172b46">execute / hold / stop</text>
+<rect x="794" y="333" width="290" height="121" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M795 347 v93" stroke="#29735c" stroke-width="3"/>
+<text x="812" y="365" class="head" fill="#29735c">Robot and controller</text>
+<text x="812" y="394" class="body" fill="#172b46">Limits, modes, readback</text>
+<text x="812" y="420" class="body" fill="#172b46">Hardware emergency stop</text>
+<path d="M176 333 L176 294 L473 294 L473 253" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="203" y="285" class="small" fill="#586779">feedback</text>
+<path d="M587 253 L587 333" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="600" y="294" class="small" fill="#586779">Action</text>
+<path d="M690 381 L794 381" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="693" y="369" class="small" fill="#586779">SDK / ROS2</text>
+<path d="M794 427 L731 427 L731 494 L177 494 L177 454" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="439" y="486" class="small" fill="#586779">State / sensors</text>
+<rect x="805" y="137" width="279" height="116" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M806 151 v88" stroke="#29735c" stroke-width="3"/>
+<text x="823" y="169" class="head" fill="#29735c">Software stop</text>
+<text x="823" y="198" class="body" fill="#172b46">Shared safety state</text>
+<text x="823" y="224" class="body" fill="#172b46">Body stop channel</text>
+<path d="M944 253 L944 284 L659 284 L659 333" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="586" class="small" fill="#586779">Test software and hardware stops separately. Host-local locks cover one user. Coordinate cross-host access at deployment.</text>
+</svg>

@@ -1,0 +1,7 @@
+# Rebuild on Python 3.10+ for RoboTenon; upstream used 3.8. FFTW/BLAS and cmake 3.18 are prerequisites.
+setuptools==57.5.0
+wheel
+torch==2.1.0
+fnvhash
+git+https://github.com/mees/calvin.git@fa03f01f19c65920e18cf37398a9ce859274af76#subdirectory=calvin_env
+git+https://github.com/mees/calvin.git@fa03f01f19c65920e18cf37398a9ce859274af76#subdirectory=calvin_models

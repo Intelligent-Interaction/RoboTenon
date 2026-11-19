@@ -1,0 +1,201 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "description": "面板级聚合示例。默认使用 sum by (environment, type) 保留每个环境/动作类型的累计总数；在 Panel → Edit → Query 中可将 sum 改为 avg，或调整 by(...) 中的维度。累计计数器若要看窗口平均速率，请使用下方 Actions / average rate 面板。",
+      "targets": [{"expr": "sum by (environment, type) (robotenon_actions_total{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\",type=~\"$action_type\"})", "legendFormat": "{{environment}} / {{type}}", "refId": "A"}],
+      "title": "Actions / total",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "id": 2,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [{"expr": "robotenon_feedback_sequence{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\"}", "legendFormat": "{{environment}} / feedback sequence", "refId": "A"}],
+      "title": "Feedback sequence",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 8},
+      "id": 3,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "robotenon_evaluator_stale_total{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\"}", "legendFormat": "stale decisions", "refId": "A"}],
+      "title": "Evaluator stale decisions",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 120}]}, "unit": "ms"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 8, "x": 8, "y": 8},
+      "id": 4,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "description": "基于 classic histogram bucket 的真实时间窗口 p95。优先使用 [5m] 内的 rate；当短实验或 metricsd 重启导致窗口内没有增量时，自动回退到当前累计 bucket，避免面板显示 no data。默认窗口是 [5m]；在 Panel → Edit → Query 中可独立修改窗口，或把 0.95 改成 0.90 得到 p90。查询必须保留 le 维度，并先按 le 和业务维度聚合再调用 histogram_quantile。",
+      "targets": [{"expr": "(histogram_quantile(0.95, sum by (le, environment, type) (rate(robotenon_action_latency_ms_bucket{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\",type=~\"$action_type\"}[5m]))) and on (environment, type) (sum by (environment, type) (rate(robotenon_action_latency_ms_count{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\",type=~\"$action_type\"}[5m])) > 0)) or histogram_quantile(0.95, sum by (le, environment, type) (last_over_time(robotenon_action_latency_ms_bucket{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\",type=~\"$action_type\"}[5m])))", "legendFormat": "{{environment}} / {{type}} / action p95", "refId": "A"}],
+      "title": "Action p95 (5m)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 150}]}, "unit": "ms"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 8, "x": 16, "y": 8},
+      "id": 5,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "description": "基于 feedback age histogram bucket 的真实时间窗口 p95。优先使用 [5m] 内的 rate；当窗口内没有增量时自动回退到当前累计 bucket，避免短实验显示 no data。默认窗口是 [5m]；在 Panel → Edit → Query 中可独立修改窗口，或把 0.95 改成 0.90 得到 p90。",
+      "targets": [{"expr": "(histogram_quantile(0.95, sum by (le, environment) (rate(robotenon_feedback_age_ms_bucket{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\"}[5m]))) and on (environment) (sum by (environment) (rate(robotenon_feedback_age_ms_count{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\"}[5m])) > 0)) or histogram_quantile(0.95, sum by (le, environment) (last_over_time(robotenon_feedback_age_ms_bucket{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\"}[5m])))", "legendFormat": "{{environment}} / feedback age p95", "refId": "A"}],
+      "title": "Feedback age p95 (5m)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 8, "x": 0, "y": 20},
+      "id": 6,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "description": "每个面板独立配置平均窗口，默认是 [5m]。在 Panel → Edit → Query 中将 [5m] 改为 [30s]、[1m]、[15m] 等即可，不会影响其他面板；也可把外层 sum by (environment) 改成 avg by (environment) 来计算各匹配序列的平均速率。",
+      "targets": [{"expr": "sum by (environment) (rate(robotenon_actions_total{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\",type=~\"$action_type\"}[5m]))", "legendFormat": "{{environment}} / actions per second", "refId": "A"}],
+      "title": "Actions / average rate (5m)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "ms"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 8, "x": 8, "y": 20},
+      "id": 7,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "description": "Histogram 的窗口平均值按 rate(_sum) / rate(_count) 计算。默认窗口是 [5m]；在 Panel → Edit → Query 中可独立替换为 [30s]、[1m]、[15m] 等。要改变跨序列聚合方式，可分别把两个外层 sum by (environment, type) 改成 avg by (environment, type)；两边必须保持相同的分组键。",
+      "targets": [{"expr": "sum by (environment, type) (rate(robotenon_action_latency_ms_sum{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\",type=~\"$action_type\"}[5m])) / sum by (environment, type) (rate(robotenon_action_latency_ms_count{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\",type=~\"$action_type\"}[5m]))", "legendFormat": "{{environment}} / {{type}} / action latency avg", "refId": "A"}],
+      "title": "Action latency / average (5m)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "ms"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 8, "x": 16, "y": 20},
+      "id": 8,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "description": "Feedback age histogram 的窗口平均值。默认窗口是 [5m]；在 Panel → Edit → Query 中可独立修改窗口。要看匹配序列的平均值而非总和，可将分子和分母的外层 sum by (environment) 同时改成 avg by (environment)。",
+      "targets": [{"expr": "sum by (environment) (rate(robotenon_feedback_age_ms_sum{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\"}[5m])) / sum by (environment) (rate(robotenon_feedback_age_ms_count{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\"}[5m]))", "legendFormat": "{{environment}} / feedback age avg", "refId": "A"}],
+      "title": "Feedback age / average (5m)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 120}]}, "unit": "ms"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 14},
+      "id": 9,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "description": "基于 action latency histogram bucket 的真实时间窗口 p90。优先使用 [5m] 内的 rate；当窗口内没有增量时自动回退到当前累计 bucket。默认窗口是 [5m]；在 Panel → Edit → Query 中可独立修改窗口，或把 0.90 改成其他 φ（例如 0.99）。",
+      "targets": [{"expr": "(histogram_quantile(0.90, sum by (le, environment, type) (rate(robotenon_action_latency_ms_bucket{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\",type=~\"$action_type\"}[5m]))) and on (environment, type) (sum by (environment, type) (rate(robotenon_action_latency_ms_count{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\",type=~\"$action_type\"}[5m])) > 0)) or histogram_quantile(0.90, sum by (le, environment, type) (last_over_time(robotenon_action_latency_ms_bucket{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\",type=~\"$action_type\"}[5m])))", "legendFormat": "{{environment}} / {{type}} / action p90", "refId": "A"}],
+      "title": "Action p90 (5m)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 150}]}, "unit": "ms"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 14},
+      "id": 10,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "description": "基于 feedback age histogram bucket 的真实时间窗口 p90。优先使用 [5m] 内的 rate；当窗口内没有增量时自动回退到当前累计 bucket。默认窗口是 [5m]；在 Panel → Edit → Query 中可独立修改窗口，或把 0.90 改成其他 φ。",
+      "targets": [{"expr": "(histogram_quantile(0.90, sum by (le, environment) (rate(robotenon_feedback_age_ms_bucket{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\"}[5m]))) and on (environment) (sum by (environment) (rate(robotenon_feedback_age_ms_count{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\"}[5m])) > 0)) or histogram_quantile(0.90, sum by (le, environment) (last_over_time(robotenon_feedback_age_ms_bucket{metric_group=~\"$metric_group\",environment=~\"$environment\",scope=~\"$scope\"}[5m])))", "legendFormat": "{{environment}} / feedback age p90", "refId": "A"}],
+      "title": "Feedback age p90 (5m)",
+      "type": "stat"
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["robotenon", "embodied"],
+  "templating": {
+    "enable": true,
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {"selected": true, "text": "All", "value": "$__all"},
+        "hide": 0,
+        "includeAll": true,
+        "label": "Metric group",
+        "multi": true,
+        "name": "metric_group",
+        "options": [
+          {"selected": true, "text": "All", "value": "$__all"},
+          {"selected": false, "text": "actions", "value": "actions"},
+          {"selected": false, "text": "feedback", "value": "feedback"},
+          {"selected": false, "text": "evaluator", "value": "evaluator"}
+        ],
+        "query": "actions,feedback,evaluator",
+        "refresh": 1,
+        "type": "custom"
+      },
+      {
+        "allValue": ".*",
+        "current": {"selected": true, "text": "All", "value": "$__all"},
+        "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+        "definition": "label_values(robotenon_actions_total, environment)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Environment",
+        "multi": true,
+        "name": "environment",
+        "options": [],
+        "query": "label_values(robotenon_actions_total, environment)",
+        "refresh": 1,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {"selected": true, "text": "All", "value": "$__all"},
+        "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+        "definition": "label_values(robotenon_actions_total, type)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Action type",
+        "multi": true,
+        "name": "action_type",
+        "options": [],
+        "query": "label_values(robotenon_actions_total, type)",
+        "refresh": 1,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {"selected": true, "text": "All", "value": "$__all"},
+        "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+        "definition": "label_values(robotenon_actions_total, scope)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Scope",
+        "multi": true,
+        "name": "scope",
+        "options": [],
+        "query": "label_values(robotenon_actions_total, scope)",
+        "refresh": 1,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "datasource": {"type": "prometheus", "uid": "RoboTenonPrometheus"},
+        "filters": [],
+        "hide": 0,
+        "label": "Dimension filters",
+        "name": "filters",
+        "type": "adhoc"
+      }
+    ]
+  },
+  "time": {"from": "now-15m", "to": "now"},
+  "timezone": "browser",
+  "title": "RoboTenon Overview",
+  "uid": "robotenon-overview",
+  "version": 12
+}

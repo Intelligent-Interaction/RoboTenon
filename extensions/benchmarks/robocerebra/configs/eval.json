@@ -1,0 +1,13 @@
+{
+  "episodes_per_task": 1,
+  "params": {
+    "robocerebra_root": "/workspace/RoboCerebra_Bench",
+    "task_types": [
+      "Ideal"
+    ],
+    "seed": 7
+  },
+  "benchmark_id": "robocerebra_benchmark",
+  "source_config": "configs/benchmarks/robocerebra/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

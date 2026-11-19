@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="430" viewBox="0 0 1120 430" role="img" aria-labelledby="title desc">
+<title id="title">观测缓存与媒体回看</title><desc id="desc">图像留在缓存与资源存储中，工作流和 Trace 传递可解析的帧引用。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="430" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">观测缓存与媒体回看</text>
+<text x="36" y="78" class="sub" fill="#586779">图像留在缓存与资源存储中，工作流和 Trace 传递可解析的帧引用。</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="153" width="240" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 167 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="185" class="head" fill="#3458a4">Environment</text>
+<text x="54" y="214" class="body" fill="#172b46">Observation.frames</text>
+<text x="54" y="240" class="body" fill="#172b46">原始 RGB / 深度 / 状态</text>
+<rect x="346" y="153" width="310" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M347 167 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="364" y="185" class="head" fill="#3458a4">Observation Cache</text>
+<text x="364" y="214" class="body" fill="#172b46">热缓存 + 持久化资源</text>
+<text x="364" y="240" class="body" fill="#172b46">frame_id / cache_ref / 索引</text>
+<rect x="738" y="132" width="346" height="98" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M739 146 v70" stroke="#3458a4" stroke-width="3"/>
+<text x="756" y="164" class="head" fill="#3458a4">运行中的消费者</text>
+<text x="756" y="193" class="body" fill="#172b46">Tool / Module 按需解析帧</text>
+<rect x="738" y="257" width="346" height="98" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M739 271 v70" stroke="#3458a4" stroke-width="3"/>
+<text x="756" y="289" class="head" fill="#3458a4">历史查询与 Portal</text>
+<text x="756" y="318" class="body" fill="#172b46">由引用定位媒体并展示</text>
+<path d="M276 215 L346 215" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M656 200 L696 200 L696 181 L738 181" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M656 232 L696 232 L696 306 L738 306" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="406" class="small" fill="#586779">视频是独立产物；资源被清理或未持久化后，保留 Trace 不代表仍可恢复图像。</text>
+</svg>

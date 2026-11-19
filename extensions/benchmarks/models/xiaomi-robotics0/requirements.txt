@@ -1,0 +1,6 @@
+transformers==4.57.1
+accelerate>=1.0
+Pillow
+numpy
+torch
+flash-attn

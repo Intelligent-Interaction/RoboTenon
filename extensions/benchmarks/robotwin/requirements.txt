@@ -1,0 +1,20 @@
+# Python 3.10; clone RoboTwin@c3ddfa8 separately and download its official assets.
+setuptools<70
+torch==2.4.1
+torchvision
+sapien==3.0.0b1
+mplib==0.2.1
+transforms3d==0.4.2
+scipy==1.10.1
+gymnasium==0.29.1
+trimesh==4.4.3
+imageio==2.34.2
+open3d==0.18.0
+pydantic
+h5py
+PyYAML
+termcolor
+matplotlib
+Pillow
+huggingface_hub==0.25.0
+git+https://github.com/NVlabs/curobo.git@v0.7.8

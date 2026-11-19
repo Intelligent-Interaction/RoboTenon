@@ -1,0 +1,18 @@
+# Rebuild on Python 3.10+ for RoboTenon. The VCS entries use libero-mem's bundled forks.
+torch==2.1.0
+numpy==1.22.4
+mujoco==3.2.3
+bddl==1.0.1
+Pillow
+scipy
+h5py
+PyYAML
+termcolor
+future
+easydict
+hydra-core
+gym>=0.21,<0.27
+matplotlib
+git+https://github.com/libero-mem/libero-mem.git@0eee0defa4024e51511b6e15a79f30e9620209de#subdirectory=thirdparty/robomimic
+git+https://github.com/libero-mem/libero-mem.git@0eee0defa4024e51511b6e15a79f30e9620209de#subdirectory=thirdparty/robosuite
+git+https://github.com/libero-mem/libero-mem.git@0eee0defa4024e51511b6e15a79f30e9620209de

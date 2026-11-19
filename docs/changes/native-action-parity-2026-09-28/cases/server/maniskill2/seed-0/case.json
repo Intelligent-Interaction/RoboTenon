@@ -1,0 +1,81 @@
+{
+  "benchmark": "maniskill2",
+  "class": "robosys_maniskill2.native.benchmark:ManiSkill2Benchmark",
+  "upstream_class": "vla_eval.benchmarks.maniskill2.benchmark:ManiSkill2Benchmark",
+  "params": {
+    "tasks": [
+      "PickCube-v0",
+      "StackCube-v0",
+      "PickSingleYCB-v0",
+      "PickSingleEGAD-v0",
+      "PickClutterYCB-v0"
+    ],
+    "max_episode_steps": 400,
+    "render_resolution": [
+      256,
+      256
+    ],
+    "enabled_cameras": [
+      "base_camera"
+    ]
+  },
+  "actions": [
+    {
+      "actions": [
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "actions": [
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "actions": [
+        -0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "actions": [
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "seed": 0,
+  "render": "gpu"
+}

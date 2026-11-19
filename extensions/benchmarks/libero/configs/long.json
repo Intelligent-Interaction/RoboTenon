@@ -1,0 +1,11 @@
+{
+  "episodes_per_task": 50,
+  "params": {
+    "suite": "libero_90",
+    "seed": 7,
+    "num_steps_wait": 10
+  },
+  "benchmark_id": "libero_benchmark",
+  "source_config": "configs/benchmarks/libero/long.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

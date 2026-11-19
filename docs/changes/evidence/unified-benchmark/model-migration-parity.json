@@ -1,0 +1,11 @@
+{
+  "1": {
+    "max_abs_diff": 0.0,
+    "identical": true
+  },
+  "8": {
+    "max_abs_diff": 0.0,
+    "identical": true
+  },
+  "buffers_bfloat16": true
+}

@@ -1,0 +1,40 @@
+{
+  "episodes_per_task": 9,
+  "params": {
+    "task_name": "google_robot_close_top_drawer",
+    "env_name": "CloseTopDrawerCustomInScene-v0",
+    "scene_name": "frl_apartment_stage_simple",
+    "env_build_kwargs": {
+      "shader_dir": "rt",
+      "light_mode": "darker",
+      "robot": "google_robot_static",
+      "sim_freq": 513,
+      "control_freq": 3
+    },
+    "init_config": {
+      "robot_x": [
+        0.65,
+        0.85,
+        3
+      ],
+      "robot_y": [
+        -0.2,
+        0.2,
+        3
+      ],
+      "obj_x": [
+        0,
+        0,
+        1
+      ],
+      "obj_y": [
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  "benchmark_id": "simpler_benchmark",
+  "source_config": "configs/benchmarks/simpler/google_robot_drawer_va.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

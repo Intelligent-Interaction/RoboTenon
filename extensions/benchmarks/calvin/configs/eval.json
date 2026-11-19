@@ -1,0 +1,11 @@
+{
+  "episodes_per_task": 1,
+  "params": {
+    "dataset_path": "/data/calvin/dataset/validation",
+    "num_sequences": 1000,
+    "seed": 0
+  },
+  "benchmark_id": "calvin_benchmark",
+  "source_config": "configs/benchmarks/calvin/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

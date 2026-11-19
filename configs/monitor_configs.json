@@ -1,0 +1,7 @@
+{
+  "config_version": 1,
+  "plugin_monitors": [],
+  "poll_hz": 20.0,
+  "on_error_level": "P3",
+  "monitors": []
+}

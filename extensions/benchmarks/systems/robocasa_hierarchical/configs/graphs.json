@@ -1,0 +1,478 @@
+{
+  "config_version": 1,
+  "graphs": [
+    {
+      "id": "xr365_single_task",
+      "entry": "reset",
+      "backend": "fallback",
+      "max_steps": 1000000,
+      "nodes": [
+        {
+          "id": "reset",
+          "type": "system",
+          "operation": "env.reset",
+          "next": [
+            {
+              "node": "plan"
+            }
+          ]
+        },
+        {
+          "id": "plan",
+          "type": "module",
+          "module": "robocasa_system_plan",
+          "predecessors": [
+            "reset"
+          ],
+          "next": [
+            {
+              "node": "action",
+              "when": "ctx.results['plan']['planner_decision'] != 'stop'"
+            },
+            {
+              "node": "END",
+              "when": "ctx.results['plan']['planner_decision'] == 'stop'"
+            }
+          ],
+          "inputs": {
+            "stm": {
+              "source": [
+                "nodes.verify.outputs.stm",
+                "previous.stm"
+              ],
+              "default": {}
+            },
+            "ltm_records": {
+              "source": "inputs.ltm_records",
+              "default": []
+            }
+          }
+        },
+        {
+          "id": "action",
+          "type": "module",
+          "module": "robocasa_system_action",
+          "predecessors": [
+            "plan"
+          ],
+          "next": [
+            {
+              "node": "body_execute"
+            }
+          ],
+          "inputs": {
+            "instruction": "nodes.plan.outputs.instruction",
+            "env_steps": {
+              "source": "nodes.evaluate.outputs.env_steps",
+              "default": 0
+            }
+          }
+        },
+        {
+          "id": "body_execute",
+          "type": "system",
+          "operation": "body.execute",
+          "predecessors": [
+            "action"
+          ],
+          "next": [
+            {
+              "node": "observe"
+            }
+          ]
+        },
+        {
+          "id": "observe",
+          "type": "system",
+          "operation": "env.observe",
+          "predecessors": [
+            "body_execute"
+          ],
+          "next": [
+            {
+              "node": "terminal_guard"
+            }
+          ]
+        },
+        {
+          "id": "terminal_guard",
+          "type": "module",
+          "module": "native_benchmark_terminal",
+          "predecessors": [
+            "observe"
+          ],
+          "next": [
+            {
+              "node": "verify",
+              "when": "ctx.results['terminal_guard']['continue'] == true"
+            },
+            {
+              "node": "END",
+              "when": "ctx.results['terminal_guard']['continue'] == false"
+            }
+          ]
+        },
+        {
+          "id": "verify",
+          "type": "module",
+          "module": "robocasa_system_verify",
+          "predecessors": [
+            "terminal_guard"
+          ],
+          "next": [
+            {
+              "node": "monitor"
+            }
+          ],
+          "inputs": {
+            "stm": "nodes.plan.outputs.stm",
+            "instruction": "nodes.plan.outputs.instruction",
+            "needs_plan": "nodes.action.outputs.needs_plan",
+            "action_queue_remaining": "nodes.action.outputs.action_queue_remaining"
+          }
+        },
+        {
+          "id": "monitor",
+          "type": "system",
+          "operation": "monitor.check",
+          "predecessors": [
+            "verify"
+          ],
+          "next": [
+            {
+              "node": "evaluate"
+            }
+          ]
+        },
+        {
+          "id": "evaluate",
+          "type": "module",
+          "module": "robocasa_system_terminal",
+          "predecessors": [
+            "monitor"
+          ],
+          "default": "END",
+          "goto": [
+            {
+              "node": "action",
+              "when": "ctx.results['evaluate']['continue'] == true and ctx.results['evaluate']['needs_plan'] == false"
+            },
+            {
+              "node": "plan",
+              "when": "ctx.results['evaluate']['continue'] == true and ctx.results['evaluate']['needs_plan'] == true"
+            }
+          ],
+          "inputs": {
+            "needs_plan": {
+              "source": "nodes.verify.outputs.needs_plan",
+              "default": true
+            }
+          }
+        }
+      ],
+      "outputs": {
+        "success": {
+          "source": [
+            "nodes.terminal_guard.outputs.success",
+            "nodes.evaluate.outputs.success"
+          ]
+        },
+        "reason": {
+          "source": [
+            "nodes.terminal_guard.outputs.reason",
+            "nodes.evaluate.outputs.reason"
+          ]
+        },
+        "env_steps": {
+          "source": [
+            "nodes.terminal_guard.outputs.env_steps",
+            "nodes.evaluate.outputs.env_steps"
+          ]
+        },
+        "stm": {
+          "source": [
+            "nodes.verify.outputs.stm",
+            "nodes.plan.outputs.stm"
+          ],
+          "default": {}
+        },
+        "instruction": {
+          "source": "nodes.plan.outputs.instruction",
+          "default": ""
+        },
+        "planner_result": {
+          "source": "nodes.plan.outputs.planner_result",
+          "default": {}
+        },
+        "verifier_result": {
+          "source": "nodes.verify.outputs.verifier_result",
+          "default": {}
+        },
+        "subtask_success": {
+          "source": "nodes.verify.outputs.subtask_success",
+          "default": null
+        },
+        "elapsed_sec": {
+          "source": [
+            "nodes.terminal_guard.outputs.elapsed_sec",
+            "nodes.evaluate.outputs.elapsed_sec"
+          ]
+        },
+        "native_metrics": {
+          "source": [
+            "nodes.terminal_guard.outputs.native_metrics",
+            "nodes.evaluate.outputs.native_metrics"
+          ]
+        },
+        "native_dimensions": {
+          "source": [
+            "nodes.terminal_guard.outputs.native_dimensions",
+            "nodes.evaluate.outputs.native_dimensions"
+          ]
+        },
+        "metric_keys": {
+          "source": [
+            "nodes.terminal_guard.outputs.metric_keys",
+            "nodes.evaluate.outputs.metric_keys"
+          ]
+        },
+        "native_case": {
+          "source": [
+            "nodes.terminal_guard.outputs.native_case",
+            "nodes.evaluate.outputs.native_case"
+          ]
+        }
+      }
+    },
+    {
+      "id": "xr365_single_task_reference",
+      "entry": "reset",
+      "backend": "fallback",
+      "max_steps": 1000000,
+      "nodes": [
+        {
+          "id": "reset",
+          "type": "system",
+          "operation": "env.reset",
+          "next": [
+            {
+              "node": "plan"
+            }
+          ]
+        },
+        {
+          "id": "plan",
+          "type": "module",
+          "module": "robocasa_system_plan",
+          "predecessors": [
+            "reset"
+          ],
+          "next": [
+            {
+              "node": "action",
+              "when": "ctx.results['plan']['planner_decision'] != 'stop'"
+            },
+            {
+              "node": "END",
+              "when": "ctx.results['plan']['planner_decision'] == 'stop'"
+            }
+          ],
+          "inputs": {
+            "stm": {
+              "source": [
+                "nodes.verify.outputs.stm",
+                "previous.stm"
+              ],
+              "default": {}
+            },
+            "ltm_records": {
+              "source": "inputs.ltm_records",
+              "default": []
+            }
+          }
+        },
+        {
+          "id": "action",
+          "type": "module",
+          "module": "robocasa_system_action",
+          "predecessors": [
+            "plan"
+          ],
+          "next": [
+            {
+              "node": "body_execute"
+            }
+          ],
+          "inputs": {
+            "instruction": "nodes.plan.outputs.instruction",
+            "env_steps": {
+              "source": "nodes.evaluate.outputs.env_steps",
+              "default": 0
+            }
+          }
+        },
+        {
+          "id": "body_execute",
+          "type": "system",
+          "operation": "body.execute",
+          "predecessors": [
+            "action"
+          ],
+          "next": [
+            {
+              "node": "observe"
+            }
+          ]
+        },
+        {
+          "id": "observe",
+          "type": "system",
+          "operation": "env.observe",
+          "predecessors": [
+            "body_execute"
+          ],
+          "next": [
+            {
+              "node": "terminal_guard"
+            }
+          ]
+        },
+        {
+          "id": "terminal_guard",
+          "type": "module",
+          "module": "native_benchmark_terminal",
+          "predecessors": [
+            "observe"
+          ],
+          "next": [
+            {
+              "node": "verify",
+              "when": "ctx.results['terminal_guard']['continue'] == true"
+            },
+            {
+              "node": "END",
+              "when": "ctx.results['terminal_guard']['continue'] == false"
+            }
+          ]
+        },
+        {
+          "id": "verify",
+          "type": "module",
+          "module": "robocasa_system_verify",
+          "predecessors": [
+            "terminal_guard"
+          ],
+          "next": [
+            {
+              "node": "evaluate"
+            }
+          ],
+          "inputs": {
+            "stm": "nodes.plan.outputs.stm",
+            "instruction": "nodes.plan.outputs.instruction",
+            "needs_plan": "nodes.action.outputs.needs_plan",
+            "action_queue_remaining": "nodes.action.outputs.action_queue_remaining"
+          }
+        },
+        {
+          "id": "evaluate",
+          "type": "module",
+          "module": "robocasa_system_terminal",
+          "predecessors": [
+            "verify"
+          ],
+          "default": "END",
+          "goto": [
+            {
+              "node": "action",
+              "when": "ctx.results['evaluate']['continue'] == true and ctx.results['evaluate']['needs_plan'] == false"
+            },
+            {
+              "node": "plan",
+              "when": "ctx.results['evaluate']['continue'] == true and ctx.results['evaluate']['needs_plan'] == true"
+            }
+          ],
+          "inputs": {
+            "needs_plan": {
+              "source": "nodes.verify.outputs.needs_plan",
+              "default": true
+            }
+          }
+        }
+      ],
+      "outputs": {
+        "success": {
+          "source": [
+            "nodes.terminal_guard.outputs.success",
+            "nodes.evaluate.outputs.success"
+          ]
+        },
+        "reason": {
+          "source": [
+            "nodes.terminal_guard.outputs.reason",
+            "nodes.evaluate.outputs.reason"
+          ]
+        },
+        "env_steps": {
+          "source": [
+            "nodes.terminal_guard.outputs.env_steps",
+            "nodes.evaluate.outputs.env_steps"
+          ]
+        },
+        "stm": {
+          "source": [
+            "nodes.verify.outputs.stm",
+            "nodes.plan.outputs.stm"
+          ],
+          "default": {}
+        },
+        "instruction": {
+          "source": "nodes.plan.outputs.instruction",
+          "default": ""
+        },
+        "planner_result": {
+          "source": "nodes.plan.outputs.planner_result",
+          "default": {}
+        },
+        "verifier_result": {
+          "source": "nodes.verify.outputs.verifier_result",
+          "default": {}
+        },
+        "subtask_success": {
+          "source": "nodes.verify.outputs.subtask_success",
+          "default": null
+        },
+        "elapsed_sec": {
+          "source": [
+            "nodes.terminal_guard.outputs.elapsed_sec",
+            "nodes.evaluate.outputs.elapsed_sec"
+          ]
+        },
+        "native_metrics": {
+          "source": [
+            "nodes.terminal_guard.outputs.native_metrics",
+            "nodes.evaluate.outputs.native_metrics"
+          ]
+        },
+        "native_dimensions": {
+          "source": [
+            "nodes.terminal_guard.outputs.native_dimensions",
+            "nodes.evaluate.outputs.native_dimensions"
+          ]
+        },
+        "metric_keys": {
+          "source": [
+            "nodes.terminal_guard.outputs.metric_keys",
+            "nodes.evaluate.outputs.metric_keys"
+          ]
+        },
+        "native_case": {
+          "source": [
+            "nodes.terminal_guard.outputs.native_case",
+            "nodes.evaluate.outputs.native_case"
+          ]
+        }
+      }
+    }
+  ]
+}

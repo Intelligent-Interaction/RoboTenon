@@ -1,0 +1,18 @@
+# Rebuild on Python 3.10+ for RoboTenon; download qiukingballball/RoboCerebraBench separately.
+torch==2.1.0
+numpy==1.22.4
+mujoco==3.2.3
+robosuite==1.4.0
+bddl==1.0.1
+Pillow
+scipy
+h5py
+PyYAML
+termcolor
+future
+easydict
+hydra-core
+gym>=0.21,<0.27
+matplotlib
+huggingface_hub
+git+https://github.com/qiuboxiang/RoboCerebra.git@2573426c13dfcd5e7d7831c15587b058aaa1c0c0#subdirectory=LIBERO

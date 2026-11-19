@@ -1,0 +1,73 @@
+{
+  "benchmark": "vlabench",
+  "class": "robosys_vlabench.native.benchmark:VLABenchBenchmark",
+  "upstream_class": "vla_eval.benchmarks.vlabench.benchmark:VLABenchBenchmark",
+  "params": {
+    "tasks": [
+      "select_fruit",
+      "select_toy",
+      "select_drink"
+    ],
+    "robot": "franka",
+    "max_steps": 200
+  },
+  "actions": [
+    {
+      "actions": [
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        -0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "seed": 0,
+  "render": "gpu"
+}

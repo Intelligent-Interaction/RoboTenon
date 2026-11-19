@@ -1,0 +1,5 @@
+policy_name: RoboTenon
+protocol: ws
+host: localhost
+port: null
+eval_batch: false

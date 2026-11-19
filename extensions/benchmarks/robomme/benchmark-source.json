@@ -1,0 +1,35 @@
+{
+  "benchmark": "robomme",
+  "registry": "robomme_benchmark",
+  "class": "robotenon_robomme.benchmark:RoboMMEBenchmark",
+  "source_repository": "https://github.com/allenai/vla-evaluation-harness",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09",
+  "files": [
+    {
+      "source": "src/vla_eval/benchmarks/robomme/benchmark.py",
+      "target": "src/robotenon_robomme/benchmark.py",
+      "sha256": "67d159cc7d8f94c50e9b44aeac89536e95de5420478ba48ef3c04d0ef04f7fa9",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.robomme.utils": "robotenon_robomme._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_robomme._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_robomme._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    }
+  ],
+  "profiles": [
+    "counting",
+    "eval-0",
+    "eval-1",
+    "eval-2",
+    "eval-3",
+    "imitation",
+    "permanence",
+    "reference"
+  ],
+  "simulation_validation": "pending",
+  "score_reproduction": "pending",
+  "source_alignment": "sha256_and_ast_verified",
+  "package_validation": "wheel_build_and_isolated_import_passed"
+}

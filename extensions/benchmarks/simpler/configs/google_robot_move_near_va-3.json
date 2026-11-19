@@ -1,0 +1,38 @@
+{
+  "episodes_per_task": 60,
+  "params": {
+    "task_name": "google_robot_move_near",
+    "env_name": "MoveNearGoogleInScene-v0",
+    "scene_name": "google_pick_coke_can_1_v4_alt_background_2",
+    "env_build_kwargs": {
+      "robot": "google_robot_static",
+      "sim_freq": 513,
+      "control_freq": 3
+    },
+    "init_config": {
+      "robot_x": [
+        0.35,
+        0.35,
+        1
+      ],
+      "robot_y": [
+        0.21,
+        0.21,
+        1
+      ],
+      "robot_rot_quat": [
+        0.0,
+        0.0,
+        -0.04498,
+        0.99899
+      ],
+      "obj_episode_range": [
+        0,
+        60
+      ]
+    }
+  },
+  "benchmark_id": "simpler_benchmark",
+  "source_config": "configs/benchmarks/simpler/google_robot_move_near_va.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

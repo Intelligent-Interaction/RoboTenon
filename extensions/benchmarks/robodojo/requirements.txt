@@ -1,0 +1,7 @@
+# RoboDojo must run in its official Isaac Sim 5.1 image with recursive submodules.
+# Clone RoboDojo@ee67a1468510da7624a089164402359f2afc72c8 and mount licensed Assets separately.
+msgpack>=1.0
+msgpack-numpy>=0.4.8
+numpy>=1.22
+Pillow>=9.1
+anyio>=4

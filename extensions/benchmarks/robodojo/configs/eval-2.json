@@ -1,0 +1,38 @@
+{
+  "episodes_per_task": 50,
+  "params": {
+    "seed": 0,
+    "tasks": [
+      "align_blocks",
+      "solve_equation",
+      "stack_blocks_by_language",
+      "general_pickup",
+      "classify_objects_by_language",
+      "pick_from_conveyor_by_image",
+      "store_tools_in_toolbox",
+      "pour_by_language",
+      "cover_blocks",
+      "match_and_pick_from_conveyor",
+      "swap_T",
+      "press_by_number",
+      "swap_blocks",
+      "fasten_screws",
+      "insert_tubes",
+      "plug_in_charger",
+      "pour_balls_into_vase",
+      "play_Xylophone",
+      "deposit_coin",
+      "insert_key",
+      "build_tower",
+      "put_bottles_into_dustbin",
+      "classify_objects",
+      "fill_pen_holder",
+      "fill_egg_holder",
+      "organize_table",
+      "play_stacking_toy"
+    ]
+  },
+  "benchmark_id": "robodojo_benchmark",
+  "source_config": "configs/benchmarks/robodojo/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

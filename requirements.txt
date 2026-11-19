@@ -1,0 +1,10 @@
+# Install RoboTenon itself in editable mode and reuse the dependency groups
+# declared in pyproject.toml. Keeping the core, development, and video
+# dependencies there avoids maintaining the same version constraints twice.
+-e .[dev,video]
+
+# Repository-level tests, examples, and benchmark helpers.
+# These are not mandatory for the minimal RoboTenon runtime.
+numpy>=1.24
+Pillow>=10.0
+psutil>=5.9

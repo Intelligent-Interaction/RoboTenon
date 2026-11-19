@@ -1,0 +1,5 @@
+{
+  "model_path": "/data/models/openvla-7b-oft-finetuned-libero-spatial",
+  "upstream_path": "/opt/src/openvla-oft",
+  "seed": 7
+}

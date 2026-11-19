@@ -1,0 +1,17 @@
+{
+  "benchmark_id": "libero_benchmark",
+  "episodes_per_task": 50,
+  "params": {
+    "suite": "libero_spatial",
+    "seed": 7,
+    "env_seed": 0,
+    "num_steps_wait": 10,
+    "send_wrist_image": true,
+    "send_state": true,
+    "quat_no_antipodal": true,
+    "discretize_gripper": false,
+    "absolute_action": false
+  },
+  "source_config": "experiments/robot/libero/run_libero_eval.py",
+  "source_commit": "e4287e94541f459edc4feabc4e181f537cd569a8"
+}

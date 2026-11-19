@@ -1,0 +1,29 @@
+{
+  "checkout": "/tmp/example-run",
+  "workload": "synthetic registry and 256 KiB fake results; tracemalloc enabled",
+  "registry": {
+    "records": 20000,
+    "startup_ms": 148.65604200167581,
+    "startup_allocated_bytes": 64775693,
+    "peak_allocated_bytes": 197242130,
+    "list_25_median_ms": 46.37837500195019,
+    "list_25_samples_ms": [
+      45.292875001905486,
+      88.23083300376311,
+      46.37837500195019,
+      50.7981670089066,
+      41.98504200030584
+    ],
+    "single_update_ms": 835.7199589954689,
+    "legacy_json_bytes": 51706670,
+    "sqlite_registry": false
+  },
+  "memory": {
+    "cases": 100,
+    "payload_bytes_per_case": 262144,
+    "workers": 4,
+    "elapsed_s": 0.5203345830086619,
+    "peak_allocated_bytes": 27181094,
+    "final_allocated_bytes": 306111
+  }
+}

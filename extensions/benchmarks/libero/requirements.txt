@@ -1,0 +1,17 @@
+# Rebuild on Python 3.10+ for RoboTenon; upstream used 3.8. Set NUMBA_DISABLE_JIT=1 if needed.
+torch==2.1.0
+numpy==1.22.4
+mujoco==3.2.3
+robosuite==1.4.0
+bddl==1.0.1
+Pillow
+scipy
+h5py
+PyYAML
+termcolor
+future
+easydict
+hydra-core
+gym>=0.21,<0.27
+matplotlib
+git+https://github.com/Lifelong-Robot-Learning/LIBERO.git@8f1084e3132a39270c3a13ebe37270a43ece2a01

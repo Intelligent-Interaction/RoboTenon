@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robotenon-robodojo"
+version = "0.1.0"
+description = "Graph-controlled RoboDojo environment integration for RoboTenon"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["robotenon>=0.1.0", "robotenon-benchmark-support>=0.1.0", "msgpack>=1.0", "msgpack-numpy>=0.4.8", "numpy>=1.22", "Pillow>=9.1", "anyio>=4"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

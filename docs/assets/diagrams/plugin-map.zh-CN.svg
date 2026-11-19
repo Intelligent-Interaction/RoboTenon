@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="450" viewBox="0 0 1120 450" role="img" aria-labelledby="title desc">
+<title id="title">插件放在哪一层</title><desc id="desc">先确定要替换的职责，再选注册表；可序列化配置只描述构造参数。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="450" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">插件放在哪一层</text>
+<text x="36" y="78" class="sub" fill="#586779">先确定要替换的职责，再选注册表；可序列化配置只描述构造参数。</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="139" width="324" height="218" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 153 v190" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="171" class="head" fill="#3458a4">业务组件</text>
+<text x="54" y="200" class="body" fill="#172b46">Module：一个业务步骤</text>
+<text x="54" y="226" class="body" fill="#172b46">Tool：模型或公共能力</text>
+<text x="54" y="252" class="body" fill="#172b46">TaskAdapter：枚举任务</text>
+<text x="54" y="278" class="body" fill="#172b46">Monitor：观测与安全判断</text>
+<rect x="398" y="139" width="324" height="218" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M399 153 v190" stroke="#3458a4" stroke-width="3"/>
+<text x="416" y="171" class="head" fill="#3458a4">设备与环境</text>
+<text x="416" y="200" class="body" fill="#172b46">Environment：状态与观测</text>
+<text x="416" y="226" class="body" fill="#172b46">Body：动作执行与停止</text>
+<text x="416" y="252" class="body" fill="#172b46">在 Worker 内构造 SDK</text>
+<text x="416" y="278" class="body" fill="#172b46">进程间传配置，不传活连接</text>
+<rect x="760" y="139" width="324" height="218" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M761 153 v190" stroke="#3458a4" stroke-width="3"/>
+<text x="778" y="171" class="head" fill="#3458a4">基础设施</text>
+<text x="778" y="200" class="body" fill="#172b46">执行后端：调度与隔离</text>
+<text x="778" y="226" class="body" fill="#172b46">存储：读写与持久化</text>
+<text x="778" y="252" class="body" fill="#172b46">RPC：服务传输</text>
+<text x="778" y="278" class="body" fill="#172b46">观测模态：资源编解码</text>
+<text x="36" y="426" class="small" fill="#586779">导入阶段只注册；连接设备、加载模型和分配资源放在构造或启动生命周期中。</text>
+</svg>

@@ -1,0 +1,52 @@
+"""Replaceable synchronous VLA interface and deterministic native-test policy.
+
+Factories return a VLA with start_episode(task_info), act(observation), and
+end_episode(result). Methods may be synchronous or asynchronous. Observations
+and actions follow the selected benchmark's native protocol, without reshaping.
+"""
+from copy import deepcopy
+from typing import Any, Protocol
+from .modules import validate_native_action
+
+
+class NativeVLA(Protocol):
+    def start_episode(self, task_info: dict[str, Any]) -> Any: ...
+    def act(self, observation: dict[str, Any]) -> Any: ...
+    def end_episode(self, result: dict[str, Any]) -> Any: ...
+
+
+class FakeVLA:
+    """A fake model; the environment, action execution and metrics remain real."""
+    def __init__(self, *, action):
+        validate_native_action(action)
+        self.action = deepcopy(action)
+        self.active = False
+        self.calls = 0
+
+    def start_episode(self, task_info):
+        if self.active:
+            raise RuntimeError('previous fake VLA episode is still active')
+        self.active = True
+        self.calls = 0
+        self.task_info = deepcopy(task_info)
+
+    def act(self, observation):
+        if not self.active:
+            raise RuntimeError('start_episode must precede act')
+        if not isinstance(observation, dict) or not observation:
+            raise ValueError('native observation must be a nonempty mapping')
+        self.calls += 1
+        return deepcopy(self.action)
+
+    def end_episode(self, result):
+        if not self.active:
+            raise RuntimeError('no active fake VLA episode')
+        self.last_result = deepcopy(result)
+        self.active = False
+
+    def close(self):
+        self.active = False
+
+
+def create(*, action):
+    return FakeVLA(action=action)

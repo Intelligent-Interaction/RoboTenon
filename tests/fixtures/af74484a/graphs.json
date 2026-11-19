@@ -1,0 +1,370 @@
+{
+  "config_version": 1,
+  "graphs": [
+    {
+      "id": "xr365_single_task",
+      "entry": "reset",
+      "backend": "fallback",
+      "max_steps": 4096,
+      "nodes": [
+        {
+          "id": "reset",
+          "type": "system",
+          "operation": "env.reset",
+          "next": [
+            {
+              "node": "plan"
+            }
+          ]
+        },
+        {
+          "id": "plan",
+          "type": "module",
+          "module": "plan",
+          "predecessors": [
+            "reset"
+          ],
+          "next": [
+            {
+              "node": "action",
+              "when": "ctx.results['plan']['planner_decision'] != 'stop'"
+            },
+            {
+              "node": "END",
+              "when": "ctx.results['plan']['planner_decision'] == 'stop'"
+            }
+          ],
+          "inputs": {
+            "stm": {
+              "source": [
+                "nodes.verify.outputs.stm",
+                "previous.stm"
+              ],
+              "default": {}
+            },
+            "ltm_records": {
+              "source": "inputs.ltm_records",
+              "default": []
+            }
+          }
+        },
+        {
+          "id": "action",
+          "type": "module",
+          "module": "xiaomi_robotics_1_action",
+          "predecessors": [
+            "plan"
+          ],
+          "next": [
+            {
+              "node": "body_execute"
+            }
+          ],
+          "inputs": {
+            "instruction": "nodes.plan.outputs.instruction",
+            "env_steps": {
+              "source": "nodes.evaluate.outputs.env_steps",
+              "default": 0
+            }
+          }
+        },
+        {
+          "id": "body_execute",
+          "type": "system",
+          "operation": "body.execute",
+          "predecessors": [
+            "action"
+          ],
+          "next": [
+            {
+              "node": "observe"
+            }
+          ]
+        },
+        {
+          "id": "observe",
+          "type": "system",
+          "operation": "env.observe",
+          "predecessors": [
+            "body_execute"
+          ],
+          "next": [
+            {
+              "node": "verify"
+            }
+          ]
+        },
+        {
+          "id": "verify",
+          "type": "module",
+          "module": "verify",
+          "predecessors": [
+            "observe"
+          ],
+          "next": [
+            {
+              "node": "monitor"
+            }
+          ],
+          "inputs": {
+            "stm": "nodes.plan.outputs.stm",
+            "instruction": "nodes.plan.outputs.instruction",
+            "needs_plan": "nodes.action.outputs.needs_plan",
+            "action_queue_remaining": "nodes.action.outputs.action_queue_remaining"
+          }
+        },
+        {
+          "id": "monitor",
+          "type": "system",
+          "operation": "monitor.check",
+          "predecessors": [
+            "verify"
+          ],
+          "next": [
+            {
+              "node": "evaluate"
+            }
+          ]
+        },
+        {
+          "id": "evaluate",
+          "type": "module",
+          "module": "robocasa365_terminal",
+          "predecessors": [
+            "monitor"
+          ],
+          "default": "END",
+          "goto": [
+            {
+              "node": "action",
+              "when": "ctx.results['evaluate']['continue'] == true and ctx.results['evaluate']['needs_plan'] == false"
+            },
+            {
+              "node": "plan",
+              "when": "ctx.results['evaluate']['continue'] == true and ctx.results['evaluate']['needs_plan'] == true"
+            }
+          ],
+          "inputs": {
+            "needs_plan": {
+              "source": "nodes.verify.outputs.needs_plan",
+              "default": true
+            }
+          }
+        }
+      ],
+      "outputs": {
+        "success": {
+          "source": "nodes.evaluate.outputs.success",
+          "default": null
+        },
+        "reason": {
+          "source": "nodes.evaluate.outputs.reason",
+          "default": "not_evaluated"
+        },
+        "env_steps": {
+          "source": "nodes.evaluate.outputs.env_steps",
+          "default": 0
+        },
+        "stm": {
+          "source": [
+            "nodes.verify.outputs.stm",
+            "nodes.plan.outputs.stm"
+          ],
+          "default": {}
+        },
+        "instruction": {
+          "source": "nodes.plan.outputs.instruction",
+          "default": ""
+        },
+        "planner_result": {
+          "source": "nodes.plan.outputs.planner_result",
+          "default": {}
+        },
+        "verifier_result": {
+          "source": "nodes.verify.outputs.verifier_result",
+          "default": {}
+        },
+        "subtask_success": {
+          "source": "nodes.verify.outputs.subtask_success",
+          "default": null
+        }
+      }
+    },
+    {
+      "id": "xr365_single_task_reference",
+      "entry": "reset",
+      "backend": "fallback",
+      "max_steps": 4096,
+      "nodes": [
+        {
+          "id": "reset",
+          "type": "system",
+          "operation": "env.reset",
+          "next": [
+            {
+              "node": "plan"
+            }
+          ]
+        },
+        {
+          "id": "plan",
+          "type": "module",
+          "module": "plan",
+          "predecessors": [
+            "reset"
+          ],
+          "next": [
+            {
+              "node": "action",
+              "when": "ctx.results['plan']['planner_decision'] != 'stop'"
+            },
+            {
+              "node": "END",
+              "when": "ctx.results['plan']['planner_decision'] == 'stop'"
+            }
+          ],
+          "inputs": {
+            "stm": {
+              "source": [
+                "nodes.verify.outputs.stm",
+                "previous.stm"
+              ],
+              "default": {}
+            },
+            "ltm_records": {
+              "source": "inputs.ltm_records",
+              "default": []
+            }
+          }
+        },
+        {
+          "id": "action",
+          "type": "module",
+          "module": "xiaomi_robotics_1_action",
+          "predecessors": [
+            "plan"
+          ],
+          "next": [
+            {
+              "node": "body_execute"
+            }
+          ],
+          "inputs": {
+            "instruction": "nodes.plan.outputs.instruction",
+            "env_steps": {
+              "source": "nodes.evaluate.outputs.env_steps",
+              "default": 0
+            }
+          }
+        },
+        {
+          "id": "body_execute",
+          "type": "system",
+          "operation": "body.execute",
+          "predecessors": [
+            "action"
+          ],
+          "next": [
+            {
+              "node": "observe"
+            }
+          ]
+        },
+        {
+          "id": "observe",
+          "type": "system",
+          "operation": "env.observe",
+          "predecessors": [
+            "body_execute"
+          ],
+          "next": [
+            {
+              "node": "verify"
+            }
+          ]
+        },
+        {
+          "id": "verify",
+          "type": "module",
+          "module": "verify",
+          "predecessors": [
+            "observe"
+          ],
+          "next": [
+            {
+              "node": "evaluate"
+            }
+          ],
+          "inputs": {
+            "stm": "nodes.plan.outputs.stm",
+            "instruction": "nodes.plan.outputs.instruction",
+            "needs_plan": "nodes.action.outputs.needs_plan",
+            "action_queue_remaining": "nodes.action.outputs.action_queue_remaining"
+          }
+        },
+        {
+          "id": "evaluate",
+          "type": "module",
+          "module": "robocasa365_terminal",
+          "predecessors": [
+            "verify"
+          ],
+          "default": "END",
+          "goto": [
+            {
+              "node": "action",
+              "when": "ctx.results['evaluate']['continue'] == true and ctx.results['evaluate']['needs_plan'] == false"
+            },
+            {
+              "node": "plan",
+              "when": "ctx.results['evaluate']['continue'] == true and ctx.results['evaluate']['needs_plan'] == true"
+            }
+          ],
+          "inputs": {
+            "needs_plan": {
+              "source": "nodes.verify.outputs.needs_plan",
+              "default": true
+            }
+          }
+        }
+      ],
+      "outputs": {
+        "success": {
+          "source": "nodes.evaluate.outputs.success",
+          "default": null
+        },
+        "reason": {
+          "source": "nodes.evaluate.outputs.reason",
+          "default": "not_evaluated"
+        },
+        "env_steps": {
+          "source": "nodes.evaluate.outputs.env_steps",
+          "default": 0
+        },
+        "stm": {
+          "source": [
+            "nodes.verify.outputs.stm",
+            "nodes.plan.outputs.stm"
+          ],
+          "default": {}
+        },
+        "instruction": {
+          "source": "nodes.plan.outputs.instruction",
+          "default": ""
+        },
+        "planner_result": {
+          "source": "nodes.plan.outputs.planner_result",
+          "default": {}
+        },
+        "verifier_result": {
+          "source": "nodes.verify.outputs.verifier_result",
+          "default": {}
+        },
+        "subtask_success": {
+          "source": "nodes.verify.outputs.subtask_success",
+          "default": null
+        }
+      }
+    }
+  ]
+}

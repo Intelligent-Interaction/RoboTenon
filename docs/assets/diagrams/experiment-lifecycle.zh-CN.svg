@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="420" viewBox="0 0 1120 420" role="img" aria-labelledby="title desc">
+<title id="title">实验从提交到资源释放</title><desc id="desc">页面显示的是执行阶段；停止请求被受理后仍需等待清理完成。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="420" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">实验从提交到资源释放</text>
+<text x="36" y="78" class="sub" fill="#586779">页面显示的是执行阶段；停止请求被受理后仍需等待清理完成。</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="145" width="238" height="96" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 159 v68" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="177" class="head" fill="#3458a4">排队</text>
+<text x="54" y="206" class="body" fill="#172b46">等待资源</text>
+<rect x="306" y="145" width="238" height="96" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M307 159 v68" stroke="#3458a4" stroke-width="3"/>
+<text x="324" y="177" class="head" fill="#3458a4">加载</text>
+<text x="324" y="206" class="body" fill="#172b46">环境 / 模型就绪</text>
+<rect x="576" y="145" width="238" height="96" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M577 159 v68" stroke="#3458a4" stroke-width="3"/>
+<text x="594" y="177" class="head" fill="#3458a4">执行</text>
+<text x="594" y="206" class="body" fill="#172b46">任务持续产出结果</text>
+<rect x="846" y="145" width="238" height="96" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M847 159 v68" stroke="#3458a4" stroke-width="3"/>
+<text x="864" y="177" class="head" fill="#3458a4">清理</text>
+<text x="864" y="206" class="body" fill="#172b46">等待进程和资源释放</text>
+<path d="M274 194 L306 194" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M544 194 L576 194" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M814 194 L846 194" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<rect x="576" y="292" width="238" height="80" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M577 306 v52" stroke="#29735c" stroke-width="3"/>
+<text x="594" y="324" class="head" fill="#29735c">已结束</text>
+<text x="594" y="353" class="body" fill="#172b46">查看最终结果</text>
+<rect x="846" y="292" width="238" height="80" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M847 306 v52" stroke="#a15c30" stroke-width="3"/>
+<text x="864" y="324" class="head" fill="#a15c30">需要人工处理</text>
+<text x="864" y="353" class="body" fill="#172b46">核对残留资源</text>
+<path d="M965 241 L965 268 L695 268 L695 292" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M994 241 L994 292" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="396" class="small" fill="#586779">HTTP 202 / 按钮返回只表示受理；以实际清理状态和资源释放结果判断停止是否完成。</text>
+</svg>

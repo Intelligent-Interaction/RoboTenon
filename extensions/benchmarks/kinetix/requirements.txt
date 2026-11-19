@@ -1,0 +1,5 @@
+# Python 3.11. Clone real-time-chunking-kinetix@9296f31 separately for RTC levels.
+numpy
+Pillow
+jax[cuda12]
+git+https://github.com/FLAIROx/Kinetix.git@v3.0.0

@@ -1,0 +1,5 @@
+{
+  "config_version": 1,
+  "plugin_modules": [],
+  "modules": [{"id": "fixture_echo", "name": "echo", "kind": "debug"}]
+}

@@ -1,0 +1,57 @@
+{
+  "date": "2026-09-21",
+  "mode": "read-only source audit; documentation and reproduction artifacts only",
+  "checks": [
+    "config_typos",
+    "cli_mode",
+    "preflight",
+    "oversized_summary",
+    "observation_window",
+    "metrics_rotation",
+    "legacy_run_scan",
+    "graph_payload"
+  ],
+  "reproduction_exit_code": 0,
+  "source_unchanged_during_reproduction": true,
+  "source_unchanged_at_completion": true,
+  "previously_deferred_files_unchanged": {
+    "robosys/storage/actions.py": true,
+    "robosys/modules/plan.py": true,
+    "robosys/tools/gpt.py": true,
+    "robosys/web/static/portal.js": true
+  },
+  "pytest": {
+    "command": "/path/to/user/miniconda3/bin/python -m pytest -o addopts= -q",
+    "exit_code": 0,
+    "passed": 526,
+    "skipped": 1,
+    "warnings": 1,
+    "elapsed_s": 26.7,
+    "log": "pytest.log"
+  },
+  "scope": [
+    "configuration and Graph grammar",
+    "CLI request semantics",
+    "preflight",
+    "historical results",
+    "Graph scheduling",
+    "observation queries",
+    "metrics reload"
+  ],
+  "limits": [
+    "synthetic temporary fixtures",
+    "no physical robot, GPU, model service or simulator execution",
+    "no browser interaction test",
+    "no long-duration soak test"
+  ],
+  "artifacts": {
+    "reproduce.py": "263d3772f1b8965d4a8c9357b9954c5717d72e5a55dae7d3b9d324fa741cf437",
+    "results.json": "94f2b03be17f32a1146e4be1c687e8e19dcd532e9ae95224eb2a0256112da402",
+    "reproduce.log": "37d1fbdad34daef5917f9e643b6518be779dde2b6702f6233bd5cfcd62ae8aae",
+    "pytest.log": "82e50ee0034c93d201feb01511550e41cff72ba671f1c87262eeb1c279df260a"
+  },
+  "artifact_lint": {
+    "command": "python -m ruff check docs/changes/framework-audit-2026-09-21/reproduce.py",
+    "exit_code": 0
+  }
+}

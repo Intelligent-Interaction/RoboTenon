@@ -1,0 +1,278 @@
+{
+  "batch.tasks_per_s": {
+    "before": {
+      "median": 76.7117164744236,
+      "range": [
+        76.54816673127361,
+        76.7666672987765
+      ]
+    },
+    "after": {
+      "median": 407.10490775670627,
+      "range": [
+        397.2677471023504,
+        483.18794495255656
+      ]
+    }
+  },
+  "batch.elapsed_s": {
+    "before": {
+      "median": 3.9107455000048503,
+      "range": [
+        3.9079461250075838,
+        3.9191010420036037
+      ]
+    },
+    "after": {
+      "median": 0.7369107919948874,
+      "range": [
+        0.6208764170005452,
+        0.7551582080050139
+      ]
+    }
+  },
+  "batch.writes.bytes": {
+    "before": {
+      "median": 131290902,
+      "range": [
+        131289176,
+        131292264
+      ]
+    },
+    "after": {
+      "median": 4164236,
+      "range": [
+        4163162,
+        4224059
+      ]
+    }
+  },
+  "batch.writes.summary_bytes": {
+    "before": {
+      "median": 68821830,
+      "range": [
+        68820969,
+        68822508
+      ]
+    },
+    "after": {
+      "median": 251185,
+      "range": [
+        251183,
+        251190
+      ]
+    }
+  },
+  "batch.writes.summary_calls": {
+    "before": {
+      "median": 302,
+      "range": [
+        302,
+        302
+      ]
+    },
+    "after": {
+      "median": 2,
+      "range": [
+        2,
+        2
+      ]
+    }
+  },
+  "batch.retained_bytes": {
+    "before": {
+      "median": 810269,
+      "range": [
+        810261,
+        810281
+      ]
+    },
+    "after": {
+      "median": 924589,
+      "range": [
+        920514,
+        924595
+      ]
+    }
+  },
+  "batch.index_retained_bytes": {
+    "before": {
+      "median": 0,
+      "range": [
+        0,
+        0
+      ]
+    },
+    "after": {
+      "median": 311296,
+      "range": [
+        307200,
+        311296
+      ]
+    }
+  },
+  "portal.stop_response_ms": {
+    "before": {
+      "median": 513.1310830038274,
+      "range": [
+        507.2594169905642,
+        513.7136670091422
+      ]
+    },
+    "after": {
+      "median": 1.3736249966314062,
+      "range": [
+        1.3243330031400546,
+        2.363332998356782
+      ]
+    }
+  },
+  "portal.during_stop_ms.p95": {
+    "before": {
+      "median": 545.368,
+      "range": [
+        538.852,
+        545.836
+      ]
+    },
+    "after": {
+      "median": 0.739,
+      "range": [
+        0.705,
+        1.372
+      ]
+    }
+  },
+  "portal.list_bytes": {
+    "before": {
+      "median": 79318,
+      "range": [
+        79318,
+        79318
+      ]
+    },
+    "after": {
+      "median": 7282,
+      "range": [
+        7282,
+        7282
+      ]
+    }
+  },
+  "portal.list_items": {
+    "before": {
+      "median": 301,
+      "range": [
+        301,
+        301
+      ]
+    },
+    "after": {
+      "median": 25,
+      "range": [
+        25,
+        25
+      ]
+    }
+  },
+  "action.p95": {
+    "before": {
+      "median": 1.386,
+      "range": [
+        1.363,
+        1.402
+      ]
+    },
+    "after": {
+      "median": 1.303,
+      "range": [
+        1.242,
+        1.35
+      ]
+    }
+  },
+  "action.p99": {
+    "before": {
+      "median": 1.462,
+      "range": [
+        1.456,
+        1.5
+      ]
+    },
+    "after": {
+      "median": 1.375,
+      "range": [
+        1.257,
+        1.503
+      ]
+    }
+  },
+  "trace.returned_bytes": {
+    "before": {
+      "median": 5668890,
+      "range": [
+        5668890,
+        5668890
+      ]
+    },
+    "after": {
+      "median": 281890,
+      "range": [
+        281890,
+        281890
+      ]
+    }
+  },
+  "cache": {
+    "before": [
+      {
+        "round": 1,
+        "cached_entries": 400,
+        "allocated_bytes": 3614703,
+        "peak_bytes": 3631344,
+        "disk_bytes": 3282800
+      },
+      {
+        "round": 2,
+        "cached_entries": 800,
+        "allocated_bytes": 7249955,
+        "peak_bytes": 7266663,
+        "disk_bytes": 6565600
+      },
+      {
+        "round": 3,
+        "cached_entries": 1200,
+        "allocated_bytes": 10864722,
+        "peak_bytes": 10881363,
+        "disk_bytes": 9848400
+      }
+    ],
+    "after": [
+      {
+        "round": 1,
+        "cached_entries": 256,
+        "allocated_bytes": 2343939,
+        "peak_bytes": 2369532,
+        "disk_bytes": 3282800
+      },
+      {
+        "round": 2,
+        "cached_entries": 256,
+        "allocated_bytes": 2346279,
+        "peak_bytes": 2441422,
+        "disk_bytes": 6565600
+      },
+      {
+        "round": 3,
+        "cached_entries": 256,
+        "allocated_bytes": 2346603,
+        "peak_bytes": 2534870,
+        "disk_bytes": 9848400
+      }
+    ]
+  },
+  "backlog_half_s": {
+    "before": 1.9238,
+    "after": 0.4035
+  }
+}

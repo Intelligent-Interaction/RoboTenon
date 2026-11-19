@@ -1,0 +1,52 @@
+{
+  "benchmark": "libero_pro",
+  "registry": "libero_pro_benchmark",
+  "class": "robotenon_libero_pro.benchmark:LIBEROProBenchmark",
+  "source_repository": "https://github.com/allenai/vla-evaluation-harness",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09",
+  "files": [
+    {
+      "source": "src/vla_eval/benchmarks/libero_pro/benchmark.py",
+      "target": "src/robotenon_libero_pro/benchmark.py",
+      "sha256": "769c9bc21b5c2e23031aab5eaf66067ea4afc67c87215633daebe27dc8ccbcf4",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.libero_pro.utils": "robotenon_libero_pro._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_libero_pro._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_libero_pro._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    },
+    {
+      "source": "src/vla_eval/benchmarks/libero/benchmark.py",
+      "target": "src/robotenon_libero_pro/_internal/libero_base.py",
+      "sha256": "017852692138ec03da7d40264d38081ec52f329dc7d2008e8fbc1a9a65697c48",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.libero_pro.utils": "robotenon_libero_pro._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_libero_pro._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_libero_pro._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    },
+    {
+      "source": "src/vla_eval/benchmarks/libero/utils.py",
+      "target": "src/robotenon_libero_pro/_internal/libero_utils.py",
+      "sha256": "538d4b9bbbd70042400ae2c5d05748937d742911250f31ae46b90274e719acd8",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.libero_pro.utils": "robotenon_libero_pro._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_libero_pro._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_libero_pro._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    }
+  ],
+  "profiles": [
+    "eval"
+  ],
+  "simulation_validation": "synthetic_action_3_step_representative_task_passed_full_suite_pending",
+  "score_reproduction": "pending",
+  "source_alignment": "sha256_and_ast_verified",
+  "package_validation": "wheel_build_and_isolated_import_passed"
+}

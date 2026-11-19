@@ -1,0 +1,29 @@
+{
+  "checkout": "/path/to/RoboClaw",
+  "workload": "synthetic registry and 256 KiB fake results; tracemalloc enabled",
+  "registry": {
+    "records": 20000,
+    "startup_ms": 1.694833001238294,
+    "startup_allocated_bytes": 15161,
+    "peak_allocated_bytes": 275508,
+    "list_25_median_ms": 3.1081670022103935,
+    "list_25_samples_ms": [
+      14.190249989042059,
+      3.2202089932980016,
+      2.9132909985492006,
+      3.1081670022103935,
+      3.013624998857267
+    ],
+    "single_update_ms": 1.3784170005237684,
+    "legacy_json_bytes": 51706670,
+    "sqlite_registry": true
+  },
+  "memory": {
+    "cases": 100,
+    "payload_bytes_per_case": 262144,
+    "workers": 4,
+    "elapsed_s": 0.5608248329954222,
+    "peak_allocated_bytes": 2063577,
+    "final_allocated_bytes": 296574
+  }
+}

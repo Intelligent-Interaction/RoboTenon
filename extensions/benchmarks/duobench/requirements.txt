@@ -1,0 +1,14 @@
+# Python 3.11; EGL and the RCS native build toolchain are required.
+pip>=25.1
+build
+wheel
+setuptools>=45
+scikit-build-core>=0.3.3
+pybind11
+cmake
+ninja
+mujoco==3.2.6
+cmeel-urdfdom<5
+pin==3.7.0
+git+https://github.com/RobotControlStack/robot-control-stack.git@v0.7.1
+git+https://github.com/RobotControlStack/duobench.git@v0.1.0

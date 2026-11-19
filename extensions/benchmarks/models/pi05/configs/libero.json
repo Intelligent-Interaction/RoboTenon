@@ -1,0 +1,7 @@
+{
+  "model_path": "/path/to/resources/models/pi05_libero_base",
+  "device": "cuda",
+  "inference_seed": 1000,
+  "tokenizer_path": "/path/to/resources/models/paligemma-tokenizer",
+  "metrics_dir": "/path/to/resources/runs/metrics"
+}

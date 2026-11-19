@@ -1,0 +1,28 @@
+{
+  "benchmark": "rlbench",
+  "registry": "rlbench_benchmark",
+  "class": "robotenon_rlbench.benchmark:RLBenchBenchmark",
+  "source_repository": "https://github.com/allenai/vla-evaluation-harness",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09",
+  "files": [
+    {
+      "source": "src/vla_eval/benchmarks/rlbench/benchmark.py",
+      "target": "src/robotenon_rlbench/benchmark.py",
+      "sha256": "79e92a8e762749e550ad5c67e6b5f388ed47d4f49f4ec4f219c1f9279d50b0da",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.rlbench.utils": "robotenon_rlbench._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_rlbench._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_rlbench._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    }
+  ],
+  "profiles": [
+    "eval"
+  ],
+  "simulation_validation": "pending",
+  "score_reproduction": "pending",
+  "source_alignment": "sha256_and_ast_verified",
+  "package_validation": "wheel_build_and_isolated_import_passed"
+}

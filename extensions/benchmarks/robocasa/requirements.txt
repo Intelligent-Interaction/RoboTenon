@@ -1,0 +1,4 @@
+# Python 3.10; run RoboCasa's macro setup and official asset downloader after install.
+numpy==1.23.3
+git+https://github.com/ARISE-Initiative/robosuite.git@v1.5.0
+git+https://github.com/robocasa/robocasa.git@v0.2

@@ -1,0 +1,49 @@
+{
+  "scope": "CPU real Kinetix, symbolic observation, fake VLA, Cartpole Thrust, 2 episodes, cap 20, hz 10, pace 1",
+  "episodes": [
+    {
+      "env_steps": 20,
+      "success": false,
+      "native_case": "kinetix_benchmark:0:0",
+      "rt_metrics": {
+        "update_count": 20,
+        "stale_count": 1,
+        "stale_action_ratio": 0.047619047619047616,
+        "effective_control_hz": 2.1207573458792295,
+        "step_time_mean": 0.3706358665986045,
+        "step_time_max": 3.8361296670045704,
+        "elapsed_sec": 9.431
+      }
+    },
+    {
+      "env_steps": 20,
+      "success": false,
+      "native_case": "kinetix_benchmark:0:1",
+      "rt_metrics": {
+        "update_count": 20,
+        "stale_count": 1,
+        "stale_action_ratio": 0.047619047619047616,
+        "effective_control_hz": 2.1058762172545267,
+        "step_time_mean": 0.37573714379614104,
+        "step_time_max": 3.887813166991691,
+        "elapsed_sec": 9.497
+      }
+    }
+  ],
+  "batch_metrics": {
+    "batches": 38,
+    "requests": 40,
+    "batch_sizes": {
+      "2": 2,
+      "1": 36
+    },
+    "queue_wait_sec": 0.21221000095829368,
+    "inference_sec": 0.004781497074873187
+  },
+  "summary": {
+    "num_episodes": 2,
+    "successes": 0,
+    "num_errors": 0,
+    "num_cancelled": 0
+  }
+}

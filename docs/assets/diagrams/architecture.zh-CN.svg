@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="570" viewBox="0 0 1120 570" role="img" aria-labelledby="title desc">
+<title id="title">运行组件与资源边界</title><desc id="desc">Graph 组织业务流程，Environment 提供观测，Body 执行动作。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="570" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">运行组件与资源边界</text>
+<text x="36" y="78" class="sub" fill="#586779">Graph 组织业务流程，Environment 提供观测，Body 执行动作。</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="138" width="248" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 152 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="170" class="head" fill="#3458a4">TaskAdapter / Worker</text>
+<text x="54" y="199" class="body" fill="#172b46">枚举任务、调度与隔离</text>
+<text x="54" y="225" class="body" fill="#172b46">管理本进程资源</text>
+<rect x="373" y="138" width="330" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M374 152 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="391" y="170" class="head" fill="#3458a4">Graph / Module</text>
+<text x="391" y="199" class="body" fill="#172b46">读取 inputs，调用能力</text>
+<text x="391" y="225" class="body" fill="#172b46">发布 outputs 与路由</text>
+<rect x="795" y="138" width="289" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M796 152 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="813" y="170" class="head" fill="#3458a4">Tool</text>
+<text x="813" y="199" class="body" fill="#172b46">模型、记忆、技能</text>
+<text x="813" y="225" class="body" fill="#172b46">在 Worker 内复用</text>
+<path d="M284 194 L373 194" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M703 185 L795 185" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="738" y="172" class="small" fill="#586779">调用</text>
+<path d="M795 222 L703 222" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<rect x="36" y="323" width="280" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 337 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="355" class="head" fill="#3458a4">Environment</text>
+<text x="54" y="384" class="body" fill="#172b46">reset / observe / feedback</text>
+<text x="54" y="410" class="body" fill="#172b46">提供状态和传感器帧</text>
+<rect x="404" y="323" width="280" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M405 337 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="422" y="355" class="head" fill="#3458a4">Body</text>
+<text x="422" y="384" class="body" fill="#172b46">execute / interrupt</text>
+<text x="422" y="410" class="body" fill="#172b46">动作确认与硬件停止</text>
+<rect x="784" y="323" width="300" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M785 337 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="802" y="355" class="head" fill="#3458a4">Monitor / Safety</text>
+<text x="802" y="384" class="body" fill="#172b46">检查观测与动作准入</text>
+<text x="802" y="410" class="body" fill="#172b46">发布安全状态</text>
+<path d="M452 250 L452 280 L176 280 L176 323" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="190" y="273" class="small" fill="#586779">读取观测</text>
+<path d="M545 250 L545 323" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="558" y="292" class="small" fill="#586779">动作</text>
+<path d="M931 323 L931 280 L632 280 L632 250" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M784 386 L684 386" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="691" y="372" class="small" fill="#586779">安全门控</text>
+<text x="36" y="499" class="head" fill="#29735c">结果与观测：episode / Metrics / Trace → 磁盘与索引 → Portal</text>
+<text x="36" y="546" class="small" fill="#586779">布局表示职责关系，不表示线程数或实时性保证；实际生命周期和通信时序见正文。</text>
+</svg>

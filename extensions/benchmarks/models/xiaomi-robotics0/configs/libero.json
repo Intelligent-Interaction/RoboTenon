@@ -1,0 +1,5 @@
+{
+  "model_path": "/path/to/resources/models/Xiaomi-Robotics-0-LIBERO",
+  "device": "cuda",
+  "metrics_dir": "/path/to/resources/runs/metrics"
+}

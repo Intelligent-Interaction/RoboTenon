@@ -1,0 +1,7 @@
+{
+  "logs_days": 30,
+  "traces_days": 30,
+  "videos_days": 7,
+  "failed_days": 90,
+  "min_free_gb": 5
+}

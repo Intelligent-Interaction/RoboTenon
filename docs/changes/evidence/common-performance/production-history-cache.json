@@ -1,0 +1,23 @@
+{
+  "scope": "production Unix socket RPC, synthetic images and model, no GPU inference",
+  "results": [
+    {
+      "replan_steps": 2,
+      "history_length": 4,
+      "history_interval": 2,
+      "samples_per_mode": 140,
+      "full_rpc_ms": 4.726437502540648,
+      "cached_rpc_ms": 2.4526249908376485,
+      "speedup": 1.927093428549964
+    },
+    {
+      "replan_steps": 16,
+      "history_length": 4,
+      "history_interval": 2,
+      "samples_per_mode": 140,
+      "full_rpc_ms": 5.044916993938386,
+      "cached_rpc_ms": 6.62535399897024,
+      "speedup": 0.7614562172409962
+    }
+  ]
+}

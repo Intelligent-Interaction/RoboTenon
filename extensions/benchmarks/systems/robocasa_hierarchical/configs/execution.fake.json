@@ -1,0 +1,29 @@
+{
+  "backend": "../../../models/fake/vla.py",
+  "backend_config": "fake-action.json",
+  "workers_per_gpu": 2,
+  "batch_size": 2,
+  "wait_ms": 50,
+  "batch_services": [
+    {
+      "name": "planner",
+      "factory": "robotenon_fake_reasoner.backend:Provider",
+      "params": {
+        "role": "planner"
+      },
+      "devices": [],
+      "max_batch_size": 2,
+      "max_wait_ms": 50
+    },
+    {
+      "name": "verifier",
+      "factory": "robotenon_fake_reasoner.backend:Provider",
+      "params": {
+        "role": "verifier"
+      },
+      "devices": [],
+      "max_batch_size": 2,
+      "max_wait_ms": 50
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "python": {
+    "passed": 506,
+    "skipped": 1,
+    "warnings": 1
+  },
+  "node": {
+    "passed": 20
+  },
+  "baseline": "/tmp/baseline-checkout",
+  "changes": [
+    {
+      "file": "robosys/infra/history.py",
+      "before_sha256": null,
+      "after_sha256": "4531aded3adda2b10a9b1d69a74447069af8fbf1eaa432e52333b1f17c6b43b2"
+    },
+    {
+      "file": "robosys/infra/trace.py",
+      "before_sha256": "d78fd33969e9d7428e81bc0a9a74f6004a7bf72c7c73c972b92f49afdba9cf50",
+      "after_sha256": "ba69b73439197a5159e348e0b20b680919b5b0e42588fa694e97cfd3b8ecfaf7"
+    },
+    {
+      "file": "robosys/infra/trace_query.py",
+      "before_sha256": "31d5919a74381d19f790fc0440d0e45de84ca379b5aaf170648ac1cf0534c5d8",
+      "after_sha256": "5dce08712a6296a087aee35740630e7f853ecbc7228d512f3afcb76d65380a7b"
+    },
+    {
+      "file": "robosys/runtime/parallel.py",
+      "before_sha256": "e7b3da017732235142da6adc0698d2d02107f6e2f3e6189887d23f2e5894b298",
+      "after_sha256": "d99230ff6d7ab50f6a6284a90c17d37cf338375e5a3029cdc7a3f6b6b49dd370"
+    },
+    {
+      "file": "robosys/runtime/preflight.py",
+      "before_sha256": null,
+      "after_sha256": "5b2bb511490033d0ded55542ef96c1b7eb0af844250453093e83bac269afb68d"
+    },
+    {
+      "file": "robosys/runtime/processes.py",
+      "before_sha256": "1ddd59cb1c9feda9d234c77c1bbce64fa69d3756bee4f44e3110e032c7fd278c",
+      "after_sha256": "b87d17a53d493750b3936e013e75936846de607ba3aa3c3ed1d3fa3e38fe39f3"
+    },
+    {
+      "file": "robosys/runtime/retention.py",
+      "before_sha256": null,
+      "after_sha256": "e60aed935093781cd72af9d7cff4ed3f3b3f486fe9e65ee19cc163ba7d1e274f"
+    },
+    {
+      "file": "robosys/runtime/runner_cli.py",
+      "before_sha256": "ebd854f9aa6d1bfe7ddf4e799f3f06140ef1e598273e5c9f3acec86c3a401a52",
+      "after_sha256": "901ecea4c6331fc0cacf9e78d9f76197584c7c64b1e1af123f89afd0553e71f6"
+    },
+    {
+      "file": "robosys/task_adapters/evaluator.py",
+      "before_sha256": "2d0ec6d9b3104446f4de0d2ebbb737a419884801158f086c74842aa82d32a4ba",
+      "after_sha256": "329270b307379a42c2bc523e41faf34187ab93a50da9373a605c8862dfb61814"
+    },
+    {
+      "file": "robosys/task_adapters/result_index.py",
+      "before_sha256": null,
+      "after_sha256": "f0717878628de39b8c4e4e0eb512b4522265116bfe655a7da36620c145a3490d"
+    },
+    {
+      "file": "robosys/web/cache.py",
+      "before_sha256": null,
+      "after_sha256": "549b48acf26911e0f42692b139e2802cc887d2fd988db16c9bab3ce6c5e5cb07"
+    },
+    {
+      "file": "robosys/web/experiments.py",
+      "before_sha256": "bec1057652dbfc36c33e08fa4228f480bd88448385d3a904b81985d95bf7f45a",
+      "after_sha256": "886fc00c7edcde0e2a04b0d6af25d387df1f8ea0d4f32f07951de14061244768"
+    },
+    {
+      "file": "robosys/web/server.py",
+      "before_sha256": "ab65a333db350a2f33c919dbc4161df43fe32837d2c38f9ea0c510e723383a42",
+      "after_sha256": "1890e72a86bd4ddfb6801653e2754e30369605998d1ba732c8064f6ae09ba22c"
+    },
+    {
+      "file": "robosys/web/static/portal.html",
+      "before_sha256": "1f65752680be0a57096d1c0e74b0c7ebd292df3a888f11563e044cb8ea482f90",
+      "after_sha256": "f14b5efb34bbe77a440e43707d187b00ba9bbe7d90469fa49f6919d313839623"
+    },
+    {
+      "file": "robosys/web/static/portal.js",
+      "before_sha256": "ba8f1901aa5a8a5373ce14e26aac8b188d50764efed00e9bb250562d94fff10f",
+      "after_sha256": "1b8b25b6fa46de21c9b9c8ac61628613078ad3f6667d2ac4f7d17eb29fadb2c1"
+    },
+    {
+      "file": "tests/test_experiment_manager.py",
+      "before_sha256": "883b43dc7347c4186f9112c6a603131816311dbcad135b491f2b9ef93d5f5d7f",
+      "after_sha256": "781849e25b5db15c98c6c00bf886879cc0592ad4790849e40cf32089a7135edc"
+    },
+    {
+      "file": "tests/test_p1_integration.py",
+      "before_sha256": "48791f31e516e61ea94f7312f6af0f781db954eb554eff5aa8582a5b787b1c61",
+      "after_sha256": "1ca2b9d36c8f873664766fde78105c2f80aaeef577fb74fa0c835f494e07aafb"
+    },
+    {
+      "file": "tests/test_performance_controls.py",
+      "before_sha256": null,
+      "after_sha256": "e02500a0057c7edc35f115c345e5b7d2750f7338484e8bb491f8110bb3ec08b7"
+    },
+    {
+      "file": "tests/test_portal_server.py",
+      "before_sha256": "6d303214bcaacc7d64ea0e642f17072761354019937e73eba1846a706aa825f3",
+      "after_sha256": "f45fb9b9f11f503a9b40bbecb8114edd7feeb96f9aea907896f93952eb1852c3"
+    },
+    {
+      "file": "configs/operations/retention-policy.json",
+      "before_sha256": null,
+      "after_sha256": "770d28b339819c79350d0ffb0b57aa88de52f37da7328568b968333fe8339166"
+    },
+    {
+      "file": "scripts/benchmark_runtime.py",
+      "before_sha256": null,
+      "after_sha256": "26d36792bb8fd356f2609adabace653f91f8bdd0c3d42089fc348ed68a4cfe60"
+    },
+    {
+      "file": "scripts/benchmark_workers.py",
+      "before_sha256": null,
+      "after_sha256": "adca42819ba6315edb68282bc0b67804657bfd01a858a54726787bbf75250236"
+    },
+    {
+      "file": "scripts/maintain_experiments.py",
+      "before_sha256": null,
+      "after_sha256": "1e3341ba1fdd2e1e0eecabccfc43935a963fdb7ddc5b6f92e745d7c92ebc1559"
+    }
+  ],
+  "hardware_tests": false,
+  "automatic_retention_enabled": false,
+  "benchmark_repetitions": 3
+}

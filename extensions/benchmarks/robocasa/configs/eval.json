@@ -1,0 +1,13 @@
+{
+  "episodes_per_task": 50,
+  "params": {
+    "robot": "PandaOmron",
+    "camera_size": 128,
+    "obj_instance_split": "B",
+    "eval_scenes": true,
+    "seed": null
+  },
+  "benchmark_id": "robocasa_benchmark",
+  "source_config": "configs/benchmarks/robocasa/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

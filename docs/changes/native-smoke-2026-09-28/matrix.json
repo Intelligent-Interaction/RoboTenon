@@ -1,0 +1,779 @@
+{
+  "date": "2026-09-28",
+  "host": "macOS Apple Silicon; local Docker linux/amd64 for supported images",
+  "scope": "Representative task/episode, three fake actions; not all tasks/seeds or score equivalence; Isaac benchmarks excluded",
+  "rows": [
+    {
+      "benchmark": "calvin",
+      "classification": "blocked_or_failed",
+      "evidence": "calvin-retry.json",
+      "accepted_steps": 0,
+      "images_valid": false,
+      "image_changed_each_step": false,
+      "success_signal_readable": false,
+      "notes": "macOS pyhash compilation requires x86 flags; official linux/amd64 image download exhausted retries with EOF. No real frame verified.",
+      "error": "No module named 'pyhash'",
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/calvin-retry.json",
+      "step_images": []
+    },
+    {
+      "benchmark": "duobench",
+      "classification": "blocked_or_failed",
+      "evidence": "duobench-retry.json",
+      "accepted_steps": 0,
+      "images_valid": false,
+      "image_changed_each_step": false,
+      "success_signal_readable": false,
+      "notes": "RCS 0.7.1 compiled with macOS library-name/header adjustments; camera initialization crashed in rcs::common::ensure_current / Renderer::register_context (SIGSEGV).",
+      "error": "exit=-11, see retry log",
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/duobench-retry.json",
+      "step_images": []
+    },
+    {
+      "benchmark": "kinetix",
+      "classification": "verified",
+      "evidence": "kinetix.json",
+      "accepted_steps": 3,
+      "images_valid": true,
+      "image_changed_each_step": true,
+      "success_signal_readable": true,
+      "notes": "",
+      "error": null,
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/kinetix.json",
+      "step_images": [
+        {
+          "viewport": {
+            "shape": [
+              125,
+              125,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "08d0d48246c8a2b0313456896c24d68e795420afa6cbe38fdff508798f053636",
+            "changed_fraction": 0.002048,
+            "file": "/path/to/workspace/outputs/local-simulators/kinetix/frames/step-1-camera-0.png"
+          }
+        },
+        {
+          "viewport": {
+            "shape": [
+              125,
+              125,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "d86f680b99af8cd0ed64443861ee0eeb5b79fb9dda2f92f48cfc3ab2bdb5685f",
+            "changed_fraction": 0.003776,
+            "file": "/path/to/workspace/outputs/local-simulators/kinetix/frames/step-2-camera-0.png"
+          }
+        },
+        {
+          "viewport": {
+            "shape": [
+              125,
+              125,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "d79e7b5aad2a6aab6434dc35b1d8c0ca2b62378fe431830eb65423bfa409e419",
+            "changed_fraction": 0.00352,
+            "file": "/path/to/workspace/outputs/local-simulators/kinetix/frames/step-3-camera-0.png"
+          }
+        }
+      ]
+    },
+    {
+      "benchmark": "libero",
+      "classification": "verified",
+      "evidence": "libero.json",
+      "accepted_steps": 3,
+      "images_valid": true,
+      "image_changed_each_step": true,
+      "success_signal_readable": true,
+      "notes": "",
+      "error": null,
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/libero.json",
+      "step_images": [
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "8066ddb17bbad6c0c2fe108807eac909c29d7b931ab057add9e957ad168186f8",
+            "changed_fraction": 0.008534749348958334,
+            "file": "/path/to/workspace/outputs/local-simulators/libero/frames/step-1-camera-0.png"
+          }
+        },
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "4e5366c9074a005c43dc6cfece20f16356442ea48fed7ab1bf1c52270d4a08ae",
+            "changed_fraction": 0.009694417317708334,
+            "file": "/path/to/workspace/outputs/local-simulators/libero/frames/step-2-camera-0.png"
+          }
+        },
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "d0aeedccf9eb06c3a8101916289fe6bc403fbbebb2c837c2ffd3328f53fad90e",
+            "changed_fraction": 0.009602864583333334,
+            "file": "/path/to/workspace/outputs/local-simulators/libero/frames/step-3-camera-0.png"
+          }
+        }
+      ]
+    },
+    {
+      "benchmark": "libero_mem",
+      "classification": "verified",
+      "evidence": "libero_mem.json",
+      "accepted_steps": 3,
+      "images_valid": true,
+      "image_changed_each_step": true,
+      "success_signal_readable": true,
+      "notes": "",
+      "error": null,
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/libero_mem.json",
+      "step_images": [
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "7c134819a780b81bf0f92e71e39dd1c5b4df8a4e32c3a904a7a15ba8ef649822",
+            "changed_fraction": 0.020238240559895832,
+            "file": "/path/to/workspace/outputs/local-simulators/libero_mem/frames/step-1-camera-0.png"
+          }
+        },
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "23af95ca33d4165f9534722a6ac0a225c24674db6fba502299ac9c48e050c3ac",
+            "changed_fraction": 0.022984822591145832,
+            "file": "/path/to/workspace/outputs/local-simulators/libero_mem/frames/step-2-camera-0.png"
+          }
+        },
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "da89f3cbe36dade087877efd7fea62826878eaa49fa756bb22b443ba5b478b37",
+            "changed_fraction": 0.034037272135416664,
+            "file": "/path/to/workspace/outputs/local-simulators/libero_mem/frames/step-3-camera-0.png"
+          }
+        }
+      ]
+    },
+    {
+      "benchmark": "libero_plus",
+      "classification": "verified",
+      "evidence": "libero_plus-retry.json",
+      "accepted_steps": 3,
+      "images_valid": true,
+      "image_changed_each_step": true,
+      "success_signal_readable": true,
+      "notes": "Pinned source + official LIBERO-Plus assets; ImageMagick runtime installed. Representative task only.",
+      "error": null,
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/libero_plus-retry.json",
+      "step_images": [
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "a5cb9249dc51a5e4cbb41b8e47b2ae89784c9e860ff6767fb654f96d83d78b81",
+            "changed_fraction": 0.009435017903645834,
+            "file": "/path/to/workspace/outputs/local-simulators/libero_plus-retry/frames/step-1-camera-0.png"
+          }
+        },
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "1750a3313ae907638b004fce87cdc8590bb58cf56d798bd5822a822e9c910011",
+            "changed_fraction": 0.009653727213541666,
+            "file": "/path/to/workspace/outputs/local-simulators/libero_plus-retry/frames/step-2-camera-0.png"
+          }
+        },
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "6bcb1e864d064f59872649c7cd43bf7101770c0e9df20220147fdc9b302f4b88",
+            "changed_fraction": 0.009674072265625,
+            "file": "/path/to/workspace/outputs/local-simulators/libero_plus-retry/frames/step-3-camera-0.png"
+          }
+        }
+      ]
+    },
+    {
+      "benchmark": "libero_pro",
+      "classification": "verified",
+      "evidence": "libero_pro.json",
+      "accepted_steps": 3,
+      "images_valid": true,
+      "image_changed_each_step": true,
+      "success_signal_readable": true,
+      "notes": "",
+      "error": null,
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/libero_pro.json",
+      "step_images": [
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "0f39a8a14f8196a04a02a864b6b369af51d8203409c2881c13ba1d3344b39629",
+            "changed_fraction": 0.010320027669270834,
+            "file": "/path/to/workspace/outputs/local-simulators/libero_pro/frames/step-1-camera-0.png"
+          }
+        },
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "491ea0dd15ad9ec5d907787f78016c7220419942a7246465d0742c6f0846ff06",
+            "changed_fraction": 0.010732014973958334,
+            "file": "/path/to/workspace/outputs/local-simulators/libero_pro/frames/step-2-camera-0.png"
+          }
+        },
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "26a348b9010ea4a2db54510da9d4229c741c4f4e06783b5c6a93bbade439c68d",
+            "changed_fraction": 0.010528564453125,
+            "file": "/path/to/workspace/outputs/local-simulators/libero_pro/frames/step-3-camera-0.png"
+          }
+        }
+      ]
+    },
+    {
+      "benchmark": "maniskill2",
+      "classification": "verified",
+      "evidence": "maniskill2-docker.json",
+      "accepted_steps": 3,
+      "images_valid": true,
+      "image_changed_each_step": true,
+      "success_signal_readable": true,
+      "notes": "Local Docker linux/amd64, lavapipe software Vulkan. Nonzero action used; geometry manually inspected.",
+      "error": null,
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/maniskill2-docker.json",
+      "step_images": [
+        {
+          "base_camera": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "ee8d281d66fdc30f014e71f88075f2f807823f492ec20fa8c20ee62f063b61d7",
+            "changed_fraction": 0.003662109375,
+            "file": "/output/maniskill2-docker/frames/step-1-camera-0.png"
+          }
+        },
+        {
+          "base_camera": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "e28dd6ca00ab9fdf105fc075a6a6d00cf5be1b77be7d3312e9df360d8f609865",
+            "changed_fraction": 0.00408935546875,
+            "file": "/output/maniskill2-docker/frames/step-2-camera-0.png"
+          }
+        },
+        {
+          "base_camera": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "cc6d4378affe5b9369c7567539f4178308ec6184a9f3b1d8c50e71aafc73d6f0",
+            "changed_fraction": 0.0032857259114583335,
+            "file": "/output/maniskill2-docker/frames/step-3-camera-0.png"
+          }
+        }
+      ]
+    },
+    {
+      "benchmark": "mikasa",
+      "classification": "blocked_or_failed",
+      "evidence": "mikasa.json",
+      "accepted_steps": 0,
+      "images_valid": false,
+      "image_changed_each_step": false,
+      "success_signal_readable": false,
+      "notes": "Pinned SAPIEN has no macOS ARM wheel; official mikasa-robo image download exhausted retries with EOF.",
+      "error": "No module named 'mikasa_robo_suite'",
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/mikasa.json",
+      "step_images": []
+    },
+    {
+      "benchmark": "molmospaces",
+      "classification": "blocked_or_failed",
+      "evidence": "molmospaces-retry.json",
+      "accepted_steps": 0,
+      "images_valid": false,
+      "image_changed_each_step": false,
+      "success_signal_readable": false,
+      "notes": "Native dependencies installed; official asset downloads repeatedly fail with TLS UNEXPECTED_EOF (latest: franka_cap metadata).",
+      "error": "HTTPSConnectionPool(host='pub-3555e9bb2d304fab9c6c79819e48aa40.r2.dev', port=443): Max retries exceeded with url: /robots/franka_cap/20260213/mjthor_resource_file_to_size_mb.json (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1016)')))",
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/molmospaces-retry.json",
+      "step_images": []
+    },
+    {
+      "benchmark": "rlbench",
+      "classification": "blocked_or_failed",
+      "evidence": "rlbench-native.json",
+      "accepted_steps": 0,
+      "images_valid": false,
+      "image_changed_each_step": false,
+      "success_signal_readable": false,
+      "notes": "License accepted. Direct Python 3.8 native probe accepted 3 actions and returned success=False, but images were black. Enabling disabled OpenGL3 plugin caused renderer crash. Graph not verified: RoboClaw requires Python >=3.10.",
+      "error": "exit=1, see container log",
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/rlbench-native.json",
+      "step_images": []
+    },
+    {
+      "benchmark": "robocasa",
+      "classification": "alternate_backend_only",
+      "evidence": "robocasa.json",
+      "accepted_steps": 3,
+      "images_valid": true,
+      "image_changed_each_step": true,
+      "success_signal_readable": true,
+      "notes": "Alternate RoboCasa 1.0.1 backend only; pinned original RoboCasa v0.2 + robosuite v1.5.0 NOT verified.",
+      "error": null,
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/robocasa.json",
+      "step_images": [
+        {
+          "robot0_agentview_left": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "0ba43866aa36f60cba35e12c667ca2fa799c280802737d4dcaaf8bbfa8ae98ad",
+            "changed_fraction": 0.033854166666666664,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa/frames/step-1-camera-0.png"
+          },
+          "robot0_eye_in_hand": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "d8f6501ab1c69d6fa8a62c44c9bae25e2825ae41669615c16aa95b7b554f84fc",
+            "changed_fraction": 0.08243815104166667,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa/frames/step-1-camera-1.png"
+          }
+        },
+        {
+          "robot0_agentview_left": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "5f7ac89a617f8fee47193f50b49fb19966d6a1e59f1fb5e64f899f244d61024d",
+            "changed_fraction": 0.052897135416666664,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa/frames/step-2-camera-0.png"
+          },
+          "robot0_eye_in_hand": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "377c246b67d3ae606f4aa09a25cabe6427c0a66d065b9af78d3b98397b628b2e",
+            "changed_fraction": 0.10441080729166667,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa/frames/step-2-camera-1.png"
+          }
+        },
+        {
+          "robot0_agentview_left": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "4b028ec4d300e9758d976dcb05ca53aa9e771f5c1dc7a0de1afa3ae7fc474f98",
+            "changed_fraction": 0.056559244791666664,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa/frames/step-3-camera-0.png"
+          },
+          "robot0_eye_in_hand": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "df7900806ce6b39bbfb5f2f0c92aad5fa2e9d7b14fd1f81734fd3e8b528fc643",
+            "changed_fraction": 0.115234375,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa/frames/step-3-camera-1.png"
+          }
+        }
+      ]
+    },
+    {
+      "benchmark": "robocasa365",
+      "classification": "verified",
+      "evidence": "robocasa365.json",
+      "accepted_steps": 3,
+      "images_valid": true,
+      "image_changed_each_step": true,
+      "success_signal_readable": true,
+      "notes": "",
+      "error": null,
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/robocasa365.json",
+      "step_images": [
+        {
+          "video.robot0_agentview_left": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "7b2ca111de1be1aeffe8331e244fd9a09f7fe36efe61c137d34ebe6301e9b672",
+            "changed_fraction": 0.03173828125,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa365/frames/step-1-camera-0.png"
+          },
+          "video.robot0_agentview_right": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "3dcb2ed944620ce828c9836bc20b5f64bef44ccff65c7b7c9a895f297c34096e",
+            "changed_fraction": 0.034098307291666664,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa365/frames/step-1-camera-1.png"
+          },
+          "video.robot0_eye_in_hand": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "cf779b8a13785127cf5b8501627c5063f3dfe422ac5f7f7977675ed199539be5",
+            "changed_fraction": 0.282470703125,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa365/frames/step-1-camera-2.png"
+          }
+        },
+        {
+          "video.robot0_agentview_left": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "ad20fb6a62261c84a40e893be2bd765ddcefa37a9d2046afe98b3c16c6ab73df",
+            "changed_fraction": 0.053629557291666664,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa365/frames/step-2-camera-0.png"
+          },
+          "video.robot0_agentview_right": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "c64f32447597285c563e5029268537ca6f8a5808ee69bd86ef3a87cbeef78bab",
+            "changed_fraction": 0.053304036458333336,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa365/frames/step-2-camera-1.png"
+          },
+          "video.robot0_eye_in_hand": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "10be1cc2a584cce8f9c302742e19a27b9934c1e7638b61c27894f8bdc017a52b",
+            "changed_fraction": 0.3895670572916667,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa365/frames/step-2-camera-2.png"
+          }
+        },
+        {
+          "video.robot0_agentview_left": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "ed851773d6b5ed909a45bb65d84af5c032f35b9af1bb8eab72dc6f0fc4b2e82b",
+            "changed_fraction": 0.056477864583333336,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa365/frames/step-3-camera-0.png"
+          },
+          "video.robot0_agentview_right": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "e863e2f502827c62a8395120fa2c46283b8a5b599199b91c2213feab2630deac",
+            "changed_fraction": 0.06575520833333333,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa365/frames/step-3-camera-1.png"
+          },
+          "video.robot0_eye_in_hand": {
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "5f6fc67aa1746f3a548e1a330a578918ed51747178fbe3fe134a9c2135fc87df",
+            "changed_fraction": 0.376708984375,
+            "file": "/path/to/workspace/outputs/local-simulators/robocasa365/frames/step-3-camera-2.png"
+          }
+        }
+      ]
+    },
+    {
+      "benchmark": "robocerebra",
+      "classification": "verified",
+      "evidence": "robocerebra-retry.json",
+      "accepted_steps": 3,
+      "images_valid": true,
+      "image_changed_each_step": true,
+      "success_signal_readable": true,
+      "notes": "Pinned LIBERO fork + official RoboCerebra Ideal/case1 data. Representative task only.",
+      "error": null,
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/robocerebra-retry.json",
+      "step_images": [
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "daa3b7b641f590e397346aaaecc3fd96218a573b6aaae2cc666f1bd0e461f502",
+            "changed_fraction": 0.007359822591145833,
+            "file": "/path/to/workspace/outputs/local-simulators/robocerebra-retry/frames/step-1-camera-0.png"
+          }
+        },
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "70112ad6b8ab51d61ede55759bf362114403dfd6ef57d329e1725c749508d0d6",
+            "changed_fraction": 0.0081329345703125,
+            "file": "/path/to/workspace/outputs/local-simulators/robocerebra-retry/frames/step-2-camera-0.png"
+          }
+        },
+        {
+          "agentview": {
+            "shape": [
+              256,
+              256,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "99ceec67f5db2127bb726b27d8eefe4e762f1eafb4a43d65c03ebfc9b84c95ec",
+            "changed_fraction": 0.00799560546875,
+            "file": "/path/to/workspace/outputs/local-simulators/robocerebra-retry/frames/step-3-camera-0.png"
+          }
+        }
+      ]
+    },
+    {
+      "benchmark": "robomme",
+      "classification": "blocked_or_failed",
+      "evidence": "robomme-retry.json",
+      "accepted_steps": 0,
+      "images_valid": false,
+      "image_changed_each_step": false,
+      "success_signal_readable": false,
+      "notes": "Pinned RoboMME + pinned ManiSkill fork installed with SAPIEN 3.0.3 on macOS; native reset imports mplib, but required mplib==0.1.1 has no installable macOS distribution. Official container image access denied.",
+      "error": "No module named 'mplib'",
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/robomme-retry.json",
+      "step_images": []
+    },
+    {
+      "benchmark": "robotwin",
+      "classification": "blocked_or_failed",
+      "evidence": "robotwin.json",
+      "accepted_steps": 0,
+      "images_valid": false,
+      "image_changed_each_step": false,
+      "success_signal_readable": false,
+      "notes": "Local Apple Silicon host / Docker has no NVIDIA CUDA GPU; native requires RoboTwin + CuRobo CUDA. Baseline import/reset attempt blocked.",
+      "error": "[Errno 2] No such file or directory: '/app/RoboTwin'",
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/robotwin.json",
+      "step_images": []
+    },
+    {
+      "benchmark": "simpler",
+      "classification": "blocked_or_failed",
+      "evidence": "simpler-docker.json",
+      "accepted_steps": 0,
+      "images_valid": false,
+      "image_changed_each_step": false,
+      "success_signal_readable": false,
+      "notes": "Official Linux image, CPU lavapipe attempted twice. No reset image within 360 seconds; logs show CUDA/OptiX driver initialization errors. Cause of timeout not conclusively isolated.",
+      "error": "exit=137, see container log",
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/simpler-docker.json",
+      "step_images": []
+    },
+    {
+      "benchmark": "vlabench",
+      "classification": "verified",
+      "evidence": "vlabench-retry.json",
+      "accepted_steps": 3,
+      "images_valid": true,
+      "image_changed_each_step": true,
+      "success_signal_readable": true,
+      "notes": "",
+      "error": null,
+      "source_evidence": "/path/to/workspace/outputs/local-simulators/vlabench-retry.json",
+      "step_images": [
+        {
+          "primary": {
+            "shape": [
+              480,
+              480,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "ab6fd58d7c6091b34682dfed2ccc52941e6f71de3c37279d9d6e9eda74a21225",
+            "changed_fraction": 0.04369791666666667,
+            "file": "/path/to/workspace/outputs/local-simulators/vlabench-retry/frames/step-1-camera-0.png"
+          }
+        },
+        {
+          "primary": {
+            "shape": [
+              480,
+              480,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "2ad9f17a3ecd678214012d96cf7671d1b999e062e527ddec25c5ec6b8f016721",
+            "changed_fraction": 0.03598234953703704,
+            "file": "/path/to/workspace/outputs/local-simulators/vlabench-retry/frames/step-2-camera-0.png"
+          }
+        },
+        {
+          "primary": {
+            "shape": [
+              480,
+              480,
+              3
+            ],
+            "dtype": "uint8",
+            "valid": true,
+            "sha256": "dc5072b28e4731fbd1463a47f70426d94b6548ee79f9f6e8bd46f10fea32ad49",
+            "changed_fraction": 0.040368923611111114,
+            "file": "/path/to/workspace/outputs/local-simulators/vlabench-retry/frames/step-3-camera-0.png"
+          }
+        }
+      ]
+    }
+  ]
+}

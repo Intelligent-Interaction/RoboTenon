@@ -1,0 +1,29 @@
+{
+  "benchmark": "kinetix",
+  "registry": "kinetix_benchmark",
+  "class": "robotenon_kinetix.benchmark:KinetixBenchmark",
+  "source_repository": "https://github.com/allenai/vla-evaluation-harness",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09",
+  "files": [
+    {
+      "source": "src/vla_eval/benchmarks/kinetix/benchmark.py",
+      "target": "src/robotenon_kinetix/benchmark.py",
+      "sha256": "d89b6d72be8360684ae3291c0d88e1a337c2469b89aa2e66ae64fb48a443cec2",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.kinetix.utils": "robotenon_kinetix._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_kinetix._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_kinetix._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    }
+  ],
+  "profiles": [
+    "eval",
+    "realtime"
+  ],
+  "simulation_validation": "synthetic_action_3_step_representative_task_passed_full_suite_pending",
+  "score_reproduction": "pending",
+  "source_alignment": "sha256_and_ast_verified",
+  "package_validation": "wheel_build_and_isolated_import_passed"
+}

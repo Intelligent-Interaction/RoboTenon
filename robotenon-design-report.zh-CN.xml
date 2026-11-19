@@ -1,0 +1,62 @@
+<title>RoboTenon 模块化架构与并行执行设计（2026-09-20）</title>
+<p><a href="robotenon-design-report.xml">English</a> · <a href="robotenon-design-report.zh-CN.xml">简体中文</a></p>
+
+<h1>1. 目标与职责边界</h1>
+<p>RoboTenon 用统一的任务、图编排、能力调用、环境反馈和动作执行接口组织仿真与真机运行。部署差异通过插件与资源配置表达；单任务与批量任务共用运行生命周期。接口复用是当前架构能力，训练推理一致性与具体硬件可靠性仍需各部署验证。</p>
+<table>
+<tr><th>组件</th><th>职责</th><th>生命周期</th></tr>
+<tr><td>TaskAdapter</td><td>枚举 TaskCase、执行单个 case</td><td>实验装配与任务执行</td></tr>
+<tr><td>GraphRuntime 与 Module</td><td>编排节点、生成决策和 ActionChunk</td><td>任务</td></tr>
+<tr><td>ToolRuntime</td><td>模型、记忆、技能与客户端能力</td><td>Worker；任务结束清理会话缓存</td></tr>
+<tr><td>Environment</td><td>会话、reset、observe、command 与事实反馈</td><td>任务；外部服务可独立常驻</td></tr>
+<tr><td>Body</td><td>唯一动作执行边界、准入、执行确认与低层停止</td><td>任务；外部服务可独立常驻</td></tr>
+<tr><td>Monitor</td><td>周期或按需观察，发布安全结论</td><td>任务或独立服务</td></tr>
+</table>
+<whiteboard type="mermaid">
+flowchart LR
+    A[TaskAdapter 枚举任务] --&gt; C[父进程调度与汇总]
+    C --&gt; W[WorkerRuntime]
+    W --&gt; T[常驻 ToolRuntime]
+    W --&gt; G[每任务 GraphRuntime 和 Module]
+    G --&gt;|能力调用| T
+    G --&gt;|ActionChunk| B[Body]
+    B --&gt;|执行与停止| D[仿真或硬件驱动]
+    G --&gt;|重置与观察| E[Environment]
+    E --&gt;|反馈| G
+    E --&gt; M[Monitor]
+    M --&gt; S[共享安全状态]
+    S --&gt; B
+    S --&gt; G
+</whiteboard>
+<h1>2. 单任务与进程并行</h1>
+<p>runtime.execution.backend 选择注册的执行后端，内置 in_process 和 process。新增 plugin_backends/backend_params 支持外部实现，入口按声明能力装配。进程后端通过 spawn 启动常驻 Worker，每个 Worker 同时只执行一个任务；GPU、EGL 与独占资源由配置明确指定。工具可复用权重或连接，每个任务重新创建环境、Body、Module 和上下文。外部模型服务仍独立部署，不会随 Worker 自动迁移 GPU。</p>
+<p>父进程负责调度和全局状态，Worker 只返回任务结果并写入独立 attempt 产物。并发完成顺序不固定，最终按 case 顺序汇总。批量记忆默认 snapshot，各任务读取同一输入快照后归并；需要顺序可见写入时选择 sequential 且使用单 Worker。</p>
+<p>真机模板使用单 Worker、零自动重试和独占机器人资源，仍沿用统一执行路径。资源锁仅覆盖同用户同主机；驱动、硬件急停与设备端互斥需要实际接入和验证。</p>
+<h1>3. 观测与 Web 解耦</h1>
+<whiteboard type="mermaid">
+flowchart LR
+    A[任务或多个 Worker] --&gt;|执行身份与事件| I[配置的观测写入端]
+    I --&gt; Q[Trace SQLite 与 JSONL]
+    I --&gt; R[Metrics JSONL]
+    Q --&gt;|显式只读数据源| W[Web]
+    R --&gt; W
+    O[观测图片索引和媒体目录] --&gt; W
+</whiteboard>
+<p>并行入口可配置共享写入端，独立任务可配置任务库；Web 只读取明确的数据源，不判断启动模式，不猜测数据库，也不重放日志。Trace 的共享 SQL 不包含全部 Metrics 和媒体。实验管理元数据、Trace 身份过滤与图片索引是不同来源，需要分别配置。</p>
+<p>experiment、run、episode、attempt、task、adapter、worker、gpu 身份贯穿记录。自动拉起的 Web 是随运行结束关闭的只读观测页面；完整实验浏览、提交和配置管理由独立 Web 的 ExperimentManager 提供。</p>
+<h1>4. 故障与恢复边界</h1>
+<table>
+<tr><th>故障层次</th><th>当前行为</th></tr>
+<tr><td>Graph 节点或安全事件</td><td>按图与安全配置处理；显式 ContextStore 可保存状态和游标</td></tr>
+<tr><td>Worker 丢失或进程任务超时</td><td>父进程存活时，按 max_retries 重建进程并启动新 attempt</td></tr>
+<tr><td>普通任务失败</td><td>记录失败，不按 Worker 丢失策略自动重试</td></tr>
+<tr><td>Coordinator 崩溃</td><td>当前不支持自动恢复或接管批量调度</td></tr>
+<tr><td>观测写入异常</td><td>有界缓冲与失败计数；不保证崩溃零丢失或 exactly-once</td></tr>
+</table>
+<p>Graph checkpoint 与 Worker 重试不是物理动作恰好执行一次的协议。动作完成但执行确认未落盘的窗口，仍需设备端幂等和状态对账。Body 的软件停止逻辑不能替代硬件安全措施。</p>
+<h1>5. 已验证范围与后续工作</h1>
+<p>2026-09-18，本地 Python 3.11 与服务器 Python 3.12 的完整测试均为 179 passed，覆盖进程执行、故障注入、生命周期隔离和观测读写等。尚未完成真实 GPU/EGL 并行压测、模型显存评估或真机动作与急停验证。后续可按实际需求增加 Coordinator 持久化接管、可靠遥测投递和媒体索引聚合；这些不是当前已交付能力。</p>
+<p>使用入口见 docs/README.zh-CN.md 和 docs/quickstart.zh-CN.md；配置、命令、产物目录与恢复矩阵见 docs/execution-and-observability.zh-CN.md；历史审计和验证记录保留各自日期。本文件是便于导入汇报文档的 XML 片段，含多个顶层元素。</p>
+
+<h1>接入边界更新</h1>
+<p>六类业务插件之外，执行后端、四类存储和 RPC 流传输使用独立注册入口。Environment RPC 是 reset/observe/health 等环境接口的跨进程调用，动作执行仍由 Body 负责。自定义观测模态可沿 ObservationFrame、缓存和 ObservationRef 传递。插件参数通过配置、TaskCase 与单次请求递归合并，新增环境与模型无需逐项修改 Runner。资源启动失败与正常关闭共用清理路径。具体配置、兼容别名和验证范围见 docs/infrastructure-plugins.zh-CN.md。</p>

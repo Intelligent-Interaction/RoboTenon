@@ -1,0 +1,21 @@
+{
+  "surface": "Codex in-app browser on an isolated localhost fixture; no real runs started",
+  "jobs": {
+    "fixture_count": 125,
+    "first_page": 20,
+    "next_page": "2 / 7",
+    "search": "preview-019 -> exactly one matching row"
+  },
+  "episodes": {
+    "fixture_count": 230,
+    "page_sizes": [
+      100,
+      100,
+      30
+    ],
+    "last_page_next_disabled": true
+  },
+  "preflight": "config/disk/output/ports/GPU checked; zero new jobs",
+  "trace_sql": "empty fixture returns 0 rows",
+  "console_errors": []
+}

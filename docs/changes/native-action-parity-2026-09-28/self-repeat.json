@@ -1,0 +1,196 @@
+[
+  {
+    "benchmark": "duobench",
+    "seed": 0,
+    "side": "upstream",
+    "same_side_repeat_exact": false,
+    "differences": [
+      {
+        "frame": "observation-000",
+        "key": "root/images/left_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 5.208333333333334e-05
+      },
+      {
+        "frame": "observation-000",
+        "key": "root/images/right_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 6.401909722222223e-05
+      },
+      {
+        "frame": "observation-001",
+        "key": "root/images/head",
+        "max_abs": 1.0,
+        "different_fraction": 4.340277777777778e-06
+      },
+      {
+        "frame": "observation-001",
+        "key": "root/images/left_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 8.463541666666667e-05
+      },
+      {
+        "frame": "observation-001",
+        "key": "root/images/right_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 4.774305555555556e-05
+      },
+      {
+        "frame": "observation-003",
+        "key": "root/images/left_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 5.099826388888889e-05
+      },
+      {
+        "frame": "observation-003",
+        "key": "root/images/right_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 7.993344907407408e-05
+      },
+      {
+        "frame": "observation-002",
+        "key": "root/images/left_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 0.00010308159722222222
+      },
+      {
+        "frame": "observation-002",
+        "key": "root/images/right_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 0.000126953125
+      },
+      {
+        "frame": "observation-005",
+        "key": "root/images/left_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 1.8446180555555556e-05
+      },
+      {
+        "frame": "observation-005",
+        "key": "root/images/right_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 3.255208333333333e-05
+      },
+      {
+        "frame": "observation-004",
+        "key": "root/images/head",
+        "max_abs": 1.0,
+        "different_fraction": 2.170138888888889e-06
+      },
+      {
+        "frame": "observation-004",
+        "key": "root/images/left_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 2.604166666666667e-05
+      },
+      {
+        "frame": "observation-004",
+        "key": "root/images/right_wrist",
+        "max_abs": 1.0,
+        "different_fraction": 4.0147569444444445e-05
+      }
+    ]
+  },
+  {
+    "benchmark": "robocasa365",
+    "seed": 0,
+    "side": "upstream",
+    "same_side_repeat_exact": true,
+    "differences": []
+  },
+  {
+    "benchmark": "robocasa365",
+    "seed": 0,
+    "side": "roboclaw",
+    "same_side_repeat_exact": true,
+    "differences": []
+  },
+  {
+    "benchmark": "vlabench",
+    "seed": 0,
+    "side": "upstream",
+    "same_side_repeat_exact": false,
+    "differences": [
+      {
+        "frame": "observation-000",
+        "key": "root/images/primary",
+        "max_abs": 204.0,
+        "different_fraction": 0.027905092592592592
+      },
+      {
+        "frame": "observation-001",
+        "key": "root/images/primary",
+        "max_abs": 222.0,
+        "different_fraction": 0.027894965277777777
+      },
+      {
+        "frame": "observation-003",
+        "key": "root/images/primary",
+        "max_abs": 216.0,
+        "different_fraction": 0.027133969907407407
+      },
+      {
+        "frame": "observation-002",
+        "key": "root/images/primary",
+        "max_abs": 209.0,
+        "different_fraction": 0.027569444444444445
+      },
+      {
+        "frame": "observation-005",
+        "key": "root/images/primary",
+        "max_abs": 217.0,
+        "different_fraction": 0.02749565972222222
+      },
+      {
+        "frame": "observation-004",
+        "key": "root/images/primary",
+        "max_abs": 213.0,
+        "different_fraction": 0.027236689814814814
+      }
+    ]
+  },
+  {
+    "benchmark": "vlabench",
+    "seed": 0,
+    "side": "roboclaw",
+    "same_side_repeat_exact": false,
+    "differences": [
+      {
+        "frame": "observation-000",
+        "key": "root/images/primary",
+        "max_abs": 180.0,
+        "different_fraction": 0.03448640046296296
+      },
+      {
+        "frame": "observation-001",
+        "key": "root/images/primary",
+        "max_abs": 180.0,
+        "different_fraction": 0.034340277777777775
+      },
+      {
+        "frame": "observation-003",
+        "key": "root/images/primary",
+        "max_abs": 180.0,
+        "different_fraction": 0.03481336805555556
+      },
+      {
+        "frame": "observation-002",
+        "key": "root/images/primary",
+        "max_abs": 180.0,
+        "different_fraction": 0.03499855324074074
+      },
+      {
+        "frame": "observation-005",
+        "key": "root/images/primary",
+        "max_abs": 180.0,
+        "different_fraction": 0.034732349537037036
+      },
+      {
+        "frame": "observation-004",
+        "key": "root/images/primary",
+        "max_abs": 180.0,
+        "different_fraction": 0.03503616898148148
+      }
+    ]
+  }
+]

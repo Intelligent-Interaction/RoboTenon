@@ -1,0 +1,16 @@
+{
+  "config_version": 1,
+  "modules_config": "experiment_fixture_modules.json",
+  "graphs_config": "experiment_fixture_graphs.json",
+  "tools_config": "experiment_fixture_tools.json",
+  "monitor_config": "experiment_fixture_monitors.json",
+  "bodies_config": "experiment_fixture_bodies.json",
+  "environments_config": "experiment_fixture_envs.json",
+  "task_adapters_config": "experiment_fixture_task_adapters.json",
+  "parameters": {
+    "runtime": {"profile": "experiment-fixture", "graph_id": "fixture_reference"},
+    "task": {"task_id": "fixture-task", "env_id": "fixture-env", "seed": 7}
+  },
+  "safety_state": {"backend": "memory", "require_shared": false},
+  "observation_cache": {"enabled": true, "backend": "memory"}
+}

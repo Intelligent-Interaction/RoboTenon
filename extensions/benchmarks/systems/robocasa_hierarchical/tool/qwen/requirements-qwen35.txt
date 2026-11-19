@@ -1,0 +1,8 @@
+# Install in the Qwen3.5 model runtime, separately from Xiaomi / Transformers 4.
+torch>=2.6,<3
+transformers>=5.2,<6
+flash-linear-attention[cuda]==0.5.2
+causal-conv1d==1.7.0
+accelerate>=1.1,<2
+pillow>=10
+numpy>=1.26,<3

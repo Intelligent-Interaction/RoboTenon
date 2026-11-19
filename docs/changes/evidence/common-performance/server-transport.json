@@ -1,0 +1,29 @@
+{
+  "platform": "Linux-5.15.0-1053-nvidia-x86_64-with-glibc2.35",
+  "python": "3.12.9",
+  "numpy": "2.2.6",
+  "baseline_commit": "014dad454912447ec7bd41055280f05006735ea6",
+  "repeats": 30,
+  "payload": "4 history frames x 3 cameras x 256x256 RGB uint8 + float32 state",
+  "old_bytes": 3147240,
+  "new_bytes": 2360359,
+  "results": {
+    "wire_roundtrip": {
+      "before_median_ms": 14.497371157631278,
+      "after_median_ms": 0.8316219318658113,
+      "speedup": 17.432646497315492
+    },
+    "observation_decode": {
+      "before_median_ms": 0.029516173526644707,
+      "after_median_ms": 0.007213559001684189,
+      "speedup": 4.091762959137564
+    },
+    "unix_socket_echo": {
+      "before_median_ms": 33.72236154973507,
+      "after_median_ms": 7.255137199535966,
+      "speedup": 4.648066690164306
+    }
+  },
+  "exact_roundtrip": true,
+  "scope": "CPU microbenchmark, not end-to-end simulator or model inference speedup"
+}

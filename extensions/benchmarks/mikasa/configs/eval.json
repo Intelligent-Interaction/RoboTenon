@@ -1,0 +1,19 @@
+{
+  "episodes_per_task": 3,
+  "params": {
+    "tasks": [
+      "RememberColor3-v0",
+      "ShellGameTouch-v0",
+      "RotateLenientPos-v0",
+      "InterceptSlow-v0",
+      "TakeItBack-v0"
+    ],
+    "render_resolution": [
+      256,
+      256
+    ]
+  },
+  "benchmark_id": "mikasa_benchmark",
+  "source_config": "configs/benchmarks/mikasa/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

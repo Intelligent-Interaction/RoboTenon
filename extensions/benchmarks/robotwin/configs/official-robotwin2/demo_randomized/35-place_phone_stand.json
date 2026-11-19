@@ -1,0 +1,15 @@
+{
+  "episodes_per_task": 1,
+  "params": {
+    "task_name": "place_phone_stand",
+    "task_config": "demo_randomized",
+    "seed": 0,
+    "instruction_type": "seen",
+    "test_num": 100,
+    "skip_expert_check": true,
+    "fast_init": true,
+    "fast_render": false
+  },
+  "benchmark_id": "robotwin_benchmark",
+  "source_config": "RoboTwin-2.0/env_cfg/eval/all_tasks.yml"
+}

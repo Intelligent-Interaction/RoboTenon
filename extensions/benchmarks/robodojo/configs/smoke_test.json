@@ -1,0 +1,14 @@
+{
+  "episodes_per_task": 1,
+  "max_tasks": 1,
+  "max_steps": 20,
+  "params": {
+    "tasks": [
+      "stack_blocks"
+    ],
+    "seed": 0
+  },
+  "benchmark_id": "robodojo_benchmark",
+  "source_config": "configs/benchmarks/robodojo/smoke_test.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

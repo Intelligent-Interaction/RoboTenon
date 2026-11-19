@@ -1,0 +1,67 @@
+{
+  "benchmark": "libero_pro",
+  "class": "robosys_libero_pro.native.benchmark:LIBEROProBenchmark",
+  "upstream_class": "vla_eval.benchmarks.libero_pro.benchmark:LIBEROProBenchmark",
+  "params": {
+    "send_state": true
+  },
+  "actions": [
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        -0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    }
+  ],
+  "seed": 11,
+  "render": "gpu"
+}

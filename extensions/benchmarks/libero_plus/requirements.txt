@@ -1,0 +1,20 @@
+# Rebuild on Python 3.10+ for RoboTenon; install ImageMagick and the perturbation assets.
+torch==2.1.0
+numpy==1.22.4
+mujoco==3.2.3
+robosuite==1.4.0
+bddl==1.0.1
+Pillow
+scipy
+h5py
+PyYAML
+termcolor
+future
+easydict
+hydra-core
+gym>=0.21,<0.27
+matplotlib
+opencv-python
+scikit-image
+wand
+git+https://github.com/sylvestf/LIBERO-plus.git@4976dc30028e805ff8094b55501d532c48fec182

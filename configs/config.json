@@ -1,0 +1,47 @@
+{
+  "config_version": 1,
+  "modules_config": "modules_configs.json",
+  "graphs_config": "graphs.json",
+  "tools_config": "tools_configs.json",
+  "monitor_config": "monitor_configs.json",
+  "bodies_config": "body_configs.json",
+  "environments_config": "envs_configs.json",
+  "task_adapters_config": "task_adapters_configs.json",
+  "parameters": {
+    "runtime": {
+      "profile": "default"
+    },
+    "policy": {
+      "action_timeout_ms": 1000
+    }
+  },
+  "safety_state": {
+    "backend": "sqlite",
+    "path": "./data/runtime/safety.sqlite3",
+    "require_shared": true
+  },
+  "observation_cache": {
+    "enabled": true,
+    "backend": "hybrid",
+    "hot": {
+      "max_records": 64,
+      "max_bytes": 268435456,
+      "ttl_seconds": 300
+    },
+    "storage": {
+      "root": "./data/observations",
+      "index": "./data/observations/index.sqlite3"
+    },
+    "persist": {
+      "async": true,
+      "queue_size": 256,
+      "workers": 2,
+      "on_queue_full": "drop_oldest"
+    },
+    "retention": {
+      "keep_sessions": 20,
+      "keep_days": 30
+    },
+    "uri_scheme": "cache"
+  }
+}

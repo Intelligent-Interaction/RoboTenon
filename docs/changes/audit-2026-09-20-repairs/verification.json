@@ -1,0 +1,157 @@
+{
+  "date": "2026-09-20T14:17:53.260105+00:00",
+  "base_head": "3e23ae2067e913ff80720855ee77b0ca77d01150",
+  "scope": "R01-R11; compared against uncommitted workspace baseline; no commit or deployment",
+  "python": {
+    "command": "/path/to/user/miniconda3/bin/python -m pytest -o addopts= -q",
+    "passed": 480,
+    "skipped": 1,
+    "warnings": 1,
+    "new_audit_regressions": 40,
+    "log": "python-tests.txt",
+    "skip_reason": "existing Linux native render crash/preload integration on macOS"
+  },
+  "javascript": {
+    "command": "node --test tests/test_graph_routes.js tests/test_trajectory_media.js",
+    "passed": 20,
+    "log": "javascript-tests.txt"
+  },
+  "checks": {
+    "compose": "GRAFANA_ADMIN_PASSWORD=validation-only docker compose config --quiet: passed",
+    "compileall": "python -m compileall -q robosys: passed",
+    "ruff": "ruff check --select F821,F822,F823,F811 robosys tests/test_audit_repairs.py: passed",
+    "whitespace": "git diff --check: passed"
+  },
+  "limits": [
+    "No real robot or GPU model integration",
+    "Linux /proc parser tested with fixtures, Linux-specific native crash test not run",
+    "Compose configuration validated without starting or upgrading containers",
+    "Existing Grafana volume passwords are not rotated by changing environment variables"
+  ],
+  "files": {
+    ".dockerignore": {
+      "before": "f4d80609adec1fec9e0993c5717a43c706250749956905f173abd578215b9328",
+      "after": "4b7ffdc8f16e8ad15a1462823e18dcfcaa5c73acb169ece5220b3b3dddae2838"
+    },
+    ".gitignore": {
+      "before": "29f1e1e0147a55ffe37793e054f57a404c25f9aec74c6495ff24087f8b9ed8c3",
+      "after": "c490583e1baf112965bb8118442120dbda53488404515038214ee86fbe50658d"
+    },
+    "docker-compose.yml": {
+      "before": "94a9ce28dba2aa695e7b9a4c70498aba77f4de572de5436f99c3a4ba689f8986",
+      "after": "8dfb315495b3c3d69a9e8ace94ee5807bac379f688e68212a2a2abc0995405cb"
+    },
+    "docs/README.md": {
+      "before": "30e3c62449afdf6879f48d632cfebe73741cdb1d78c42a95825ebaa992f5acb8",
+      "after": "3bcb19aaaa3feb012e4a545c6b663b4e0945b8c5032694c000026cbae4acada0"
+    },
+    "docs/execution-and-observability.md": {
+      "before": "64106fd7fca142d5cd5f1261e87cce8e8ab934ef9bb9f5e2251bdc1064b6f277",
+      "after": "1eef12ab7e513c68476e3d1f7f250dfc44fba9202d7934d316589cb7f912aa1f"
+    },
+    "robosys/bodies/real_robot_body.py": {
+      "before": "8069cdaa8827b355d028663b65778277285f2a2ca49b946768abdca1e14067a1",
+      "after": "bd8cb1d8d1f4ccbffdf4451f17084a53e8bfb9f982d40170e53ee3ccb8539dc1"
+    },
+    "robosys/infra/ingest_server.py": {
+      "before": "5d3268046dcf691665ba1a7d5245b56c02df4c6a90dd4c490906b01242cf7c35",
+      "after": "28a899c3f6f533f775ae25d5ffbde9e8e011a43bb57425ae0e7cf579bd9c5a48"
+    },
+    "robosys/modules/verify.py": {
+      "before": "75de9768729a740b09f292d6175a2af5cb14ae2fbd2f3f30d4129b309316f5ae",
+      "after": "8277cf81bcabf3262d3f2e5b9be9d0a84b90a2a405820bdbc5be5a0174e666ef"
+    },
+    "robosys/runtime/config.py": {
+      "before": "59827e4295ca84ffcaea17833dc98f4d73bcfae527b7d0cb70d2d0cf76c54dd8",
+      "after": "b000a8d4ee2e7960a7638f908e14632892a965b5974ba060705063f036a278f7"
+    },
+    "robosys/runtime/execution.py": {
+      "before": "b16474540095bdf4e7e1629a14a3e6988b437bc60e359842230f40c9ff01883e",
+      "after": "3a156b5183d64b20d306b9b541acf8077ddffaafd840087eddf686563c5710bf"
+    },
+    "robosys/runtime/experiment.py": {
+      "before": "4584d8dbb07e96d69d057265342b08e5b6cb2157732d35b5c5ae0a6e62abcca0",
+      "after": "894c18a0a13c54d81f46204402a650e2753a0476c3be0715a8f6f9ebf460f648"
+    },
+    "robosys/runtime/factory.py": {
+      "before": "075a891da528ef1615e6530f6969d14e085a3c30a3035ac75cdc9d50c854c7e4",
+      "after": "f1aff2ef891c87c0ccc0c8f355f226221a46bdb6802870176d59adcb8f07a4f2"
+    },
+    "robosys/runtime/model_services.py": {
+      "before": "01ad3e4835105fb71804e0db9abf5f5599f8366e24d8635522590c61380e45a8",
+      "after": "14c0c9adfeb2f82675fc8b6af7a69f416bbd220a06ade0e16284a699fa358acd"
+    },
+    "robosys/runtime/observability.py": {
+      "before": "7aacc08accb1a36c79c0da2cf35de17ca8eecff67faaa1e6321c7160cd604287",
+      "after": "32a75d525e1c0e4a26e1b842becb1d5db3d7fcf61fd72e950007143b7fee7f82"
+    },
+    "robosys/runtime/parallel.py": {
+      "before": "5e4132344a88a03b901d875dd3edc0ac6fcfb8e04a19a3654ac2ba7d3342820b",
+      "after": "e7b3da017732235142da6adc0698d2d02107f6e2f3e6189887d23f2e5894b298"
+    },
+    "robosys/runtime/runner.py": {
+      "before": "3012fc96850bf9b4d7407f3d2fff3a2ce4a105d090f4cb8ec9aa036a2078617f",
+      "after": "c3649787d634bc718484cbe18acd6065f37b6565d44e29a6c67ad898db360946"
+    },
+    "robosys/runtime/runner_cli.py": {
+      "before": "315d6a1630069f11e04b8365e288197b3bd77e937e202e4d62108823a33cd2c4",
+      "after": "ebd854f9aa6d1bfe7ddf4e799f3f06140ef1e598273e5c9f3acec86c3a401a52"
+    },
+    "robosys/runtime/worker.py": {
+      "before": "e6aaeb3d148ae047aab64d4fea51bbfdd43dc2666992fc401fdaccba762f791c",
+      "after": "169bf5403d8dc31baadcf2469e8c5e742f9b7d46e1e56d3c39e23ffaff29a1ce"
+    },
+    "robosys/services/body.py": {
+      "before": "064f222854821413f3701d4ce3d6a000bca6d9233dd1e0f8fa2f2dc4778407dc",
+      "after": "24ebbc2ff7e03d172f778af8a753cd3a7036e7e97ca4f4299bcfeaa1291097e8"
+    },
+    "robosys/task_adapters/base.py": {
+      "before": "06a0489adf47eb9e491560244b2376f226234b14efdc51110189668579c68488",
+      "after": "ebfa081d8a94a69a86ddfef62847537ad953fe50b082c314d2e18d8ae3616fad"
+    },
+    "robosys/task_adapters/evaluator.py": {
+      "before": "47429ce74991a004fbd228d427b5761a4168ca03c7075598269fa20f5507538d",
+      "after": "2d0ec6d9b3104446f4de0d2ebbb737a419884801158f086c74842aa82d32a4ba"
+    },
+    "robosys/web/access.py": {
+      "before": "86b59d33939c927b7bb817f914c8e7284c2f03d1b3a9879e2f9515e6f75e6dc6",
+      "after": "066538c92708f9394dfb20cc6e00eb283c62ea9417600491e2baa43497b810df"
+    },
+    "robosys/web/experiments.py": {
+      "before": "143bb80fe24111ad0de8e2d70a715d1b8a0fc8beb1bf5f24ac379b53439d6373",
+      "after": "bec1057652dbfc36c33e08fa4228f480bd88448385d3a904b81985d95bf7f45a"
+    },
+    "robosys/web/grafana.py": {
+      "before": "713aa2d3dd972c0d7c9c698554d29b7bca2ed8113c020c528713fbe09ea7dc2a",
+      "after": "ec7ea1ec0470d728ff337e37ac96b6ee453af76ad5db7b3abe1a5a035d4c2665"
+    },
+    "robosys/web/server.py": {
+      "before": "9db2f306b4d4d77aeca3fc5a907fac7eac2b28ddddcf13f93c5bdcc4f1a93031",
+      "after": "ab65a333db350a2f33c919dbc4161df43fe32837d2c38f9ea0c510e723383a42"
+    },
+    "robosys/web/static/portal.js": {
+      "before": "ead8d53ef21bafe40b77d783d4af2ff354a93453c90bdb425b0a703cbd6ae907",
+      "after": "ba8f1901aa5a8a5373ce14e26aac8b188d50764efed00e9bb250562d94fff10f"
+    },
+    "tests/test_experiment_manager.py": {
+      "before": "26a34f6279d312df3b3074cec5d16d1658382d59f9fb9184c45beaeb7a7d52a3",
+      "after": "883b43dc7347c4186f9112c6a603131816311dbcad135b491f2b9ef93d5f5d7f"
+    },
+    "robosys/runtime/processes.py": {
+      "before": null,
+      "after": "1ddd59cb1c9feda9d234c77c1bbce64fa69d3756bee4f44e3110e032c7fd278c"
+    },
+    "robosys/runtime/run_state.py": {
+      "before": null,
+      "after": "6e699df036cc9954c8ca2248ff091245ea474aa9eae1fc479657e8f8c02f6aed"
+    },
+    "tests/test_audit_repairs.py": {
+      "before": null,
+      "after": "b3a201b94c9a3dd976cf376a1e962cf13450775bc1b62c9857508a4959468245"
+    },
+    "docs/audit-repairs-2026-09-20.md": {
+      "before": null,
+      "after": "bb74b4ec4c72c55b505058b30a58971b19cc718866c3fb985590019345e695eb"
+    }
+  }
+}

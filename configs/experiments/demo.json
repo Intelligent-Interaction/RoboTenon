@@ -1,0 +1,10 @@
+{
+  "parameters": {
+    "runtime": {
+      "profile": "demo"
+    },
+    "policy": {
+      "action_timeout_ms": 750
+    }
+  }
+}

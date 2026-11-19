@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="550" viewBox="0 0 1120 550" role="img" aria-labelledby="title desc">
+<title id="title">Physical and Worker-local GPU IDs</title><desc id="desc">Example: two Workers. Each assigns the first GPU in its group to Xiaomi and the next two to Qwen.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="550" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">Physical and Worker-local GPU IDs</text>
+<text x="36" y="78" class="sub" fill="#586779">Example: two Workers. Each assigns the first GPU in its group to Xiaomi and the next two to Qwen.</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="135" width="470" height="120" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 149 v92" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="167" class="head" fill="#3458a4">Worker 0 · physical GPUs 0 / 1 / 2</text>
+<text x="54" y="196" class="body" fill="#172b46">CUDA_VISIBLE_DEVICES=0,1,2</text>
+<text x="54" y="222" class="body" fill="#172b46">Local IDs: cuda:0 / cuda:1 / cuda:2</text>
+<rect x="614" y="135" width="470" height="120" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M615 149 v92" stroke="#3458a4" stroke-width="3"/>
+<text x="632" y="167" class="head" fill="#3458a4">Worker 1 · physical GPUs 3 / 4 / 5</text>
+<text x="632" y="196" class="body" fill="#172b46">CUDA_VISIBLE_DEVICES=3,4,5</text>
+<text x="632" y="222" class="body" fill="#172b46">Local IDs: cuda:0 / cuda:1 / cuda:2</text>
+<rect x="36" y="330" width="216" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 344 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="362" class="head" fill="#3458a4">Xiaomi</text>
+<text x="54" y="391" class="body" fill="#172b46">Local 0</text>
+<text x="54" y="417" class="body" fill="#172b46">Separate service and port</text>
+<rect x="290" y="330" width="216" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M291 344 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="308" y="362" class="head" fill="#3458a4">Qwen</text>
+<text x="308" y="391" class="body" fill="#172b46">Local 1, 2</text>
+<text x="308" y="417" class="body" fill="#172b46">Separate service and port</text>
+<rect x="614" y="330" width="216" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M615 344 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="632" y="362" class="head" fill="#3458a4">Xiaomi</text>
+<text x="632" y="391" class="body" fill="#172b46">Local 0</text>
+<text x="632" y="417" class="body" fill="#172b46">Separate service and port</text>
+<rect x="868" y="330" width="216" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M869 344 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="886" y="362" class="head" fill="#3458a4">Qwen</text>
+<text x="886" y="391" class="body" fill="#172b46">Local 1, 2</text>
+<text x="886" y="417" class="body" fill="#172b46">Separate service and port</text>
+<path d="M200 255 L200 292 L144 292 L144 330" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M360 255 L360 292 L398 292 L398 330" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M780 255 L780 292 L722 292 L722 330" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M930 255 L930 292 L976 292 L976 330" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="526" class="small" fill="#586779">Set gpu_ids and tool deployment.gpu_ids for your deployment and the memory requirements of each model.</text>
+</svg>

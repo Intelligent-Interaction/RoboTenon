@@ -1,0 +1,361 @@
+[
+  {
+    "id": "behavior1k",
+    "registry": "behavior1k_benchmark",
+    "class": "robotenon_behavior1k.benchmark:Behavior1KBenchmark",
+    "path": "extensions/benchmarks/behavior1k",
+    "vla_interface": "extensions/benchmarks/behavior1k/src/robotenon_behavior1k/vla.py",
+    "profiles": [
+      "extensions/benchmarks/behavior1k/configs/eval.json"
+    ],
+    "default_profile": "extensions/benchmarks/behavior1k/configs/eval.json"
+  },
+  {
+    "id": "calvin",
+    "registry": "calvin_benchmark",
+    "class": "robotenon_calvin.benchmark:CALVINBenchmark",
+    "path": "extensions/benchmarks/calvin",
+    "vla_interface": "extensions/benchmarks/calvin/src/robotenon_calvin/vla.py",
+    "profiles": [
+      "extensions/benchmarks/calvin/configs/eval.json"
+    ],
+    "default_profile": "extensions/benchmarks/calvin/configs/eval.json"
+  },
+  {
+    "id": "duobench",
+    "registry": "duobench_benchmark",
+    "class": "robotenon_duobench.benchmark:DuoBenchBenchmark",
+    "path": "extensions/benchmarks/duobench",
+    "vla_interface": "extensions/benchmarks/duobench/src/robotenon_duobench/vla.py",
+    "profiles": [
+      "extensions/benchmarks/duobench/configs/eval.json",
+      "extensions/benchmarks/duobench/configs/smoke_test.json"
+    ],
+    "default_profile": "extensions/benchmarks/duobench/configs/smoke_test.json"
+  },
+  {
+    "id": "kinetix",
+    "registry": "kinetix_benchmark",
+    "class": "robotenon_kinetix.benchmark:KinetixBenchmark",
+    "path": "extensions/benchmarks/kinetix",
+    "vla_interface": "extensions/benchmarks/kinetix/src/robotenon_kinetix/vla.py",
+    "profiles": [
+      "extensions/benchmarks/kinetix/configs/eval.json",
+      "extensions/benchmarks/kinetix/configs/realtime.json"
+    ],
+    "default_profile": "extensions/benchmarks/kinetix/configs/eval.json"
+  },
+  {
+    "id": "libero",
+    "registry": "libero_benchmark",
+    "class": "robotenon_libero.benchmark:LIBEROBenchmark",
+    "path": "extensions/benchmarks/libero",
+    "vla_interface": "extensions/benchmarks/libero/src/robotenon_libero/vla.py",
+    "profiles": [
+      "extensions/benchmarks/libero/configs/10.json",
+      "extensions/benchmarks/libero/configs/all-0.json",
+      "extensions/benchmarks/libero/configs/all-1.json",
+      "extensions/benchmarks/libero/configs/all-2.json",
+      "extensions/benchmarks/libero/configs/all-3.json",
+      "extensions/benchmarks/libero/configs/goal.json",
+      "extensions/benchmarks/libero/configs/long.json",
+      "extensions/benchmarks/libero/configs/object.json",
+      "extensions/benchmarks/libero/configs/openvla_oft_spatial.json",
+      "extensions/benchmarks/libero/configs/smoke_test.json",
+      "extensions/benchmarks/libero/configs/spatial.json"
+    ],
+    "default_profile": "extensions/benchmarks/libero/configs/smoke_test.json"
+  },
+  {
+    "id": "libero_mem",
+    "registry": "libero_mem_benchmark",
+    "class": "robotenon_libero_mem.benchmark:LIBEROMemBenchmark",
+    "path": "extensions/benchmarks/libero_mem",
+    "vla_interface": "extensions/benchmarks/libero_mem/src/robotenon_libero_mem/vla.py",
+    "profiles": [
+      "extensions/benchmarks/libero_mem/configs/eval.json"
+    ],
+    "default_profile": "extensions/benchmarks/libero_mem/configs/eval.json"
+  },
+  {
+    "id": "libero_plus",
+    "registry": "libero_plus_benchmark",
+    "class": "robotenon_libero_plus.benchmark:LIBEROPlusBenchmark",
+    "path": "extensions/benchmarks/libero_plus",
+    "vla_interface": "extensions/benchmarks/libero_plus/src/robotenon_libero_plus/vla.py",
+    "profiles": [
+      "extensions/benchmarks/libero_plus/configs/all-0.json",
+      "extensions/benchmarks/libero_plus/configs/all-1.json",
+      "extensions/benchmarks/libero_plus/configs/all-2.json",
+      "extensions/benchmarks/libero_plus/configs/all-3.json",
+      "extensions/benchmarks/libero_plus/configs/spatial.json"
+    ],
+    "default_profile": "extensions/benchmarks/libero_plus/configs/all-0.json"
+  },
+  {
+    "id": "libero_pro",
+    "registry": "libero_pro_benchmark",
+    "class": "robotenon_libero_pro.benchmark:LIBEROProBenchmark",
+    "path": "extensions/benchmarks/libero_pro",
+    "vla_interface": "extensions/benchmarks/libero_pro/src/robotenon_libero_pro/vla.py",
+    "profiles": [
+      "extensions/benchmarks/libero_pro/configs/eval.json"
+    ],
+    "default_profile": "extensions/benchmarks/libero_pro/configs/eval.json"
+  },
+  {
+    "id": "maniskill2",
+    "registry": "maniskill2_benchmark",
+    "class": "robotenon_maniskill2.benchmark:ManiSkill2Benchmark",
+    "path": "extensions/benchmarks/maniskill2",
+    "vla_interface": "extensions/benchmarks/maniskill2/src/robotenon_maniskill2/vla.py",
+    "profiles": [
+      "extensions/benchmarks/maniskill2/configs/eval.json"
+    ],
+    "default_profile": "extensions/benchmarks/maniskill2/configs/eval.json"
+  },
+  {
+    "id": "mikasa",
+    "registry": "mikasa_benchmark",
+    "class": "robotenon_mikasa.benchmark:MIKASABenchmark",
+    "path": "extensions/benchmarks/mikasa",
+    "vla_interface": "extensions/benchmarks/mikasa/src/robotenon_mikasa/vla.py",
+    "profiles": [
+      "extensions/benchmarks/mikasa/configs/eval.json"
+    ],
+    "default_profile": "extensions/benchmarks/mikasa/configs/eval.json"
+  },
+  {
+    "id": "molmospaces",
+    "registry": "molmospaces_benchmark",
+    "class": "robotenon_molmospaces.benchmark:MolmoSpacesBenchmark",
+    "path": "extensions/benchmarks/molmospaces",
+    "vla_interface": "extensions/benchmarks/molmospaces/src/robotenon_molmospaces/vla.py",
+    "profiles": [
+      "extensions/benchmarks/molmospaces/configs/pick_and_place.json"
+    ],
+    "default_profile": "extensions/benchmarks/molmospaces/configs/pick_and_place.json"
+  },
+  {
+    "id": "rlbench",
+    "registry": "rlbench_benchmark",
+    "class": "robotenon_rlbench.benchmark:RLBenchBenchmark",
+    "path": "extensions/benchmarks/rlbench",
+    "vla_interface": "extensions/benchmarks/rlbench/src/robotenon_rlbench/vla.py",
+    "profiles": [
+      "extensions/benchmarks/rlbench/configs/eval.json"
+    ],
+    "default_profile": "extensions/benchmarks/rlbench/configs/eval.json"
+  },
+  {
+    "id": "robocasa",
+    "registry": "robocasa_benchmark",
+    "class": "robotenon_robocasa.benchmark:RoboCasaBenchmark",
+    "path": "extensions/benchmarks/robocasa",
+    "vla_interface": "extensions/benchmarks/robocasa/src/robotenon_robocasa/vla.py",
+    "profiles": [
+      "extensions/benchmarks/robocasa/configs/eval.json",
+      "extensions/benchmarks/robocasa/configs/smoke.json"
+    ],
+    "default_profile": "extensions/benchmarks/robocasa/configs/smoke.json"
+  },
+  {
+    "id": "robocasa365",
+    "registry": "robocasa365_benchmark",
+    "class": "robotenon_robocasa365.benchmark:RoboCasa365Benchmark",
+    "path": "extensions/benchmarks/robocasa365",
+    "vla_interface": "extensions/benchmarks/robocasa365/src/robotenon_robocasa365/vla.py",
+    "profiles": [
+      "extensions/benchmarks/robocasa365/configs/smoke.json",
+      "extensions/benchmarks/robocasa365/configs/xiaomi_official.json"
+    ],
+    "default_profile": "extensions/benchmarks/robocasa365/configs/smoke.json"
+  },
+  {
+    "id": "robocerebra",
+    "registry": "robocerebra_benchmark",
+    "class": "robotenon_robocerebra.benchmark:RoboCerebraBenchmark",
+    "path": "extensions/benchmarks/robocerebra",
+    "vla_interface": "extensions/benchmarks/robocerebra/src/robotenon_robocerebra/vla.py",
+    "profiles": [
+      "extensions/benchmarks/robocerebra/configs/eval.json"
+    ],
+    "default_profile": "extensions/benchmarks/robocerebra/configs/eval.json"
+  },
+  {
+    "id": "robodojo",
+    "registry": "robodojo_benchmark",
+    "class": "robotenon_robodojo.benchmark:RoboDojoBenchmark",
+    "path": "extensions/benchmarks/robodojo",
+    "vla_interface": "extensions/benchmarks/robodojo/src/robotenon_robodojo/vla.py",
+    "profiles": [
+      "extensions/benchmarks/robodojo/configs/eval-0.json",
+      "extensions/benchmarks/robodojo/configs/eval-1.json",
+      "extensions/benchmarks/robodojo/configs/eval-2.json",
+      "extensions/benchmarks/robodojo/configs/eval-3.json",
+      "extensions/benchmarks/robodojo/configs/smoke_test.json"
+    ],
+    "default_profile": "extensions/benchmarks/robodojo/configs/smoke_test.json"
+  },
+  {
+    "id": "robomme",
+    "registry": "robomme_benchmark",
+    "class": "robotenon_robomme.benchmark:RoboMMEBenchmark",
+    "path": "extensions/benchmarks/robomme",
+    "vla_interface": "extensions/benchmarks/robomme/src/robotenon_robomme/vla.py",
+    "profiles": [
+      "extensions/benchmarks/robomme/configs/counting.json",
+      "extensions/benchmarks/robomme/configs/eval-0.json",
+      "extensions/benchmarks/robomme/configs/eval-1.json",
+      "extensions/benchmarks/robomme/configs/eval-2.json",
+      "extensions/benchmarks/robomme/configs/eval-3.json",
+      "extensions/benchmarks/robomme/configs/imitation.json",
+      "extensions/benchmarks/robomme/configs/permanence.json",
+      "extensions/benchmarks/robomme/configs/reference.json"
+    ],
+    "default_profile": "extensions/benchmarks/robomme/configs/counting.json"
+  },
+  {
+    "id": "robotwin",
+    "registry": "robotwin_benchmark",
+    "class": "robotenon_robotwin.benchmark:RoboTwinBenchmark",
+    "path": "extensions/benchmarks/robotwin",
+    "vla_interface": "extensions/benchmarks/robotwin/src/robotenon_robotwin/vla.py",
+    "profiles": [
+      "extensions/benchmarks/robotwin/configs/eval.json"
+    ],
+    "default_profile": "extensions/benchmarks/robotwin/configs/eval.json"
+  },
+  {
+    "id": "simpler",
+    "registry": "simpler_benchmark",
+    "class": "robotenon_simpler.benchmark:SimplerEnvBenchmark",
+    "path": "extensions/benchmarks/simpler",
+    "vla_interface": "extensions/benchmarks/simpler/src/robotenon_simpler/vla.py",
+    "profiles": [
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-0.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-1.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-10.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-11.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-12.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-13.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-14.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-15.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-16.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-17.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-18.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-19.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-2.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-20.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-21.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-22.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-23.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-24.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-25.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-26.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-27.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-28.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-29.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-3.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-30.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-31.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-32.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-33.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-34.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-35.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-36.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-37.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-38.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-39.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-4.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-40.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-41.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-5.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-6.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-7.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-8.json",
+      "extensions/benchmarks/simpler/configs/google_robot_drawer_va-9.json",
+      "extensions/benchmarks/simpler/configs/google_robot_move_near_va-0.json",
+      "extensions/benchmarks/simpler/configs/google_robot_move_near_va-1.json",
+      "extensions/benchmarks/simpler/configs/google_robot_move_near_va-2.json",
+      "extensions/benchmarks/simpler/configs/google_robot_move_near_va-3.json",
+      "extensions/benchmarks/simpler/configs/google_robot_move_near_va-4.json",
+      "extensions/benchmarks/simpler/configs/google_robot_move_near_va-5.json",
+      "extensions/benchmarks/simpler/configs/google_robot_move_near_va-6.json",
+      "extensions/benchmarks/simpler/configs/google_robot_move_near_va-7.json",
+      "extensions/benchmarks/simpler/configs/google_robot_move_near_va-8.json",
+      "extensions/benchmarks/simpler/configs/google_robot_move_near_va-9.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-0.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-1.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-10.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-11.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-12.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-13.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-14.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-15.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-16.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-17.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-18.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-19.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-2.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-20.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-21.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-22.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-23.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-24.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-25.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-26.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-27.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-28.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-29.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-3.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-30.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-31.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-32.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-4.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-5.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-6.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-7.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-8.json",
+      "extensions/benchmarks/simpler/configs/google_robot_pick_coke_can_va-9.json",
+      "extensions/benchmarks/simpler/configs/google_robot_put_in_drawer_va-0.json",
+      "extensions/benchmarks/simpler/configs/google_robot_put_in_drawer_va-1.json",
+      "extensions/benchmarks/simpler/configs/google_robot_put_in_drawer_va-2.json",
+      "extensions/benchmarks/simpler/configs/google_robot_put_in_drawer_va-3.json",
+      "extensions/benchmarks/simpler/configs/google_robot_put_in_drawer_va-4.json",
+      "extensions/benchmarks/simpler/configs/google_robot_put_in_drawer_va-5.json",
+      "extensions/benchmarks/simpler/configs/google_robot_put_in_drawer_va-6.json",
+      "extensions/benchmarks/simpler/configs/google_robot_vm-0.json",
+      "extensions/benchmarks/simpler/configs/google_robot_vm-1.json",
+      "extensions/benchmarks/simpler/configs/google_robot_vm-2.json",
+      "extensions/benchmarks/simpler/configs/google_robot_vm-3.json",
+      "extensions/benchmarks/simpler/configs/google_robot_vm-4.json",
+      "extensions/benchmarks/simpler/configs/google_robot_vm-5.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm-0.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm-1.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm-2.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm-3.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm_groot-0.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm_groot-1.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm_groot-2.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm_groot-3.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm_xvla-0.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm_xvla-1.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm_xvla-2.json",
+      "extensions/benchmarks/simpler/configs/widowx_vm_xvla-3.json"
+    ],
+    "default_profile": "extensions/benchmarks/simpler/configs/google_robot_drawer_va-0.json"
+  },
+  {
+    "id": "vlabench",
+    "registry": "vlabench_benchmark",
+    "class": "robotenon_vlabench.benchmark:VLABenchBenchmark",
+    "path": "extensions/benchmarks/vlabench",
+    "vla_interface": "extensions/benchmarks/vlabench/src/robotenon_vlabench/vla.py",
+    "profiles": [
+      "extensions/benchmarks/vlabench/configs/eval.json",
+      "extensions/benchmarks/vlabench/configs/full.json"
+    ],
+    "default_profile": "extensions/benchmarks/vlabench/configs/eval.json"
+  }
+]

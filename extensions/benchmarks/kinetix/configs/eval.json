@@ -1,0 +1,13 @@
+{
+  "episodes_per_task": 100,
+  "params": {
+    "seed": 0,
+    "observation_type": "symbolic",
+    "max_episode_steps": 256,
+    "rtc_worlds_dir": "/app/rtc/worlds",
+    "action_noise_std": 0.1
+  },
+  "benchmark_id": "kinetix_benchmark",
+  "source_config": "configs/benchmarks/kinetix/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

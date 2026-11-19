@@ -1,0 +1,5 @@
+# Python 3.10; install Vulkan/Lavapipe or a supported NVIDIA driver.
+setuptools<70
+torch==2.1.0
+numpy<2
+mani-skill2==0.5.3

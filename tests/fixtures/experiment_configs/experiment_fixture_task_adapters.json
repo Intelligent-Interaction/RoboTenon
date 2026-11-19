@@ -1,0 +1,5 @@
+{
+  "config_version": 1,
+  "plugin_task_adapters": ["robotenon.task_adapters.single"],
+  "task_adapters": [{"id": "fixture", "name": "single-task", "params": {"num_trials": 1}}]
+}

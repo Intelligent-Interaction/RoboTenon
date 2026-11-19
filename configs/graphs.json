@@ -1,0 +1,343 @@
+{
+  "graphs": [
+    {
+      "id": "demo",
+      "entry": "prepare",
+      "backend": "langgraph",
+      "max_steps": 30,
+      "nodes": [
+        {
+          "id": "prepare",
+          "module": "debug_echo",
+          "next": [
+            {
+              "node": "observe"
+            },
+            {
+              "node": "plan"
+            }
+          ]
+        },
+        {
+          "id": "observe",
+          "module": "debug_echo",
+          "predecessors": [
+            "prepare"
+          ],
+          "next": [
+            {
+              "node": "join"
+            }
+          ]
+        },
+        {
+          "id": "plan",
+          "module": "debug_echo",
+          "predecessors": [
+            "prepare"
+          ],
+          "next": [
+            {
+              "node": "join"
+            }
+          ]
+        },
+        {
+          "id": "join",
+          "module": "debug_echo",
+          "predecessors": [
+            "observe",
+            "plan"
+          ],
+          "next": [
+            {
+              "node": "repeat"
+            }
+          ]
+        },
+        {
+          "id": "repeat",
+          "graph": "repeat_once",
+          "predecessors": [
+            "join"
+          ],
+          "next": [
+            {
+              "node": "finish"
+            }
+          ]
+        },
+        {
+          "id": "finish",
+          "module": "debug_echo",
+          "predecessors": [
+            "repeat"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "repeat_once",
+      "entry": "step",
+      "backend": "langgraph",
+      "max_steps": 4,
+      "nodes": [
+        {
+          "id": "step",
+          "module": "debug_echo",
+          "default": "END",
+          "loop": {
+            "when": "ctx.trigger == 'entry'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "embodied_loop",
+      "entry": "reset",
+      "backend": "langgraph",
+      "max_steps": 100,
+      "emergency_graphs": {
+        "P3": "emergency_pause",
+        "P4": "emergency_stop"
+      },
+      "recovery": {
+        "P1": {
+          "mode": "auto",
+          "recovery_graph": "recover_monitor",
+          "resume_graph": "embodied_loop"
+        },
+        "P2": {
+          "mode": "auto",
+          "recovery_graph": "recover_limited",
+          "resume_graph": "embodied_loop"
+        },
+        "P3": {
+          "mode": "manual",
+          "recovery_graph": "recover_pause",
+          "resume_graph": "embodied_loop",
+          "clear_latched": true
+        },
+        "P4": {
+          "mode": "manual",
+          "recovery_graph": "recover_estop",
+          "resume_graph": "embodied_loop",
+          "clear_latched": true
+        }
+      },
+      "nodes": [
+        {
+          "id": "reset",
+          "type": "system",
+          "operation": "env.reset",
+          "next": [
+            {
+              "node": "policy"
+            }
+          ]
+        },
+        {
+          "id": "policy",
+          "type": "module",
+          "module": "agent_main",
+          "predecessors": [
+            "reset"
+          ],
+          "next": [
+            {
+              "node": "body_execute"
+            }
+          ]
+        },
+        {
+          "id": "body_execute",
+          "type": "system",
+          "operation": "body.execute",
+          "predecessors": [
+            "policy"
+          ],
+          "next": [
+            {
+              "node": "observe"
+            }
+          ]
+        },
+        {
+          "id": "observe",
+          "type": "system",
+          "operation": "env.observe",
+          "predecessors": [
+            "body_execute"
+          ],
+          "next": [
+            {
+              "node": "monitor"
+            }
+          ]
+        },
+        {
+          "id": "monitor",
+          "type": "system",
+          "operation": "monitor.check",
+          "predecessors": [
+            "observe"
+          ],
+          "next": [
+            {
+              "node": "evaluator"
+            }
+          ]
+        },
+        {
+          "id": "evaluator",
+          "type": "module",
+          "module": "evaluator_main",
+          "predecessors": [
+            "monitor"
+          ],
+          "default": "END",
+          "goto": [
+            {
+              "node": "policy",
+              "when": "ctx.results['evaluator']['continue'] == true"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "emergency_pause",
+      "entry": "interrupt_body",
+      "backend": "fallback",
+      "max_steps": 4,
+      "nodes": [
+        {
+          "id": "interrupt_body",
+          "type": "system",
+          "operation": "body.interrupt",
+          "next": [
+            {
+              "node": "snapshot"
+            }
+          ]
+        },
+        {
+          "id": "snapshot",
+          "type": "system",
+          "operation": "safety.snapshot",
+          "predecessors": [
+            "interrupt_body"
+          ],
+          "next": [
+            {
+              "node": "END"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "emergency_stop",
+      "entry": "interrupt_body",
+      "backend": "fallback",
+      "max_steps": 4,
+      "nodes": [
+        {
+          "id": "interrupt_body",
+          "type": "system",
+          "operation": "body.interrupt",
+          "next": [
+            {
+              "node": "snapshot"
+            }
+          ]
+        },
+        {
+          "id": "snapshot",
+          "type": "system",
+          "operation": "safety.snapshot",
+          "predecessors": [
+            "interrupt_body"
+          ],
+          "next": [
+            {
+              "node": "END"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recover_monitor",
+      "entry": "snapshot",
+      "backend": "fallback",
+      "max_steps": 2,
+      "nodes": [
+        {
+          "id": "snapshot",
+          "type": "system",
+          "operation": "safety.snapshot",
+          "next": [
+            {
+              "node": "END"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recover_limited",
+      "entry": "snapshot",
+      "backend": "fallback",
+      "max_steps": 2,
+      "nodes": [
+        {
+          "id": "snapshot",
+          "type": "system",
+          "operation": "safety.snapshot",
+          "next": [
+            {
+              "node": "END"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recover_pause",
+      "entry": "snapshot",
+      "backend": "fallback",
+      "max_steps": 2,
+      "nodes": [
+        {
+          "id": "snapshot",
+          "type": "system",
+          "operation": "safety.snapshot",
+          "next": [
+            {
+              "node": "END"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recover_estop",
+      "entry": "snapshot",
+      "backend": "fallback",
+      "max_steps": 2,
+      "nodes": [
+        {
+          "id": "snapshot",
+          "type": "system",
+          "operation": "safety.snapshot",
+          "next": [
+            {
+              "node": "END"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "benchmark": "molmospaces",
+  "class": "robosys_molmospaces.native.benchmark:MolmoSpacesBenchmark",
+  "upstream_class": "vla_eval.benchmarks.molmospaces.benchmark:MolmoSpacesBenchmark",
+  "params": {
+    "benchmark_dir": "/path/to/deployment/molmo-assets/benchmarks/molmospaces-bench-v2/procthor-objaverse/FrankaPickandPlaceHardBench/FrankaPickandPlaceHardBench_20260212_200ep_json_benchmark",
+    "eval_config_cls": "molmo_spaces.evaluation.configs.evaluation_configs:DummyPickPlaceEvalConfig",
+    "task_horizon": 600,
+    "send_wrist_image": true,
+    "send_state": true
+  },
+  "seed": 0,
+  "render": "gpu",
+  "actions": [
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        -0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "resource_manifest": "/path/to/deployment/scripts/molmo-v2-manifest.json"
+}

@@ -1,0 +1,64 @@
+{
+  "benchmark": "kinetix",
+  "class": "robosys_kinetix.native.benchmark:KinetixBenchmark",
+  "upstream_class": "vla_eval.benchmarks.kinetix.benchmark:KinetixBenchmark",
+  "params": {
+    "rtc_worlds_dir": "/path/to/workspace/work/rtc-kinetix/worlds",
+    "observation_type": "pixels",
+    "seed": 11
+  },
+  "actions": [
+    {
+      "actions": [
+        0.1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        0.1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        -0.1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        0.1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "seed": 11,
+  "render": "gpu"
+}

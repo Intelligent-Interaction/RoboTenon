@@ -1,0 +1,23 @@
+{
+  "episodes_per_task": 25,
+  "params": {
+    "seed": 0,
+    "tasks": [
+      "stack_bowls_random",
+      "push_T_random",
+      "pack_objects_into_box_random",
+      "fold_clothes_random",
+      "hang_mugs_random",
+      "sweep_blocks_random",
+      "pour_liquid_into_cup_random",
+      "make_toast_random",
+      "arrange_largest_number_random",
+      "sort_nesting_dolls_by_size_random",
+      "store_laptop_and_headphones_random",
+      "stack_blocks_random"
+    ]
+  },
+  "benchmark_id": "robodojo_benchmark",
+  "source_config": "configs/benchmarks/robodojo/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

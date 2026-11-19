@@ -1,0 +1,130 @@
+{
+  "benchmark": "duobench",
+  "class": "robosys_duobench.native.benchmark:DuoBenchBenchmark",
+  "upstream_class": "vla_eval.benchmarks.duobench.benchmark:DuoBenchBenchmark",
+  "params": {
+    "task_ids": [
+      "ball_maze",
+      "bin_sort",
+      "block_balance",
+      "carry_pot",
+      "hinge_chest",
+      "join_blocks",
+      "pour_marbles",
+      "spring_door",
+      "transfer_cube",
+      "transfer_gate",
+      "transfer_reorient"
+    ],
+    "seed": 11,
+    "send_state": true,
+    "control_mode": "cartesian_tquat",
+    "relative_to": "last_step",
+    "binary_gripper": false,
+    "frequency": 30
+  },
+  "actions": [
+    {
+      "actions": [
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        -0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "seed": 11,
+  "render": "gpu"
+}

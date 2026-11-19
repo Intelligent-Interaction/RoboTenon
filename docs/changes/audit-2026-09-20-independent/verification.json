@@ -1,0 +1,28 @@
+{
+  "source_head": "3e23ae2067e913ff80720855ee77b0ca77d01150",
+  "snapshot_files": 396,
+  "python": "3.11.10",
+  "pydantic": "2.13.5",
+  "pytest": "9.1.1",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "baseline_python": {
+    "passed": 440,
+    "skipped": 1,
+    "failed": 0
+  },
+  "baseline_javascript": {
+    "passed": 20,
+    "failed": 0
+  },
+  "defect_probes": {
+    "confirmed": 11,
+    "failed": 0
+  },
+  "implementation_drift": [],
+  "commands": [
+    "python -m pytest -q",
+    "node --test tests/test_graph_routes.js tests/test_trajectory_media.js",
+    "python -m pytest -o addopts= -q -s docs/audit-2026-09-20-independent/reproduce.py"
+  ],
+  "scope": "Local working-tree source including uncommitted changes, isolated fake execution; no GPU, model endpoint, deployed server or robot verification."
+}

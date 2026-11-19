@@ -1,0 +1,228 @@
+{
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "python": "3.11.10",
+  "scope": "local CPU microbenchmarks and explicitly synthetic scheduling sensitivity; no real GPU throughput claim",
+  "history": [
+    {
+      "replan_steps": 1,
+      "history_length": 4,
+      "interval": 2,
+      "full_ms": 1.0002084891311824,
+      "delta_ms": 0.2145000034943223,
+      "speedup": 4.662976563343774,
+      "mean_bytes": [
+        2360322,
+        645443.34375
+      ],
+      "exact": true
+    },
+    {
+      "replan_steps": 2,
+      "history_length": 4,
+      "interval": 2,
+      "full_ms": 0.9721670066937804,
+      "delta_ms": 0.20020798547193408,
+      "speedup": 4.855785369410564,
+      "mean_bytes": [
+        2360322,
+        590123.9375
+      ],
+      "exact": true
+    },
+    {
+      "replan_steps": 4,
+      "history_length": 4,
+      "interval": 2,
+      "full_ms": 1.0610210010781884,
+      "delta_ms": 0.5326874961610883,
+      "speedup": 1.9918263686019173,
+      "mean_bytes": [
+        2360322,
+        1180198.875
+      ],
+      "exact": true
+    },
+    {
+      "replan_steps": 16,
+      "history_length": 4,
+      "interval": 2,
+      "full_ms": 1.2396249949233606,
+      "delta_ms": 1.2165834923507646,
+      "speedup": 1.0189395160442902,
+      "mean_bytes": [
+        2360322,
+        2360349
+      ],
+      "exact": true
+    }
+  ],
+  "scheduler": [
+    {
+      "sim_pause_sec": 2,
+      "batch_extra_sample_sec": 0.02,
+      "speedup_median": 1.0564658196805687,
+      "fixed": {
+        "seconds": 280.5077228322754,
+        "mean_batch": 2.633744855967078,
+        "mean_queue_wait": 0.20508097880378182
+      },
+      "shared": {
+        "seconds": 266.3306369808408,
+        "mean_batch": 3.532983715153188,
+        "mean_queue_wait": 0.031885907802362654
+      }
+    },
+    {
+      "sim_pause_sec": 2,
+      "batch_extra_sample_sec": 0.1,
+      "speedup_median": 1.041063257984597,
+      "fixed": {
+        "seconds": 315.1595455988125,
+        "mean_batch": 3.3307311995836586,
+        "mean_queue_wait": 0.31572473308533583
+      },
+      "shared": {
+        "seconds": 302.0453440645073,
+        "mean_batch": 4.1544952937358,
+        "mean_queue_wait": 0.06759281766544119
+      }
+    },
+    {
+      "sim_pause_sec": 2,
+      "batch_extra_sample_sec": 0.4,
+      "speedup_median": 0.9935203411223633,
+      "fixed": {
+        "seconds": 641.4024354569777,
+        "mean_batch": 7.935523868567886,
+        "mean_queue_wait": 1.2055077993232433
+      },
+      "shared": {
+        "seconds": 644.1749427891787,
+        "mean_batch": 7.876923076923077,
+        "mean_queue_wait": 1.195519556038261
+      }
+    },
+    {
+      "sim_pause_sec": 6,
+      "batch_extra_sample_sec": 0.02,
+      "speedup_median": 1.0128278235207784,
+      "fixed": {
+        "seconds": 706.7135834423426,
+        "mean_batch": 1.3651877133105803,
+        "mean_queue_wait": 0.1556160473448489
+      },
+      "shared": {
+        "seconds": 697.7628053163808,
+        "mean_batch": 1.963792574409328,
+        "mean_queue_wait": 0.037602786007507535
+      }
+    },
+    {
+      "sim_pause_sec": 6,
+      "batch_extra_sample_sec": 0.1,
+      "speedup_median": 1.0065548375281854,
+      "fixed": {
+        "seconds": 714.2274802495282,
+        "mean_batch": 1.3964651974689068,
+        "mean_queue_wait": 0.17344623624760724
+      },
+      "shared": {
+        "seconds": 709.9234966438273,
+        "mean_batch": 1.9500304692260817,
+        "mean_queue_wait": 0.037939401470751755
+      }
+    },
+    {
+      "sim_pause_sec": 6,
+      "batch_extra_sample_sec": 0.4,
+      "speedup_median": 0.9971573699929787,
+      "fixed": {
+        "seconds": 767.8640791858343,
+        "mean_batch": 1.7048481619605753,
+        "mean_queue_wait": 0.3510284815940092
+      },
+      "shared": {
+        "seconds": 765.7804560548133,
+        "mean_batch": 2.181694221919209,
+        "mean_queue_wait": 0.05998781454956757
+      }
+    },
+    {
+      "sim_pause_sec": 12,
+      "batch_extra_sample_sec": 0.02,
+      "speedup_median": 1.003295264543993,
+      "fixed": {
+        "seconds": 1353.720019212843,
+        "mean_batch": 1.134550611593689,
+        "mean_queue_wait": 0.11552123115479099
+      },
+      "shared": {
+        "seconds": 1348.187608021777,
+        "mean_batch": 1.5051740357478833,
+        "mean_queue_wait": 0.04167478081577459
+      }
+    },
+    {
+      "sim_pause_sec": 12,
+      "batch_extra_sample_sec": 0.1,
+      "speedup_median": 1.001922778499476,
+      "fixed": {
+        "seconds": 1357.779838647554,
+        "mean_batch": 1.1378789225708952,
+        "mean_queue_wait": 0.11954875346893794
+      },
+      "shared": {
+        "seconds": 1354.2511030494645,
+        "mean_batch": 1.5019948368927483,
+        "mean_queue_wait": 0.04180954207655424
+      }
+    },
+    {
+      "sim_pause_sec": 12,
+      "batch_extra_sample_sec": 0.4,
+      "speedup_median": 0.9943809557080213,
+      "fixed": {
+        "seconds": 1365.7043244371414,
+        "mean_batch": 1.1613137361640355,
+        "mean_queue_wait": 0.14631599008715088
+      },
+      "shared": {
+        "seconds": 1371.4650718849139,
+        "mean_batch": 1.4932337844143724,
+        "mean_queue_wait": 0.04187100563760711
+      }
+    }
+  ],
+  "graph": {
+    "trace_live": {
+      "median_ms": 885.6134999950882,
+      "samples_ms": [
+        885.6134999950882,
+        885.5751249939203,
+        885.0856249919161,
+        907.2785839962307,
+        1007.9757919884287
+      ]
+    },
+    "no_trace_live": {
+      "median_ms": 691.2075000000186,
+      "samples_ms": [
+        682.5564159953501,
+        691.2075000000186,
+        682.4262920126785,
+        723.5907499853056,
+        727.8357500035781
+      ]
+    },
+    "no_trace_no_live": {
+      "median_ms": 689.9892079818528,
+      "samples_ms": [
+        704.0474170062225,
+        684.6405419928487,
+        682.3830420034938,
+        714.0181669965386,
+        689.9892079818528
+      ]
+    }
+  }
+}

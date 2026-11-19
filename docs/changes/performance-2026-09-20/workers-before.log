@@ -1,0 +1,29 @@
+[
+  {
+    "workers": 1,
+    "idle_s": 5.000314667006023,
+    "cpu_s": 0.067846036,
+    "cpu_core_percent": 1.3568353297378248,
+    "rss_before": 51118080,
+    "rss_after": 51331072,
+    "receive_mode": "20ms_polling"
+  },
+  {
+    "workers": 4,
+    "idle_s": 5.001395749990479,
+    "cpu_s": 0.23197679200000001,
+    "cpu_core_percent": 4.6382410750127425,
+    "rss_before": 206553088,
+    "rss_after": 206585856,
+    "receive_mode": "20ms_polling"
+  },
+  {
+    "workers": 8,
+    "idle_s": 5.001560125005199,
+    "cpu_s": 0.46038930399999994,
+    "cpu_core_percent": 9.20491391672556,
+    "rss_before": 419233792,
+    "rss_after": 419233792,
+    "receive_mode": "20ms_polling"
+  }
+]

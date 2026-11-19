@@ -1,0 +1,28 @@
+{
+  "name": "duobench",
+  "episodes_per_task": 100,
+  "params": {
+    "task_ids": [
+      "ball_maze",
+      "bin_sort",
+      "block_balance",
+      "carry_pot",
+      "hinge_chest",
+      "join_blocks",
+      "pour_marbles",
+      "spring_door",
+      "transfer_cube",
+      "transfer_gate",
+      "transfer_reorient"
+    ],
+    "seed": 0,
+    "send_state": true,
+    "control_mode": "cartesian_tquat",
+    "relative_to": "last_step",
+    "binary_gripper": false,
+    "frequency": 30
+  },
+  "benchmark_id": "duobench_benchmark",
+  "source_config": "configs/benchmarks/duobench/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

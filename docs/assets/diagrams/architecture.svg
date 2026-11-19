@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="570" viewBox="0 0 1120 570" role="img" aria-labelledby="title desc">
+<title id="title">Runtime components and resource ownership</title><desc id="desc">The Graph coordinates the workflow. Environment supplies observations and Body executes actions.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="570" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">Runtime components and resource ownership</text>
+<text x="36" y="78" class="sub" fill="#586779">The Graph coordinates the workflow. Environment supplies observations and Body executes actions.</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="138" width="248" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 152 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="170" class="head" fill="#3458a4">TaskAdapter / Worker</text>
+<text x="54" y="199" class="body" fill="#172b46">Enumerate and schedule tasks</text>
+<text x="54" y="225" class="body" fill="#172b46">Own process resources</text>
+<rect x="373" y="138" width="330" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M374 152 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="391" y="170" class="head" fill="#3458a4">Graph / Module</text>
+<text x="391" y="199" class="body" fill="#172b46">Read inputs and call tools</text>
+<text x="391" y="225" class="body" fill="#172b46">Publish outputs and routes</text>
+<rect x="795" y="138" width="289" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M796 152 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="813" y="170" class="head" fill="#3458a4">Tool</text>
+<text x="813" y="199" class="body" fill="#172b46">Models, memory, skills</text>
+<text x="813" y="225" class="body" fill="#172b46">Reused within a Worker</text>
+<path d="M284 194 L373 194" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M703 185 L795 185" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="738" y="172" class="small" fill="#586779">Call</text>
+<path d="M795 222 L703 222" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<rect x="36" y="323" width="280" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 337 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="355" class="head" fill="#3458a4">Environment</text>
+<text x="54" y="384" class="body" fill="#172b46">reset / observe / feedback</text>
+<text x="54" y="410" class="body" fill="#172b46">State and sensor frames</text>
+<rect x="404" y="323" width="280" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M405 337 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="422" y="355" class="head" fill="#3458a4">Body</text>
+<text x="422" y="384" class="body" fill="#172b46">execute / interrupt</text>
+<text x="422" y="410" class="body" fill="#172b46">Confirm or stop actions</text>
+<rect x="784" y="323" width="300" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M785 337 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="802" y="355" class="head" fill="#3458a4">Monitor / Safety</text>
+<text x="802" y="384" class="body" fill="#172b46">Check action admission</text>
+<text x="802" y="410" class="body" fill="#172b46">Publish safety state</text>
+<path d="M452 250 L452 280 L176 280 L176 323" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="190" y="273" class="small" fill="#586779">Observe</text>
+<path d="M545 250 L545 323" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="558" y="292" class="small" fill="#586779">Actions</text>
+<path d="M931 323 L931 280 L632 280 L632 250" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M784 386 L684 386" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="691" y="372" class="small" fill="#586779">Safety gate</text>
+<text x="36" y="499" class="head" fill="#29735c">Episode results, metrics, and traces → storage and indexes → Portal</text>
+<text x="36" y="546" class="small" fill="#586779">The diagram shows responsibilities. See the reference for lifecycle and timing details.</text>
+</svg>

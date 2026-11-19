@@ -1,0 +1,17 @@
+{
+  "episodes_per_task": 50,
+  "params": {
+    "tasks": [
+      "PickHighlight",
+      "VideoRepick",
+      "VideoPlaceButton",
+      "VideoPlaceOrder"
+    ],
+    "action_space": "joint_angle",
+    "max_steps": 1300
+  },
+  "render": "cpu",
+  "benchmark_id": "robomme_benchmark",
+  "source_config": "configs/benchmarks/robomme/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

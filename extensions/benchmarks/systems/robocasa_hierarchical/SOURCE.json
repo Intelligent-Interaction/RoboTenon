@@ -1,0 +1,14 @@
+{
+  "commit": "af74484a88d9fddd225e35ed211f50c8103172b3",
+  "path": "extensions/robocasa365/configs/robosys_xr365_graphs.json",
+  "environment": "robocasa365_benchmark",
+  "adaptations": [
+    "native action contract and per-step history",
+    "authoritative environment terminal guard before verifier",
+    "native benchmark metrics and cleanup",
+    "task-specific horizon; no legacy runtime horizon override",
+    "separate planner/verifier service bindings",
+    "managed batch transport instead of HTTP/socket model servers; same JSON parsing contract",
+    "Qwen3-VL-4B checkpoint retained; not identical to reference Qwen3.5 model"
+  ]
+}

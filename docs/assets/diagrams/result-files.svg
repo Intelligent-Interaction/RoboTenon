@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="630" viewBox="0 0 1120 630" role="img" aria-labelledby="title desc">
+<title id="title">Finding an experiment and an execution attempt</title><desc id="desc">Example output from the CPU batch tutorial in data/tutorial/cli/cpu-demo.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="630" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">Finding an experiment and an execution attempt</text>
+<text x="36" y="78" class="sub" fill="#586779">Example output from the CPU batch tutorial in data/tutorial/cli/cpu-demo.</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="130" width="486" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 144 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="162" class="head" fill="#3458a4">summary.json / status.json</text>
+<text x="54" y="191" class="body" fill="#172b46">Final summary / live progress</text>
+<rect x="36" y="246" width="486" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 260 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="278" class="head" fill="#3458a4">cpu-demo/episode_000_seed_7.json</text>
+<text x="54" y="307" class="body" fill="#172b46">Task status and task_success</text>
+<text x="54" y="333" class="body" fill="#172b46">result.identity、result.outputs</text>
+<rect x="36" y="382" width="486" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 396 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="414" class="head" fill="#3458a4">cpu-demo/…/attempts/&lt;id&gt;/</text>
+<text x="54" y="443" class="body" fill="#172b46">Per-attempt episode.json and sources</text>
+<rect x="36" y="498" width="486" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 512 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="530" class="head" fill="#3458a4">observability.json</text>
+<text x="54" y="559" class="body" fill="#172b46">Trace and metrics file locations</text>
+<rect x="615" y="130" width="469" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M616 144 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="633" y="162" class="head" fill="#3458a4">1. Read the summary</text>
+<text x="633" y="191" class="body" fill="#172b46">Completed, successful, and failed</text>
+<rect x="615" y="246" width="469" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M616 260 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="633" y="278" class="head" fill="#3458a4">2. Find a task</text>
+<text x="633" y="307" class="body" fill="#172b46">adapter / global_index / seed</text>
+<text x="633" y="333" class="body" fill="#172b46">Check status and task success</text>
+<rect x="615" y="382" width="469" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M616 396 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="633" y="414" class="head" fill="#3458a4">3. Identify attempts</text>
+<text x="633" y="443" class="body" fill="#172b46">Use attempt_id to trace retries</text>
+<rect x="615" y="498" width="469" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M616 512 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="633" y="530" class="head" fill="#3458a4">4. Inspect calls and media</text>
+<text x="633" y="559" class="body" fill="#172b46">Read the trace and follow video_path</text>
+<path d="M522 176 L615 176" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M522 302 L615 302" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M522 428 L615 428" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M522 544 L615 544" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="606" class="small" fill="#586779">Use the output JSON for actual paths. Enable video explicitly. Internal locks, indexes, and logs are omitted here.</text>
+</svg>

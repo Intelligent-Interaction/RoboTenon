@@ -1,0 +1,56 @@
+{
+  "config_version": 1,
+  "modules": [{"id": "report", "name": "echo"}],
+  "tools": [],
+  "monitors": [],
+  "bodies": [],
+  "environments": [{"id": "tutorial_env", "name": "fake"}],
+  "task_adapters": [
+    {
+      "id": "tutorial",
+      "name": "single-task",
+      "params": {"task_id": "cpu-demo", "environment_id": "fake", "num_trials": 3}
+    }
+  ],
+  "graphs": [
+    {
+      "id": "cpu_demo",
+      "entry": "reset",
+      "max_steps": 8,
+      "outputs": {
+        "success": {"source": "nodes.report.outputs.values.environment_ready", "default": false},
+        "sequence_no": "nodes.report.outputs.values.sequence_no"
+      },
+      "nodes": [
+        {"id": "reset", "type": "system", "operation": "env.reset", "next": [{"node": "observe"}]},
+        {"id": "observe", "type": "system", "operation": "env.observe", "predecessors": ["reset"], "next": [{"node": "report"}]},
+        {
+          "id": "report",
+          "module": "report",
+          "predecessors": ["observe"],
+          "inputs": {
+            "environment_ready": "nodes.observe.outputs.feedback.health.ready",
+            "sequence_no": "nodes.observe.outputs.feedback.sequence_no"
+          }
+        }
+      ]
+    }
+  ],
+  "parameters": {
+    "task": {"task_id": "cpu-demo", "env_id": "fake", "seed": 7},
+    "runtime": {
+      "profile": "tutorial",
+      "environment_id": "tutorial_env",
+      "graph_id": "cpu_demo",
+      "monitor_enabled": false,
+      "execution": {
+        "backend": "process",
+        "max_workers": 1,
+        "max_retries": 0,
+        "memory_mode": "disabled"
+      }
+    }
+  },
+  "observation_cache": {"enabled": false},
+  "safety_state": {"backend": "memory"}
+}

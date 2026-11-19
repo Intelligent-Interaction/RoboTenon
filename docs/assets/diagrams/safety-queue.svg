@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="480" viewBox="0 0 1120 480" role="img" aria-labelledby="title desc">
+<title id="title">Task decisions and action stops</title><desc id="desc">The evaluator chooses the next task step. Monitor and Safety constrain actions during execution.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="480" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">Task decisions and action stops</text>
+<text x="36" y="78" class="sub" fill="#586779">The evaluator chooses the next task step. Monitor and Safety constrain actions during execution.</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="155" width="220" height="226" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 169 v198" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="187" class="head" fill="#3458a4">Environment</text>
+<text x="54" y="216" class="body" fill="#172b46">Publish feedback</text>
+<text x="54" y="242" class="body" fill="#172b46">Task signals</text>
+<text x="54" y="268" class="body" fill="#172b46">Health status</text>
+<text x="54" y="294" class="body" fill="#172b46">Sensor frames</text>
+<rect x="339" y="135" width="310" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M340 149 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="357" y="167" class="head" fill="#3458a4">Evaluator</text>
+<text x="357" y="196" class="body" fill="#172b46">Continue / finish / retry / abort</text>
+<text x="357" y="222" class="body" fill="#172b46">Update the task queue</text>
+<rect x="738" y="135" width="346" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M739 149 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="756" y="167" class="head" fill="#3458a4">TaskQueue / Graph</text>
+<text x="756" y="196" class="body" fill="#172b46">Select the next task</text>
+<text x="756" y="222" class="body" fill="#172b46">Execute its workflow</text>
+<rect x="339" y="298" width="310" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M340 312 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="357" y="330" class="head" fill="#3458a4">Monitor / Safety</text>
+<text x="357" y="359" class="body" fill="#172b46">Publish safety level and latch</text>
+<text x="357" y="385" class="body" fill="#172b46">Body watchdog reads state</text>
+<rect x="738" y="298" width="346" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M739 312 v84" stroke="#29735c" stroke-width="3"/>
+<text x="756" y="330" class="head" fill="#29735c">Body / driver</text>
+<text x="756" y="359" class="body" fill="#172b46">Admit or interrupt actions</text>
+<text x="756" y="385" class="body" fill="#172b46">Call device hold or stop</text>
+<path d="M256 215 L297 215 L297 190 L339 190" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M256 325 L297 325 L297 353 L339 353" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M649 190 L738 190" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M649 353 L738 353" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="456" class="small" fill="#586779">TaskQueue holds application tasks. The scheduler, experiment queue, and hardware stop have separate responsibilities.</text>
+</svg>

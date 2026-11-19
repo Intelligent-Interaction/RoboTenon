@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 128 128" role="img" aria-labelledby="title description">
+  <title id="title">RoboTenon</title>
+  <desc id="description">A machined letter R. The diagonal leg and its dovetail are signal yellow, matching the hexagonal nut at the foot of the navy upright.</desc>
+  <rect width="128" height="128" rx="16" fill="#F1F3F4"/>
+  <path fill="#23364A" fill-rule="evenodd" d="
+    M22 17H89L109 37V60L90 79H81L91 59H58L68 79H41V105L35 111H17V22Z
+    M41 35V52H80L88 44V42L81 35Z
+    "/>
+  <path fill="#F4BC23" d="M26 92H32L35 97L32 102H26L23 97Z"/>
+  <path fill="#F4BC23" d="
+    M62 61.5H87L78.5 78.5V82H86L111 107L107 111H84L56 82H70.5V78.5Z"/>
+</svg>

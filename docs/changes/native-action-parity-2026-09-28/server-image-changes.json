@@ -1,0 +1,3462 @@
+[
+  {
+    "benchmark": "calvin",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/rgb_static": {
+            "upstream_changed_channels": 10894,
+            "roboclaw_changed_channels": 10894,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/rgb_static": {
+            "upstream_changed_channels": 13086,
+            "roboclaw_changed_channels": 13086,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/rgb_static": {
+            "upstream_changed_channels": 7761,
+            "roboclaw_changed_channels": 7761,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/rgb_static": {
+            "upstream_changed_channels": 6223,
+            "roboclaw_changed_channels": 6223,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/rgb_static": {
+            "upstream_changed_channels": 12379,
+            "roboclaw_changed_channels": 12379,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "calvin",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/rgb_static": {
+            "upstream_changed_channels": 10894,
+            "roboclaw_changed_channels": 10894,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/rgb_static": {
+            "upstream_changed_channels": 13086,
+            "roboclaw_changed_channels": 13086,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/rgb_static": {
+            "upstream_changed_channels": 7761,
+            "roboclaw_changed_channels": 7761,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/rgb_static": {
+            "upstream_changed_channels": 6223,
+            "roboclaw_changed_channels": 6223,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/rgb_static": {
+            "upstream_changed_channels": 12379,
+            "roboclaw_changed_channels": 12379,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "duobench",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/head": {
+            "upstream_changed_channels": 100888,
+            "roboclaw_changed_channels": 100885,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/left_wrist": {
+            "upstream_changed_channels": 1807017,
+            "roboclaw_changed_channels": 1807002,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              2,
+              255
+            ]
+          },
+          "root/images/right_wrist": {
+            "upstream_changed_channels": 830592,
+            "roboclaw_changed_channels": 830574,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/head": {
+            "upstream_changed_channels": 100962,
+            "roboclaw_changed_channels": 100956,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/left_wrist": {
+            "upstream_changed_channels": 1801018,
+            "roboclaw_changed_channels": 1801013,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          },
+          "root/images/right_wrist": {
+            "upstream_changed_channels": 726869,
+            "roboclaw_changed_channels": 726869,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/head": {
+            "upstream_changed_channels": 53224,
+            "roboclaw_changed_channels": 53221,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/left_wrist": {
+            "upstream_changed_channels": 1731084,
+            "roboclaw_changed_channels": 1731064,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              2,
+              255
+            ]
+          },
+          "root/images/right_wrist": {
+            "upstream_changed_channels": 571409,
+            "roboclaw_changed_channels": 571388,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/head": {
+            "upstream_changed_channels": 39346,
+            "roboclaw_changed_channels": 39340,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/left_wrist": {
+            "upstream_changed_channels": 1338229,
+            "roboclaw_changed_channels": 1338220,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              2,
+              255
+            ]
+          },
+          "root/images/right_wrist": {
+            "upstream_changed_channels": 481900,
+            "roboclaw_changed_channels": 481897,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/head": {
+            "upstream_changed_channels": 31625,
+            "roboclaw_changed_channels": 31625,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/left_wrist": {
+            "upstream_changed_channels": 1601583,
+            "roboclaw_changed_channels": 1601583,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              2,
+              255
+            ]
+          },
+          "root/images/right_wrist": {
+            "upstream_changed_channels": 405595,
+            "roboclaw_changed_channels": 405598,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": false,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "duobench",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/head": {
+            "upstream_changed_channels": 118263,
+            "roboclaw_changed_channels": 118263,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/left_wrist": {
+            "upstream_changed_channels": 1818404,
+            "roboclaw_changed_channels": 1818423,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/right_wrist": {
+            "upstream_changed_channels": 832624,
+            "roboclaw_changed_channels": 832621,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              2,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/head": {
+            "upstream_changed_channels": 115833,
+            "roboclaw_changed_channels": 115827,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/left_wrist": {
+            "upstream_changed_channels": 1821264,
+            "roboclaw_changed_channels": 1821239,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/right_wrist": {
+            "upstream_changed_channels": 716210,
+            "roboclaw_changed_channels": 716207,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              2,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/head": {
+            "upstream_changed_channels": 54874,
+            "roboclaw_changed_channels": 54871,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/left_wrist": {
+            "upstream_changed_channels": 1779345,
+            "roboclaw_changed_channels": 1779345,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/right_wrist": {
+            "upstream_changed_channels": 573305,
+            "roboclaw_changed_channels": 573275,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              2,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/head": {
+            "upstream_changed_channels": 40300,
+            "roboclaw_changed_channels": 40297,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/left_wrist": {
+            "upstream_changed_channels": 1397068,
+            "roboclaw_changed_channels": 1397071,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/right_wrist": {
+            "upstream_changed_channels": 482481,
+            "roboclaw_changed_channels": 482469,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              2,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/head": {
+            "upstream_changed_channels": 32222,
+            "roboclaw_changed_channels": 32222,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/left_wrist": {
+            "upstream_changed_channels": 1658846,
+            "roboclaw_changed_channels": 1658846,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/right_wrist": {
+            "upstream_changed_channels": 407729,
+            "roboclaw_changed_channels": 407729,
+            "delta_equal": false,
+            "delta_max_abs": 1,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              2,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": false,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "maniskill2",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 5723,
+            "roboclaw_changed_channels": 5723,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 6037,
+            "roboclaw_changed_channels": 6037,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 4962,
+            "roboclaw_changed_channels": 4962,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 1276,
+            "roboclaw_changed_channels": 1276,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 5412,
+            "roboclaw_changed_channels": 5412,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "maniskill2",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 5723,
+            "roboclaw_changed_channels": 5723,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 6037,
+            "roboclaw_changed_channels": 6037,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 4962,
+            "roboclaw_changed_channels": 4962,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 1276,
+            "roboclaw_changed_channels": 1276,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 5412,
+            "roboclaw_changed_channels": 5412,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "mikasa",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 624,
+            "roboclaw_changed_channels": 624,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/hand_camera": {
+            "upstream_changed_channels": 30462,
+            "roboclaw_changed_channels": 30462,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 854,
+            "roboclaw_changed_channels": 854,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/hand_camera": {
+            "upstream_changed_channels": 36950,
+            "roboclaw_changed_channels": 36950,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              3,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 261,
+            "roboclaw_changed_channels": 261,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/hand_camera": {
+            "upstream_changed_channels": 19697,
+            "roboclaw_changed_channels": 19697,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              3,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 453,
+            "roboclaw_changed_channels": 453,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              36,
+              255
+            ],
+            "roboclaw_frame_range": [
+              36,
+              255
+            ]
+          },
+          "root/images/hand_camera": {
+            "upstream_changed_channels": 25289,
+            "roboclaw_changed_channels": 25289,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              35,
+              255
+            ],
+            "roboclaw_frame_range": [
+              35,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 478,
+            "roboclaw_changed_channels": 478,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              36,
+              255
+            ],
+            "roboclaw_frame_range": [
+              36,
+              255
+            ]
+          },
+          "root/images/hand_camera": {
+            "upstream_changed_channels": 28339,
+            "roboclaw_changed_channels": 28339,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              34,
+              255
+            ],
+            "roboclaw_frame_range": [
+              34,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "mikasa",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 624,
+            "roboclaw_changed_channels": 624,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/hand_camera": {
+            "upstream_changed_channels": 30462,
+            "roboclaw_changed_channels": 30462,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 854,
+            "roboclaw_changed_channels": 854,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/hand_camera": {
+            "upstream_changed_channels": 36950,
+            "roboclaw_changed_channels": 36950,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              3,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 261,
+            "roboclaw_changed_channels": 261,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/hand_camera": {
+            "upstream_changed_channels": 19697,
+            "roboclaw_changed_channels": 19697,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              3,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 381,
+            "roboclaw_changed_channels": 381,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/hand_camera": {
+            "upstream_changed_channels": 25097,
+            "roboclaw_changed_channels": 25097,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              3,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/base_camera": {
+            "upstream_changed_channels": 550,
+            "roboclaw_changed_channels": 550,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              36,
+              255
+            ],
+            "roboclaw_frame_range": [
+              36,
+              255
+            ]
+          },
+          "root/images/hand_camera": {
+            "upstream_changed_channels": 28421,
+            "roboclaw_changed_channels": 28421,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              34,
+              255
+            ],
+            "roboclaw_frame_range": [
+              34,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "molmospaces",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/exo_camera_1": {
+            "upstream_changed_channels": 48913,
+            "roboclaw_changed_channels": 48916,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist_camera": {
+            "upstream_changed_channels": 384393,
+            "roboclaw_changed_channels": 384409,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              1,
+              240
+            ],
+            "roboclaw_frame_range": [
+              1,
+              240
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/exo_camera_1": {
+            "upstream_changed_channels": 51165,
+            "roboclaw_changed_channels": 51231,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist_camera": {
+            "upstream_changed_channels": 421592,
+            "roboclaw_changed_channels": 421694,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              1,
+              214
+            ],
+            "roboclaw_frame_range": [
+              1,
+              214
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/exo_camera_1": {
+            "upstream_changed_channels": 53620,
+            "roboclaw_changed_channels": 53615,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist_camera": {
+            "upstream_changed_channels": 537853,
+            "roboclaw_changed_channels": 537937,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              240
+            ],
+            "roboclaw_frame_range": [
+              0,
+              240
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/exo_camera_1": {
+            "upstream_changed_channels": 54523,
+            "roboclaw_changed_channels": 54529,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist_camera": {
+            "upstream_changed_channels": 501515,
+            "roboclaw_changed_channels": 501584,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              251
+            ],
+            "roboclaw_frame_range": [
+              0,
+              251
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/exo_camera_1": {
+            "upstream_changed_channels": 44675,
+            "roboclaw_changed_channels": 44665,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist_camera": {
+            "upstream_changed_channels": 489595,
+            "roboclaw_changed_channels": 489565,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": false,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "molmospaces",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/exo_camera_1": {
+            "upstream_changed_channels": 48894,
+            "roboclaw_changed_channels": 48887,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist_camera": {
+            "upstream_changed_channels": 384414,
+            "roboclaw_changed_channels": 384414,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              1,
+              240
+            ],
+            "roboclaw_frame_range": [
+              1,
+              240
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/exo_camera_1": {
+            "upstream_changed_channels": 51208,
+            "roboclaw_changed_channels": 51170,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist_camera": {
+            "upstream_changed_channels": 421667,
+            "roboclaw_changed_channels": 421742,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              1,
+              214
+            ],
+            "roboclaw_frame_range": [
+              1,
+              214
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/exo_camera_1": {
+            "upstream_changed_channels": 53622,
+            "roboclaw_changed_channels": 53613,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist_camera": {
+            "upstream_changed_channels": 537880,
+            "roboclaw_changed_channels": 537880,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              240
+            ],
+            "roboclaw_frame_range": [
+              0,
+              240
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/exo_camera_1": {
+            "upstream_changed_channels": 54538,
+            "roboclaw_changed_channels": 54561,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist_camera": {
+            "upstream_changed_channels": 501598,
+            "roboclaw_changed_channels": 501569,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              251
+            ],
+            "roboclaw_frame_range": [
+              0,
+              251
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/exo_camera_1": {
+            "upstream_changed_channels": 44677,
+            "roboclaw_changed_channels": 44687,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist_camera": {
+            "upstream_changed_channels": 489571,
+            "roboclaw_changed_channels": 489571,
+            "delta_equal": false,
+            "delta_max_abs": 2,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": false,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "rlbench",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/front": {
+            "upstream_changed_channels": 1858,
+            "roboclaw_changed_channels": 1858,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 167872,
+            "roboclaw_changed_channels": 167872,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/front": {
+            "upstream_changed_channels": 1952,
+            "roboclaw_changed_channels": 1952,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 172450,
+            "roboclaw_changed_channels": 172450,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/front": {
+            "upstream_changed_channels": 1457,
+            "roboclaw_changed_channels": 1457,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 162067,
+            "roboclaw_changed_channels": 162067,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/front": {
+            "upstream_changed_channels": 661,
+            "roboclaw_changed_channels": 661,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 67259,
+            "roboclaw_changed_channels": 67259,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/front": {
+            "upstream_changed_channels": 1784,
+            "roboclaw_changed_channels": 1784,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 170263,
+            "roboclaw_changed_channels": 170263,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "rlbench",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/front": {
+            "upstream_changed_channels": 1839,
+            "roboclaw_changed_channels": 1839,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 167211,
+            "roboclaw_changed_channels": 167211,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/front": {
+            "upstream_changed_channels": 1943,
+            "roboclaw_changed_channels": 1943,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 171557,
+            "roboclaw_changed_channels": 171557,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/front": {
+            "upstream_changed_channels": 1448,
+            "roboclaw_changed_channels": 1448,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 161432,
+            "roboclaw_changed_channels": 161432,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              254
+            ],
+            "roboclaw_frame_range": [
+              0,
+              254
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/front": {
+            "upstream_changed_channels": 661,
+            "roboclaw_changed_channels": 661,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 66572,
+            "roboclaw_changed_channels": 66572,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/front": {
+            "upstream_changed_channels": 1775,
+            "roboclaw_changed_channels": 1775,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 169423,
+            "roboclaw_changed_channels": 169423,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              254
+            ],
+            "roboclaw_frame_range": [
+              0,
+              254
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "robocasa365",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 369,
+            "roboclaw_changed_channels": 360,
+            "delta_equal": false,
+            "delta_max_abs": 33,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 385,
+            "roboclaw_changed_channels": 361,
+            "delta_equal": false,
+            "delta_max_abs": 40,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 3476,
+            "roboclaw_changed_channels": 2615,
+            "delta_equal": false,
+            "delta_max_abs": 87,
+            "upstream_frame_range": [
+              9,
+              255
+            ],
+            "roboclaw_frame_range": [
+              9,
+              235
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 640,
+            "roboclaw_changed_channels": 639,
+            "delta_equal": false,
+            "delta_max_abs": 14,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 643,
+            "roboclaw_changed_channels": 638,
+            "delta_equal": false,
+            "delta_max_abs": 38,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 4667,
+            "roboclaw_changed_channels": 3386,
+            "delta_equal": false,
+            "delta_max_abs": 129,
+            "upstream_frame_range": [
+              9,
+              255
+            ],
+            "roboclaw_frame_range": [
+              9,
+              235
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 258,
+            "roboclaw_changed_channels": 254,
+            "delta_equal": false,
+            "delta_max_abs": 40,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 261,
+            "roboclaw_changed_channels": 237,
+            "delta_equal": false,
+            "delta_max_abs": 39,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 1955,
+            "roboclaw_changed_channels": 1441,
+            "delta_equal": false,
+            "delta_max_abs": 173,
+            "upstream_frame_range": [
+              9,
+              255
+            ],
+            "roboclaw_frame_range": [
+              9,
+              235
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 184,
+            "roboclaw_changed_channels": 185,
+            "delta_equal": false,
+            "delta_max_abs": 38,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 240,
+            "roboclaw_changed_channels": 245,
+            "delta_equal": false,
+            "delta_max_abs": 46,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 2572,
+            "roboclaw_changed_channels": 2031,
+            "delta_equal": false,
+            "delta_max_abs": 100,
+            "upstream_frame_range": [
+              8,
+              255
+            ],
+            "roboclaw_frame_range": [
+              9,
+              235
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 374,
+            "roboclaw_changed_channels": 374,
+            "delta_equal": false,
+            "delta_max_abs": 39,
+            "upstream_frame_range": [
+              2,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 405,
+            "roboclaw_changed_channels": 381,
+            "delta_equal": false,
+            "delta_max_abs": 41,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 3596,
+            "roboclaw_changed_channels": 2737,
+            "delta_equal": false,
+            "delta_max_abs": 157,
+            "upstream_frame_range": [
+              9,
+              255
+            ],
+            "roboclaw_frame_range": [
+              9,
+              235
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": false,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "robocasa365",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 353,
+            "roboclaw_changed_channels": 353,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              7,
+              255
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 397,
+            "roboclaw_changed_channels": 397,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              6,
+              255
+            ],
+            "roboclaw_frame_range": [
+              6,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 1916,
+            "roboclaw_changed_channels": 1916,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 644,
+            "roboclaw_changed_channels": 644,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              7,
+              255
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 700,
+            "roboclaw_changed_channels": 700,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              6,
+              255
+            ],
+            "roboclaw_frame_range": [
+              6,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 2558,
+            "roboclaw_changed_channels": 2558,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 229,
+            "roboclaw_changed_channels": 229,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              7,
+              255
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 265,
+            "roboclaw_changed_channels": 265,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              6,
+              255
+            ],
+            "roboclaw_frame_range": [
+              6,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 1054,
+            "roboclaw_changed_channels": 1054,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 192,
+            "roboclaw_changed_channels": 192,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              7,
+              255
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 256,
+            "roboclaw_changed_channels": 256,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              6,
+              255
+            ],
+            "roboclaw_frame_range": [
+              6,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 1376,
+            "roboclaw_changed_channels": 1376,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 340,
+            "roboclaw_changed_channels": 340,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              7,
+              255
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 376,
+            "roboclaw_changed_channels": 376,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              6,
+              255
+            ],
+            "roboclaw_frame_range": [
+              6,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 1976,
+            "roboclaw_changed_channels": 1976,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "robomme",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 3,
+            "roboclaw_changed_channels": 3,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 189076,
+            "roboclaw_changed_channels": 189076,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 0,
+            "roboclaw_changed_channels": 0,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 163982,
+            "roboclaw_changed_channels": 163982,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 0,
+            "roboclaw_changed_channels": 0,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 161524,
+            "roboclaw_changed_channels": 161524,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 0,
+            "roboclaw_changed_channels": 0,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 163474,
+            "roboclaw_changed_channels": 163474,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 0,
+            "roboclaw_changed_channels": 0,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 157619,
+            "roboclaw_changed_channels": 157619,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "robomme",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 3,
+            "roboclaw_changed_channels": 3,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 189076,
+            "roboclaw_changed_channels": 189076,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 0,
+            "roboclaw_changed_channels": 0,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 163982,
+            "roboclaw_changed_channels": 163982,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 0,
+            "roboclaw_changed_channels": 0,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 161524,
+            "roboclaw_changed_channels": 161524,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 0,
+            "roboclaw_changed_channels": 0,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 163474,
+            "roboclaw_changed_channels": 163474,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 0,
+            "roboclaw_changed_channels": 0,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          },
+          "root/images/wrist": {
+            "upstream_changed_channels": 157619,
+            "roboclaw_changed_channels": 157619,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "robotwin",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/head_camera": {
+            "upstream_changed_channels": 69649,
+            "roboclaw_changed_channels": 69649,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              25,
+              255
+            ],
+            "roboclaw_frame_range": [
+              25,
+              255
+            ]
+          },
+          "root/images/left_camera": {
+            "upstream_changed_channels": 56652,
+            "roboclaw_changed_channels": 56652,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              36,
+              255
+            ],
+            "roboclaw_frame_range": [
+              36,
+              255
+            ]
+          },
+          "root/images/right_camera": {
+            "upstream_changed_channels": 44242,
+            "roboclaw_changed_channels": 44242,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              37,
+              255
+            ],
+            "roboclaw_frame_range": [
+              37,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/head_camera": {
+            "upstream_changed_channels": 63426,
+            "roboclaw_changed_channels": 63426,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              26,
+              255
+            ],
+            "roboclaw_frame_range": [
+              26,
+              255
+            ]
+          },
+          "root/images/left_camera": {
+            "upstream_changed_channels": 49377,
+            "roboclaw_changed_channels": 49377,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              33,
+              255
+            ],
+            "roboclaw_frame_range": [
+              33,
+              255
+            ]
+          },
+          "root/images/right_camera": {
+            "upstream_changed_channels": 45607,
+            "roboclaw_changed_channels": 45607,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              29,
+              255
+            ],
+            "roboclaw_frame_range": [
+              29,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/head_camera": {
+            "upstream_changed_channels": 54361,
+            "roboclaw_changed_channels": 54361,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              25,
+              255
+            ],
+            "roboclaw_frame_range": [
+              25,
+              255
+            ]
+          },
+          "root/images/left_camera": {
+            "upstream_changed_channels": 62716,
+            "roboclaw_changed_channels": 62716,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              26,
+              255
+            ],
+            "roboclaw_frame_range": [
+              26,
+              255
+            ]
+          },
+          "root/images/right_camera": {
+            "upstream_changed_channels": 41332,
+            "roboclaw_changed_channels": 41332,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              23,
+              255
+            ],
+            "roboclaw_frame_range": [
+              23,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/head_camera": {
+            "upstream_changed_channels": 42875,
+            "roboclaw_changed_channels": 42875,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              25,
+              255
+            ],
+            "roboclaw_frame_range": [
+              25,
+              255
+            ]
+          },
+          "root/images/left_camera": {
+            "upstream_changed_channels": 47523,
+            "roboclaw_changed_channels": 47523,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              26,
+              255
+            ],
+            "roboclaw_frame_range": [
+              26,
+              255
+            ]
+          },
+          "root/images/right_camera": {
+            "upstream_changed_channels": 28768,
+            "roboclaw_changed_channels": 28768,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              24,
+              255
+            ],
+            "roboclaw_frame_range": [
+              24,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/head_camera": {
+            "upstream_changed_channels": 48272,
+            "roboclaw_changed_channels": 48272,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              28,
+              255
+            ],
+            "roboclaw_frame_range": [
+              28,
+              255
+            ]
+          },
+          "root/images/left_camera": {
+            "upstream_changed_channels": 47658,
+            "roboclaw_changed_channels": 47658,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              24,
+              255
+            ],
+            "roboclaw_frame_range": [
+              24,
+              255
+            ]
+          },
+          "root/images/right_camera": {
+            "upstream_changed_channels": 26676,
+            "roboclaw_changed_channels": 26676,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              23,
+              255
+            ],
+            "roboclaw_frame_range": [
+              23,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "robotwin",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/head_camera": {
+            "upstream_changed_channels": 73496,
+            "roboclaw_changed_channels": 73496,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              25,
+              255
+            ],
+            "roboclaw_frame_range": [
+              25,
+              255
+            ]
+          },
+          "root/images/left_camera": {
+            "upstream_changed_channels": 55189,
+            "roboclaw_changed_channels": 55189,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              37,
+              255
+            ],
+            "roboclaw_frame_range": [
+              37,
+              255
+            ]
+          },
+          "root/images/right_camera": {
+            "upstream_changed_channels": 42110,
+            "roboclaw_changed_channels": 42110,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              39,
+              255
+            ],
+            "roboclaw_frame_range": [
+              39,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/head_camera": {
+            "upstream_changed_channels": 67090,
+            "roboclaw_changed_channels": 67090,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              25,
+              255
+            ],
+            "roboclaw_frame_range": [
+              25,
+              255
+            ]
+          },
+          "root/images/left_camera": {
+            "upstream_changed_channels": 51242,
+            "roboclaw_changed_channels": 51242,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              32,
+              255
+            ],
+            "roboclaw_frame_range": [
+              32,
+              255
+            ]
+          },
+          "root/images/right_camera": {
+            "upstream_changed_channels": 45967,
+            "roboclaw_changed_channels": 45967,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              29,
+              255
+            ],
+            "roboclaw_frame_range": [
+              29,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/head_camera": {
+            "upstream_changed_channels": 58351,
+            "roboclaw_changed_channels": 58351,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              26,
+              255
+            ],
+            "roboclaw_frame_range": [
+              26,
+              255
+            ]
+          },
+          "root/images/left_camera": {
+            "upstream_changed_channels": 61588,
+            "roboclaw_changed_channels": 61588,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              25,
+              255
+            ],
+            "roboclaw_frame_range": [
+              25,
+              255
+            ]
+          },
+          "root/images/right_camera": {
+            "upstream_changed_channels": 39342,
+            "roboclaw_changed_channels": 39342,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              23,
+              255
+            ],
+            "roboclaw_frame_range": [
+              23,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/head_camera": {
+            "upstream_changed_channels": 48604,
+            "roboclaw_changed_channels": 48604,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              28,
+              255
+            ],
+            "roboclaw_frame_range": [
+              28,
+              255
+            ]
+          },
+          "root/images/left_camera": {
+            "upstream_changed_channels": 43354,
+            "roboclaw_changed_channels": 43354,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              25,
+              255
+            ],
+            "roboclaw_frame_range": [
+              25,
+              255
+            ]
+          },
+          "root/images/right_camera": {
+            "upstream_changed_channels": 25813,
+            "roboclaw_changed_channels": 25813,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              23,
+              255
+            ],
+            "roboclaw_frame_range": [
+              23,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/head_camera": {
+            "upstream_changed_channels": 52042,
+            "roboclaw_changed_channels": 52042,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              29,
+              255
+            ],
+            "roboclaw_frame_range": [
+              29,
+              255
+            ]
+          },
+          "root/images/left_camera": {
+            "upstream_changed_channels": 46766,
+            "roboclaw_changed_channels": 46766,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              24,
+              255
+            ],
+            "roboclaw_frame_range": [
+              24,
+              255
+            ]
+          },
+          "root/images/right_camera": {
+            "upstream_changed_channels": 25063,
+            "roboclaw_changed_channels": 25063,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              23,
+              255
+            ],
+            "roboclaw_frame_range": [
+              23,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "simpler",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 267672,
+            "roboclaw_changed_channels": 267672,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 314707,
+            "roboclaw_changed_channels": 314707,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 277089,
+            "roboclaw_changed_channels": 277089,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              10,
+              240
+            ],
+            "roboclaw_frame_range": [
+              10,
+              240
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 284396,
+            "roboclaw_changed_channels": 284396,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              10,
+              203
+            ],
+            "roboclaw_frame_range": [
+              10,
+              203
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 226606,
+            "roboclaw_changed_channels": 226606,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "simpler",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 267672,
+            "roboclaw_changed_channels": 267672,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 314707,
+            "roboclaw_changed_channels": 314707,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 277089,
+            "roboclaw_changed_channels": 277089,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              10,
+              240
+            ],
+            "roboclaw_frame_range": [
+              10,
+              240
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 284396,
+            "roboclaw_changed_channels": 284396,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              10,
+              203
+            ],
+            "roboclaw_frame_range": [
+              10,
+              203
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 226606,
+            "roboclaw_changed_channels": 226606,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              10,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  }
+]

@@ -1,0 +1,80 @@
+{
+  "poll_glfw": false,
+  "safe_gl_finalizer": false,
+  "trace_placement": false,
+  "reference_render_guard": false,
+  "disable_gc": false,
+  "controlled_reset": false,
+  "benchmark": "robocasa",
+  "class": "robosys_robocasa.native.benchmark:RoboCasaBenchmark",
+  "upstream_class": "vla_eval.benchmarks.robocasa.benchmark:RoboCasaBenchmark",
+  "params": {
+    "tasks": [
+      "OpenDrawer"
+    ],
+    "camera_size": 64,
+    "max_steps": 8,
+    "seed": 11,
+    "obj_instance_split": "B",
+    "eval_scenes": true
+  },
+  "actions": [
+    {
+      "actions": [
+        0.05,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        0.05,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        -0.05,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "actions": [
+        0.05,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "seed": 11,
+  "render": "gpu"
+}

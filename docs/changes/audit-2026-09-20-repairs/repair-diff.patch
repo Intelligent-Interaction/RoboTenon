@@ -1,0 +1,2612 @@
+--- before/.dockerignore
++++ after/.dockerignore
+@@ -6,3 +6,5 @@
+ runs/*
+ .DS_Store
+ 
++
++.env
+--- before/.gitignore
++++ after/.gitignore
+@@ -9,3 +9,4 @@
+ *.egg-info/
+ .ruff_cache/
+ .mypy_cache/
++.env
+--- before/docker-compose.yml
++++ after/docker-compose.yml
+@@ -17,7 +17,7 @@
+       - ./runs:/data/runs
+       - robosys-runtime:/run/robosys
+     ports:
+-      - "9100:9100"
++      - "127.0.0.1:9100:9100"
+ 
+   traced:
+     build: .
+@@ -45,7 +45,7 @@
+       - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+       - prometheus-data:/prometheus
+     ports:
+-      - "9090:9090"
++      - "127.0.0.1:9090:9090"
+     depends_on:
+       - metricsd
+ 
+@@ -53,19 +53,18 @@
+     image: grafana/grafana:11.2.0
+     environment:
+       GF_SECURITY_ADMIN_USER: admin
+-      GF_SECURITY_ADMIN_PASSWORD: admin
++      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
+       GF_SECURITY_ALLOW_EMBEDDING: "true"
+       GF_AUTH_ANONYMOUS_ENABLED: "true"
+-      # Development convenience: the embedded user can create dashboards,
+-      # folders and panels. Use Viewer (or disable anonymous access) in prod.
+-      GF_AUTH_ANONYMOUS_ORG_ROLE: Editor
++      # Anonymous embedded dashboards are read-only, even on localhost.
++      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+       GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
+     volumes:
+       - grafana-data:/var/lib/grafana
+       - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+       - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+     ports:
+-      - "3000:3000"
++      - "127.0.0.1:3000:3000"
+     depends_on:
+       - prometheus
+ 
+@@ -81,6 +80,7 @@
+       - robosys.web.server
+       - --host
+       - 0.0.0.0
++      - --loopback-published
+       - --port
+       - "8765"
+       - --run-root
+@@ -97,7 +97,7 @@
+       # TraceDaemon rebuilds the SQLite index on startup; the HTTP API itself remains read-only.
+       - ./runs:/data/runs
+     ports:
+-      - "8765:8765"
++      - "127.0.0.1:8765:8765"
+     depends_on:
+       - metricsd
+       - traced
+--- before/docs/README.md
++++ after/docs/README.md
+@@ -46,3 +46,5 @@
+ - 不将“已设计”“已有接口”写成“已验证”；测试日期、环境和硬件覆盖分别记录。
+ - 不将图内并行、实验并行、节点 checkpoint 和实验断点恢复混称为“恢复”。
+ - 不写入凭据。上游文档和许可证保留原文，项目内提供中文导读，不修改第三方授权文字。
++
++- [2026-09-20 独立审计修复记录](audit-repairs-2026-09-20.md)
+--- before/docs/audit-repairs-2026-09-20.md
++++ after/docs/audit-repairs-2026-09-20.md
+@@ -0,0 +1,29 @@
++# 独立审计修复记录（2026-09-20）
++
++本次落实 [独立审计](audit-2026-09-20-independent/独立审计.md) 的 R01–R11。修改基于审计后的当前工作区，保留已有基础设施插件、环境参数、文档等未提交工作；原审计及“缺陷存在即通过”的探针不改写。修复后的预期行为由 `tests/test_audit_repairs.py` 中 40 项回归用例验证。
++
++| 问题 | 修复后的行为 | 验证重点 |
++| --- | --- | --- |
++| R01 停止不完整 | 持久记录 Coordinator、Worker、模型进程身份；Portal 可独立清理；只有相关进程退出才返回 `released=true`。`stopping`、`stop_failed` 阻止队列继续派发。运行锁和资源锁由子进程继承。 | 实际进程后端、同步阻塞 Worker、忽略 SIGTERM 的假模型；Portal 强杀和提前强杀 Coordinator 两条路径；残留期间锁仍占用，退出后释放；过期 PID 不被误杀。 |
++| R02 取消遗漏停止 | 外部取消、看门狗和关闭共用有界底层停止；外部取消继续抛出 `CancelledError`。同步驱动仍在执行时拒绝新动作；关闭超时明确报错。 | 驱动在独立线程持续阻塞；检查停止调用、取消传播、拒绝复用及关闭超时。 |
++| R03 错误布尔值污染 STM | `subtask_success` 必须是实际 JSON boolean；belief 更新必须是对象；不合格输出在写 STM 前拒绝。 | true/false、字符串、数字、null、数组、对象、缺字段及 belief 格式错误；错误输入不改动记忆。 |
++| R04 调度键冲突 | 使用 adapter + index 标识 case，执行前校验适配器和索引唯一性；完成数不等于总数时拒绝报告完成。 | 相同任务/episode 的两个种子并发，快任务结束后仍等待慢任务；重复 index 拒绝派发。 |
++| R05 同步 SDK 阻塞 | 真实机器人驱动普通调用运行在专用单线程执行器；停止使用独立线程。连接、健康、关闭有时间预算，动作仍受 deadline 约束。 | 假同步 SDK 阻塞时，事件循环定时器可运行；25 ms 动作超时触发 hold；验证调用线程和生命周期。 |
++| R06 暴露控制面 | Compose 所有发布端口绑定宿主回环地址；远程 Portal 默认拒绝无令牌启动，配置令牌后读写都认证；Grafana 匿名权限降为 Viewer，管理员密码无默认值。 | Host/Origin 和认证回归；真实 HTTP 读/控制接口；Compose 配置校验。 |
++| R07 配置混用 | 完整合并配置保存为带哈希的快照，传入 Worker 和子进程；每个任务从同一快照构建组件。排队、历史图、Fork 和重跑也使用快照。 | 执行中改源文件，旧 Worker 保持原值、新 Worker 使用新值；进程内与进程后端一致；Fork 表单及显式覆盖保持正确来源。 |
++| R08 幂等异内容误确认 | 成功账本增加请求哈希，包含动作类型、payload、资源作用域；同键异内容或旧记录无法核验时返回冲突，不发送新动作。 | 内存与 SQLite 持久化、重启后相同请求重试、异内容拒绝、旧账本拒绝。 |
++| R09 观测接入关闭挂起 | 停止接入并关闭客户端连接，有界等待处理器和在途写入；超时保留错误，不把线程仍在写入误报为已完成。 | 空闲/半包客户端无需配合即可关闭；阻塞写入超时报错，恢复后可完成关闭。 |
++| R10 失败资源复用 | 任务失败先清理驻留工具，成功后再重建；清理失败或超时会永久停用该 Worker 实例。 | `end_session` 失败后下个任务重新启动工具；`close` 失败后连续调用也不能重新启用旧 Worker。 |
++| R11 运行覆盖 | 默认运行 ID 增加 UUID；持久占用记录及独占文件锁拒绝重复新运行；保留显式 resume，校验原配置哈希。 | 冻结时钟下两次默认 ID 仍唯一；重复 ID 不改原文件；原地重跑正常；变更配置的 resume 被拒绝；Portal 预建目录不误判为重复运行。 |
++
++验证使用 macOS arm64、Python 3.11.10、Pydantic 2.13.5。完整 Python 和前端测试结果、执行命令及变更文件哈希保存在 [修复验证资料](audit-2026-09-20-repairs/verification.json)。新增关键故障场景使用隔离临时目录、假驱动及本地轻量模型服务，没有连接真实 GPU 模型或机器人。
++
++验证边界：Linux `/proc` 身份解析已有回归用例，但本机没有执行原有的 Linux 原生渲染崩溃测试。Docker Compose 已验证配置解析，没有启动或升级现有容器。真机 SDK 的线程安全、实际停止确认以及 Linux/GPU 部署仍需在目标环境验收，不能以本机测试代替硬件验证。
++
++部署与兼容变化见 [运行契约与访问边界](execution-and-observability.md#64-完整-portal-的访问边界)：
++
++- 本机和 SSH 隧道使用方式保持免登录；共享网络需要 `ROBOSYS_PORTAL_TOKEN` 与 HTTPS/SSH 传输保护。不要把 `--loopback-published` 用于公网端口发布。
++- 首次自动启动 Grafana 可创建随机管理员密码；直接 Compose 启动需要 `.env`。已有 Grafana 数据卷中的密码不会因环境变量改变而自动轮换。
++- 旧幂等账本没有请求哈希时拒绝自动重试。先核对实际执行状态；确认是新动作后再使用新键。
++- 历史实验若没有配置快照，只能在原配置哈希仍可核验时迁移并原地重跑；否则应保留历史记录并创建新实验。
++- 配置快照不包含插件源码、模型权重和环境资产；部署仍需固定这些版本。自定义模型命令应留在托管进程组内。
+--- before/docs/execution-and-observability.md
++++ after/docs/execution-and-observability.md
+@@ -355,15 +355,28 @@
+ 
+ ### 6.4 完整 Portal 的访问边界
+ 
+-完整 Portal 不生成、不要求也不读取 `access_token`；启动链接不会带 URL 片段，浏览器直接
+-打开地址即可执行提交、停止、重跑和全局关闭。`ROBOSYS_PORTAL_TOKEN` 也不再参与服务配置，
+-旧环境变量即使存在也会被忽略。
+-
+-Portal 默认只绑定回环地址，推荐通过 SSH 隧道访问。服务仍会校验请求的 Host 和 Origin，
+-拒绝跨来源请求；反向代理必须保留浏览器的 Host。使用额外域名时，通过可重复的
+-`--allowed-host robot.example` 显式信任该主机名。默认允许 localhost、回环地址及具体绑定主机，
+-绑定 `0.0.0.0` 不代表信任任意 Host。若确实需要把 Portal 暴露到更大网络范围，应使用 SSH
+-隧道、HTTPS 或外部反向代理的网络访问控制。
++Portal 默认绑定 `127.0.0.1`，本机或 SSH 隧道访问可以不登录。
++`ROBOSYS_PORTAL_TOKEN` 设置后，读取和控制接口均要求认证；API 使用
++`Authorization: Bearer <token>`，浏览器使用 HTTP Basic 登录，用户名任意、密码为该令牌。
++远程绑定（包括 `0.0.0.0`）必须配置令牌，通过 HTTPS 反向代理或 SSH 隧道保护传输。
++令牌不写入 URL、页面或日志。Host/Origin 校验继续生效；代理保留浏览器 Host，
++额外域名通过 `--allowed-host robot.example` 显式配置。
++
++Compose 的 8765、3000、9090、9100 端口仅发布到宿主 `127.0.0.1`。
++`--loopback-published` 仅供这种容器部署使用：容器内绑定所有网卡，但宿主必须保持回环发布。
++如果需要远程发布，去掉该参数并配置令牌与 HTTPS；不要仅修改端口绑定。
++
++Grafana 匿名用户改为 Viewer，编辑需管理员登录。Compose 要求 `.env` 或进程环境中提供
++`GRAFANA_ADMIN_PASSWORD`，不再提供默认密码。Portal 首次自动启动 Grafana 时，若 `.env`
++不存在，会生成权限为 0600 的文件和随机密码；已有 `.env` 不会被覆盖。
++直接启动 Compose 前可用以下命令创建新文件（文件已存在时会拒绝覆盖）：
++
++```bash
++python -c 'import os,secrets; fd=os.open(".env", os.O_WRONLY|os.O_CREAT|os.O_EXCL, 0o600); os.write(fd, ("GRAFANA_ADMIN_PASSWORD="+secrets.token_urlsafe(32)+"\n").encode()); os.close(fd)'
++docker compose up -d
++```
++
++已有 Grafana 数据卷中的管理员密码不会被环境变量自动轮换，需要通过 Grafana 的账户设置更新。
+ 
+ 只读观测 Web 仍禁用实验控制接口。所有 POST 要求 `Content-Type: application/json`，请求体上限
+ 为 1 MiB，连接读取超时为 10 秒。
+@@ -461,3 +474,16 @@
+ CLI 的 --environment-parameters 接受 JSON 对象，--batch --task-adapter-overrides 接受适配器实例 ID/注册名到 JSON 对象的映射。--split 接受插件自定义名称；历史快捷参数由 TaskAdapter 的 cli_overrides 声明接收。Python API 对应 EpisodeRequest/ExperimentRequest.environment_parameters 和 ExperimentRequest.task_adapter_overrides。环境参数按配置 → case → 请求合并，既有 task_env_id、split、IO、render 规范字段保持优先。
+ 
+ 存储/流传输及跨机器部署边界见[基础设施插件](infrastructure-plugins.md)。插件入口不改变内置 Web 对显式 SQLite/JSONL 数据源的查询契约；自定义数据库需提供兼容投影或另外的查询适配。
++
++
++## 2026-09-20 审计修复后的运行契约
++
++- 提交与运行开始时保存完整合并配置 `config.snapshot.json`，带 SHA-256 校验。Worker、子进程、Portal 历史图、Fork 和原地重跑使用该快照。源码插件与模型文件本身没有打包到快照；它们仍需由部署版本固定。
++- 批量默认运行 ID 增加 UUID；显式 ID 有持久化占用记录和文件锁。已使用的 ID 不允许作为新运行覆盖。Portal 重跑走 `.control/resume.json`，只允许相同配置哈希；升级前没有快照的历史实验仍需保留原配置。
++- Portal 的 `stopping` / `stop_failed` 均阻止新实验派发。停止确认覆盖 Coordinator、Worker 及托管模型；进程身份记录在 `.processes`。子进程继承资源锁和运行锁，Coordinator 被强杀也不会提前释放占用。自定义命令仍不得自行脱离托管进程组。
++- Worker 任务失败后先关闭驻留工具，再重建。清理失败或超时会永久停用该 Worker 实例，要求替换进程，不能再次复用不确定的资源。
++- Body 外部取消发送有界停止并继续抛出 `CancelledError`；尚未返回的同步调用阻止新动作，关闭超时明确报错。真实机器人 SDK 的普通调用在单线程执行器运行，停止指令使用独立执行器；SDK 必须支持停止 API 与动作并发调用。
++- 幂等成功记录保存请求内容哈希，覆盖动作类型、payload 和资源作用域。相同键、不同内容，以及没有哈希的旧记录返回 `idempotency_conflict`，不自动再次执行。历史记录必须先与真实执行状态核对；确认是新动作后使用新键。多机器人共享账本时配置不同的 `idempotency_scope`，真实机器人默认作用域包含 `robot_name` 和 `action_format`。
++- 观测接入关闭会断开空闲客户端；在途写入超时会明确报错，不能把客户端断开当作写入已终止。
++
++逐项证据及验证边界见 [独立审计修复记录](audit-repairs-2026-09-20.md)。
+--- before/robosys/bodies/real_robot_body.py
++++ after/robosys/bodies/real_robot_body.py
+@@ -9,6 +9,8 @@
+ from __future__ import annotations
+ 
+ import inspect
++import asyncio
++from concurrent.futures import ThreadPoolExecutor
+ from collections.abc import Mapping, MutableSequence
+ from typing import Any
+ 
+@@ -67,6 +69,7 @@
+         observation_updates: MutableSequence[EnvironmentFeedback] | None = None,
+         executor: Any = None,
+         stop_executor: Any = None,
++        driver_timeout_s: float = 5.0,
+         **kwargs: Any,
+     ) -> None:
+         if control_rate_hz <= 0:
+@@ -82,12 +85,21 @@
+         self.action_transform = action_transform
+         self.session = session
+         self.observation_updates = observation_updates
++        if driver_timeout_s <= 0:
++            raise ValueError("driver_timeout_s must be positive")
++        self.driver_timeout_s = driver_timeout_s
++        self._driver_started = False
++        self._pools_closed = False
++        self._driver_start_lock = asyncio.Lock()
++        self._driver_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="robot-sdk")
++        self._control_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="robot-stop")
+         # ``executor`` and the environment ``stop_executor`` are accepted so
+         # the generic bootstrap can pass runtime values to every Body.  A
+         # real robot always routes both normal actions and safety stops to its
+         # own driver; EnvironmentSession.command("stop") is not a hardware
+         # emergency stop.
+         _ = executor, stop_executor
++        kwargs.setdefault("idempotency_scope", f"real_robot:{robot_name}:{action_format}")
+         super().__init__(
+             self._execute_action,
+             stop_executor=self._stop_driver,
+@@ -99,17 +111,48 @@
+             raise RuntimeError(
+                 f"real robot body {self.robot_name!r} requires an injected driver"
+             )
+-        for name in ("connect", "start"):
+-            method = getattr(self.driver, name, None)
+-            if callable(method):
+-                await _maybe_await(method())
++        async with self._driver_start_lock:
++            if not self._driver_started:
++                if self._pools_closed:
++                    self._driver_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="robot-sdk")
++                    self._control_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="robot-stop")
++                    self._pools_closed = False
++                for name in ("connect", "start"):
++                    method = getattr(self.driver, name, None)
++                    if callable(method):
++                        await asyncio.wait_for(self._driver_call(method), self.driver_timeout_s)
++                self._driver_started = True
+         await super().start()
++
++    async def _driver_call(self, method, *args, control=False, **kwargs):
++        if inspect.iscoroutinefunction(method):
++            return await method(*args, **kwargs)
++        if not control and self._sync_driver_busy.is_set():
++            raise RuntimeError("robot SDK is still completing a previous call")
++        if not control:
++            self._sync_driver_busy.set()
++        def invoke():
++            try:
++                return method(*args, **kwargs)
++            finally:
++                if not control:
++                    self._sync_driver_busy.clear()
++        try:
++            future = asyncio.get_running_loop().run_in_executor(
++                self._control_pool if control else self._driver_pool, invoke)
++        except BaseException:
++            if not control:
++                self._sync_driver_busy.clear()
++            raise
++        future.add_done_callback(lambda f: f.exception() if not f.cancelled() else None)
++        # Cancellation releases the event loop, but the guard remains set until
++        # the actual SDK call returns. Stops use their own independent thread.
++        return await _maybe_await(await asyncio.shield(future))
+ 
+     async def _execute_action(self, action: Action) -> Any:
+         candidate: Any = action
+         if callable(self.action_transform):
+-            candidate = self.action_transform(action)
+-            candidate = await _maybe_await(candidate)
++            candidate = await self._driver_call(self.action_transform, action)
+             if isinstance(candidate, Mapping):
+                 copy_model = getattr(action, "model_copy", None)
+                 updates = {"payload": dict(candidate)}
+@@ -121,7 +164,7 @@
+         execute = getattr(self.driver, "execute", None)
+         if not callable(execute):
+             raise TypeError("real robot driver must implement execute(action)")
+-        result = await _maybe_await(execute(candidate))
++        result = await self._driver_call(execute, candidate)
+         if (
+             isinstance(result, EnvironmentFeedback)
+             and self.observation_updates is not None
+@@ -137,23 +180,29 @@
+         if not callable(method):
+             command = getattr(self.driver, "command", None)
+             if callable(command):
+-                return await _maybe_await(command("stop", reason=reason))
++                return await self._driver_call(command, "stop", reason=reason, control=True)
+             raise RuntimeError(
+                 f"real robot driver has no {method_name}()/stop()/command() "
+                 "safe-stop API"
+             )
++        args = (reason,)
+         try:
+-            return await _maybe_await(method(reason))
++            inspect.signature(method).bind(reason)
+         except TypeError:
+-            # A few SDKs expose ``hold()``/``stop()`` without a reason arg.
+-            return await _maybe_await(method())
++            args = ()
++        except ValueError:
++            pass
++        return await self._driver_call(method, *args, control=True)
+ 
+     async def health(self) -> EnvironmentHealth:
+         body_health = await super().health()
+         driver_health = getattr(self.driver, "health", None)
+         if not callable(driver_health):
+             return body_health
+-        value = await _maybe_await(driver_health())
++        try:
++            value = await asyncio.wait_for(self._driver_call(driver_health), self.driver_timeout_s)
++        except (TimeoutError, RuntimeError) as exc:
++            return EnvironmentHealth(ready=False, degraded=True, message=str(exc))
+         if isinstance(value, EnvironmentHealth):
+             if not value.ready or value.degraded:
+                 copy_model = getattr(value, "model_copy", None)
+@@ -174,12 +223,16 @@
+         return body_health
+ 
+     async def close(self) -> None:
+-        try:
+-            await super().close()
+-        finally:
+-            close = getattr(self.driver, "close", None)
+-            if callable(close):
+-                await _maybe_await(close())
++        await super().close()
++        if self._sync_driver_busy.is_set():
++            raise TimeoutError("robot SDK is still running; driver cannot be safely closed")
++        close = getattr(self.driver, "close", None)
++        if callable(close):
++            await asyncio.wait_for(self._driver_call(close), self.driver_timeout_s)
++        self._driver_started = False
++        self._driver_pool.shutdown(wait=False)
++        self._control_pool.shutdown(wait=False)
++        self._pools_closed = True
+ 
+ 
+ __all__ = ["RealRobotBody"]
+--- before/robosys/infra/ingest_server.py
++++ after/robosys/infra/ingest_server.py
+@@ -10,13 +10,21 @@
+ 
+ 
+ class IngestServer:
+-    def __init__(self, path, store):
++    def __init__(self, path, store, *, close_timeout_s=2.0):
++        if close_timeout_s <= 0:
++            raise ValueError("close_timeout_s must be positive")
+         self.path = Path(path)
+         self.store = store
++        self.close_timeout_s = close_timeout_s
+         self.server = None
+         self.handlers = set()
++        self.writers = set()
++        self.writes = set()
++        self._closing = False
++        self._close_lock = asyncio.Lock()
+ 
+     async def start(self):
++        self._closing = False
+         self.path.parent.mkdir(parents=True, exist_ok=True)
+         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+         try:
+@@ -40,12 +48,23 @@
+     async def handle(self, reader, writer):
+         task = asyncio.current_task()
+         self.handlers.add(task)
++        self.writers.add(writer)
+         try:
+-            while line := await reader.readline():
++            while not self._closing:
++                line = await reader.readline()
++                if not line:
++                    break
+                 try:
+                     payload = json.loads(line)
+                     batch = payload if isinstance(payload, list) else [payload]
+-                    await asyncio.to_thread(self.store.ingest_batch, batch)
++                    write = asyncio.create_task(asyncio.to_thread(self.store.ingest_batch, batch))
++                    self.writes.add(write)
++                    try:
++                        # Cancelling a handler cannot stop an in-flight disk write.
++                        await asyncio.shield(write)
++                    finally:
++                        if write.done():
++                            self.writes.discard(write)
+                     response = {"ok": True}
+                 except Exception as exc:
+                     response = {"ok": False, "error": str(exc)}
+@@ -57,19 +76,38 @@
+         finally:
+             writer.close()
+             try:
+-                await writer.wait_closed()
+-            except (ConnectionError, BrokenPipeError):
++                await asyncio.wait_for(writer.wait_closed(), self.close_timeout_s)
++            except (ConnectionError, BrokenPipeError, asyncio.TimeoutError):
+                 pass
+             finally:
+                 self.handlers.discard(task)
++                self.writers.discard(writer)
+ 
+     async def close(self):
+-        if self.server is None:
+-            return
+-        self.server.close()
+-        await self.server.wait_closed()
+-        if self.handlers:
+-            # Clients close before the owned ingest services.
+-            await asyncio.gather(*list(self.handlers), return_exceptions=True)
+-        self.path.unlink(missing_ok=True)
+-        self.server = None
++        async with self._close_lock:
++            self._closing = True
++            server = self.server
++            if server is not None:
++                server.close()
++                self.server = None
++                self.path.unlink(missing_ok=True)
++            for writer in tuple(self.writers):
++                writer.close()
++            if server is not None:
++                await asyncio.wait_for(server.wait_closed(), timeout=self.close_timeout_s)
++            tasks = self.handlers | self.writes
++            if not tasks:
++                return
++            done, pending = await asyncio.wait(tasks, timeout=self.close_timeout_s)
++            for task in done:
++                if not task.cancelled():
++                    task.exception()  # consume errors after client disconnection
++            self.writes.difference_update(done)
++            for task in pending & self.handlers:
++                task.cancel()
++            if pending & self.handlers:
++                await asyncio.wait(pending & self.handlers, timeout=self.close_timeout_s)
++            if any(not task.done() for task in self.handlers):
++                raise TimeoutError("observation ingest handlers did not close")
++            if any(not task.done() for task in self.writes):
++                raise TimeoutError("observation ingest write is still running after shutdown deadline")
+--- before/robosys/modules/verify.py
++++ after/robosys/modules/verify.py
+@@ -93,14 +93,15 @@
+             raise RuntimeError(
+                 f"{tool_name} verifier failed: {result.error or 'unknown error'}"
+             )
+-        output = result.output if isinstance(result.output, Mapping) else {}
++        output = result.output
++        if not isinstance(output, Mapping) or type(output.get("subtask_success")) is not bool:
++            raise ValueError(f"{tool_name} verifier output requires a JSON boolean subtask_success")
++        belief = output.get("physical_belief_update", {})
++        if not isinstance(belief, Mapping):
++            raise ValueError(f"{tool_name} verifier physical_belief_update must be an object")
+         verification = {
+-            "subtask_success": bool(output.get("subtask_success", False)),
+-            "physical_belief_update": (
+-                dict(output.get("physical_belief_update") or {})
+-                if isinstance(output.get("physical_belief_update"), Mapping)
+-                else {}
+-            ),
++            "subtask_success": output["subtask_success"],
++            "physical_belief_update": dict(belief),
+         }
+ 
+         stm_value = values.get("stm")
+--- before/robosys/runtime/config.py
++++ after/robosys/runtime/config.py
+@@ -3,6 +3,8 @@
+ from __future__ import annotations
+ 
+ import json
++import hashlib
++from copy import deepcopy
+ from collections.abc import Mapping
+ from dataclasses import dataclass, field
+ from pathlib import Path
+@@ -622,6 +624,36 @@
+     """Load the master config and derive all extension manifests from one Params."""
+ 
+     bundle = load_config_bundle(config, experiment_config, base_dir=base_dir)
++    return _loaded_bundle(bundle)
++
++
++def freeze_config(loaded: LoadedConfigs) -> dict[str, Any]:
++    """Portable, merged config: consumers never reopen its source files."""
++    from ..contracts.serialization import jsonable
++    value = jsonable({"version": 1, "config": loaded.bundle.config, "sources": loaded.bundle.sources,
++                     "name": loaded.params.name})
++    value["sha256"] = hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
++    return value
++
++
++def load_config_snapshot(snapshot: str | Path | Mapping[str, Any]) -> LoadedConfigs:
++    value = deepcopy(dict(snapshot)) if isinstance(snapshot, Mapping) else json.loads(Path(snapshot).read_text())
++    digest = value.pop("sha256", None)
++    expected = hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
++    if value.get("version") != 1 or digest != expected:
++        raise ValueError("invalid or modified configuration snapshot")
++    config = value["config"]
++    return _loaded_bundle(ConfigBundle(params=Params(config, name=value.get("name", "default")),
++                                      config=config, sources=value["sources"]))
++
++
++def load_request_config(request) -> LoadedConfigs:
++    snapshot = getattr(request, "config_snapshot", None)
++    return (load_config_snapshot(snapshot) if snapshot is not None
++            else load_application_config(request.config, request.experiment_config))
++
++
++def _loaded_bundle(bundle: ConfigBundle) -> LoadedConfigs:
+     # Imported lazily to keep runtime.config independent from workflow import
+     # side effects during package discovery.
+     from ..workflow.definition import load_graphs_config
+--- before/robosys/runtime/execution.py
++++ after/robosys/runtime/execution.py
+@@ -122,9 +122,11 @@
+ class ResourceLease:
+     """Host-local exclusive resource reservation, independent of provider type."""
+ 
+-    def __init__(self, resource_ids):
++    def __init__(self, resource_ids, *, share_with_children=False):
+         self.resource_ids = sorted(set(resource_ids))
+         self.handles = []
++        self.share_with_children = share_with_children
++        self._context_token = None
+ 
+     def acquire(self):
+         import fcntl
+@@ -146,11 +148,18 @@
+                         f"resource already reserved: {resource}"
+                     ) from None
+                 self.handles.append(handle)
++            if self.share_with_children:
++                from .processes import LEASE_FDS, resource_fds
++                self._context_token = LEASE_FDS.set((*resource_fds(), *(h.fileno() for h in self.handles)))
+         except BaseException:
+             self.close()
+             raise
+ 
+     def close(self):
++        if self._context_token is not None:
++            from .processes import LEASE_FDS
++            LEASE_FDS.reset(self._context_token)
++            self._context_token = None
+         for handle in self.handles:
+             handle.close()
+         self.handles.clear()
+--- before/robosys/runtime/experiment.py
++++ after/robosys/runtime/experiment.py
+@@ -7,10 +7,11 @@
+ from datetime import datetime
+ from pathlib import Path
+ from typing import Any
++from uuid import uuid4
+ 
+ from ..infra.params import merge_parameter_values
+ 
+-from ..runtime.config import load_application_config
++from ..runtime.config import load_request_config, freeze_config
+ from ..runtime.factory import build_task_adapters
+ from ..task_adapters import TaskCase, evaluate_task_adapters
+ from ..task_adapters.evaluator import write_json
+@@ -56,6 +57,7 @@
+     run_id: str | None = None
+     task_adapter_overrides: dict[str, dict[str, Any]] | None = None
+     environment_parameters: dict[str, Any] | None = None
++    config_snapshot: dict[str, Any] | str | Path | None = None
+ 
+ 
+ def _param(params: Any, name: str, default: Any = None) -> Any:
+@@ -148,7 +150,8 @@
+     come from one master config in both modes.
+     """
+ 
+-    loaded = load_application_config(request.config, request.experiment_config)
++    loaded = load_request_config(request)
++    snapshot = freeze_config(loaded)
+     from .runner import _graph_selector
+     from .result_projection import require_episode_outputs
+     selected = _graph_selector(loaded, loaded.params, EpisodeRequest(config=request.config))
+@@ -176,7 +179,7 @@
+             env_id=loaded.params.resolve("runtime.environment_id"),
+             adapters=[item.instance_id for item in adapters],
+         )
+-    run_id = request.run_id or datetime.now().strftime("%Y%m%d-%H%M%S")
++    run_id = request.run_id or f"{datetime.now():%Y%m%d-%H%M%S}-{uuid4().hex}"
+     output_root = Path(options["output_dir"]) / run_id
+ 
+     def make_request(
+@@ -197,6 +200,7 @@
+             )
+         episode_request = EpisodeRequest(
+             config=config_path,
++            config_snapshot=snapshot,
+             environment_parameters=request.environment_parameters,
+             experiment_config=request.experiment_config,
+             task_id=case.task_id,
+@@ -234,17 +238,21 @@
+     execution.validate_tools(loaded.tools)
+     options["memory_mode"] = execution.memory_mode
+     profile = EpisodeRequest(config=config_path, experiment_config=request.experiment_config,
++                             config_snapshot=snapshot,
+                              output=output_root / "worker-profile.json",
+                              model_path=request.model_path, model_host=request.model_host,
+                              model_port=request.model_port, dry_run=request.dry_run)
+     worker = WorkerRuntime(profile, loaded=loaded, terminal=terminal)
+     shared = None
+     portal = None
+-    lease = ResourceLease([*execution.resource_ids, *(f"gpu:{x}" for x in execution.gpu_ids)])
++    lease = ResourceLease([*execution.resource_ids, *(f"gpu:{x}" for x in execution.gpu_ids)], share_with_children=True)
+     source = None
+     backend = build_execution_backend(execution, profile, make_request)
+     memory_path = Path(request.memory) if request.memory else None
++    from .run_state import RunReservation
++    reservation = RunReservation(options["output_dir"], run_id, loaded.params.content_hash).acquire()
+     try:
++        write_json(output_root / "config.snapshot.json", snapshot)
+         lease.acquire()
+         # Source selection is a launch concern, never a query-side mode switch.
+         configured_source = ObservabilitySource.from_params(loaded.params)
+@@ -267,6 +275,7 @@
+         portal = PortalRuntime(source, web_settings)
+         await portal.start()
+         return await evaluate_task_adapters(
++            _reservation=reservation,
+             config_path=config_path,
+             params=loaded.params,
+             adapters=adapters,
+@@ -294,6 +303,7 @@
+                         await shared.close()
+                 finally:
+                     lease.close()
++                    reservation.close()
+ 
+ 
+ 
+--- before/robosys/runtime/factory.py
++++ after/robosys/runtime/factory.py
+@@ -9,6 +9,7 @@
+ import inspect
+ import json
+ from collections.abc import Mapping
++from copy import deepcopy
+ from dataclasses import dataclass
+ from pathlib import Path
+ from typing import Any
+@@ -860,6 +861,7 @@
+     base_dir: str | Path | None = None,
+     tools: ToolRuntime | None = None,
+     resource_root: str | Path | None = None,
++    loaded: LoadedConfigs | None = None,
+ ) -> ApplicationRuntime:
+     """Load every config through Parameter and start all resident resources.
+ 
+@@ -879,7 +881,8 @@
+         if isinstance(config, (str, Path))
+         else None
+     )
+-    loaded: LoadedConfigs = load_application_config(
++    # Task-specific resource paths must never mutate the resident snapshot.
++    loaded = deepcopy(loaded) if loaded is not None else load_application_config(
+         config, experiment_config, base_dir=config_base_dir
+     )
+     # Resolve the safety backend before starting any resident component.  All
+--- before/robosys/runtime/model_services.py
++++ after/robosys/runtime/model_services.py
+@@ -122,6 +122,7 @@
+             ):
+                 env.pop(key, None)
+             self.log = (self.directory / "server.log").open("ab", buffering=0)
++            from .processes import resource_fds, register_process
+             self.process = subprocess.Popen(
+                 command,
+                 env=env,
+@@ -129,7 +130,11 @@
+                 stdout=self.log,
+                 stderr=subprocess.STDOUT,
+                 start_new_session=self.own_group,
+-            )
++                pass_fds=resource_fds(),
++            )
++            registry = os.environ.get("ROBOSYS_PROCESS_REGISTRY")
++            if registry:
++                register_process(registry, self.process.pid, role="model")
+             manifest = {
+                 "tool_id": self.tool_id,
+                 "pid": self.process.pid,
+--- before/robosys/runtime/observability.py
++++ after/robosys/runtime/observability.py
+@@ -212,6 +212,7 @@
+         if not self.source.trace_db:
+             raise ValueError("runtime.web requires an explicit trace_db data source")
+         import threading
++        import os
+ 
+         from ..web.query import PortalData
+         from ..web.server import build_server
+@@ -223,6 +224,7 @@
+             self.settings.get("host", "127.0.0.1"),
+             int(self.settings.get("port", 8765)),
+             data,
++            control_token=os.getenv("ROBOSYS_PORTAL_TOKEN"),
+         )
+         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+         self.thread.start()
+--- before/robosys/runtime/parallel.py
++++ after/robosys/runtime/parallel.py
+@@ -61,9 +61,15 @@
+                 os.environ[key] = value
+ 
+ 
+-def _worker_main(connection, profile, gpu_id, egl_device_id, worker_id, worker_threads=2):
++def _worker_main(connection, profile, gpu_id, egl_device_id, worker_id, worker_threads=2, lease_fds=()):
+     # The Worker and its model children share a killable process group.
+     os.setsid()
++    import json
++    from .processes import register_process
++    registry = Path(profile.output or "data/runs/result.json").resolve().parent / ".processes"
++    os.environ["ROBOSYS_PROCESS_REGISTRY"] = str(registry)
++    os.environ["ROBOSYS_RESOURCE_FDS"] = json.dumps(lease_fds)
++    register_process(registry, os.getpid(), role="worker")
+     # Also applies when a pre-update coordinator spawns this entry point.
+     for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+         os.environ[key] = str(worker_threads)
+@@ -177,6 +183,8 @@
+     finally:
+         faulthandler.disable()
+         diagnostic_file.close()
++        for fd in lease_fds:
++            os.close(fd)
+ 
+ 
+ class ProcessSlot:
+@@ -225,9 +233,11 @@
+             return
+         parent, child = multiprocessing.get_context("spawn").Pipe()
+         self.worker_id = str(uuid4())
++        from .processes import resource_fds, SharedDescriptor
+         self.process = multiprocessing.get_context("spawn").Process(
+             target=_worker_main,
+-            args=(child, self.profile, self.gpu_id, self.egl_device_id, self.worker_id, self.options.worker_threads),
++            args=(child, self.profile, self.gpu_id, self.egl_device_id, self.worker_id, self.options.worker_threads,
++                  tuple(SharedDescriptor(fd) for fd in resource_fds())),
+         )
+         self.connection = parent
+         # Configure native libraries before Python imports them in the child.
+--- before/robosys/runtime/processes.py
++++ after/robosys/runtime/processes.py
+@@ -0,0 +1,144 @@
++"""Persist process ownership so cleanup survives coordinator failure."""
++from contextvars import ContextVar
++import json
++import os
++from pathlib import Path
++import signal
++import subprocess
++import time
++
++
++LEASE_FDS = ContextVar("robosys_resource_fds", default=None)
++
++
++def resource_fds():
++    current = LEASE_FDS.get()
++    return tuple(current if current is not None else json.loads(os.environ.get("ROBOSYS_RESOURCE_FDS", "[]")))
++
++
++def _detach_fd(wrapper):
++    return wrapper.detach()
++
++
++class SharedDescriptor:
++    def __init__(self, fd):
++        self.fd = fd
++
++    def __reduce__(self):
++        # DupFd must run inside spawn's serializer, where pass_fds is recorded.
++        from multiprocessing.reduction import DupFd
++        return _detach_fd, (DupFd(self.fd),)
++
++
++def process_table():
++    if Path("/proc/self/stat").exists():
++        # /proc works in minimal Linux containers without a procps package.
++        boot = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
++        rows = {}
++        for path in Path("/proc").iterdir():
++            if not path.name.isdigit():
++                continue
++            try:
++                stat = (path / "stat").read_text().rsplit(")", 1)[1].split()
++                if stat[0] in {"Z", "X"}:
++                    continue
++                pid = int(path.name)
++                rows[pid] = {"pid": pid, "ppid": int(stat[1]), "pgid": int(stat[2]),
++                             "start": f"{boot}:{stat[19]}"}
++            except (OSError, ValueError, IndexError):
++                continue
++        return rows
++    result = subprocess.run(["ps", "-axo", "pid=,ppid=,pgid=,lstart=,stat="],
++                            capture_output=True, text=True, check=True, timeout=2)
++    rows = {}
++    for line in result.stdout.splitlines():
++        parts = line.split()
++        if len(parts) < 9:
++            continue
++        pid, ppid, pgid = map(int, parts[:3])
++        if parts[8].startswith("Z"):
++            continue
++        rows[pid] = {"pid": pid, "ppid": ppid, "pgid": pgid, "start": " ".join(parts[3:8])}
++    return rows
++
++
++def register_process(directory, pid, *, role):
++    row = process_table().get(pid)
++    if row is None:
++        return None
++    row["role"] = role
++    directory = Path(directory)
++    directory.mkdir(parents=True, exist_ok=True)
++    path = directory / f"{pid}.json"
++    temporary = path.with_suffix(f".{os.getpid()}.tmp")
++    temporary.write_text(json.dumps(row))
++    temporary.replace(path)
++    return row
++
++
++def owned_processes(directory, *, table=None):
++    table = process_table() if table is None else table
++    owned = {}
++    for path in Path(directory).glob("*.json"):
++        record = json.loads(path.read_text())
++        row = table.get(record["pid"])
++        if row is not None and row["start"] == record["start"] and row["pgid"] == record["pgid"]:
++            owned[row["pid"]] = row
++    # Include descendants and members of groups positively identified above.
++    # Never signal a stale PGID merely because it appears in an old file.
++    while True:
++        groups = {row["pgid"] for row in owned.values() if row["pgid"] != os.getpgrp()}
++        extra = {pid: row for pid, row in table.items()
++                 if row["ppid"] in owned or row["pgid"] in groups}
++        if extra.keys() <= owned.keys():
++            return owned
++        owned.update(extra)
++
++
++def same_process(left, right):
++    return (left is not None and right is not None and
++            all(left[key] == right[key] for key in ("pid", "pgid", "start")))
++
++
++def remember_descendants(directory):
++    for row in owned_processes(directory).values():
++        register_process(directory, row["pid"], role="descendant")
++
++
++def terminate_owned(directory, *, timeout_s=1.0):
++    known = owned_processes(directory)
++    forced = False
++    def signal_known(sig):
++        current = process_table()
++        groups = set()
++        for pid, row in list(known.items()):
++            if pid == os.getpid() or not same_process(current.get(pid), row):
++                continue
++            try:
++                if row["pgid"] != os.getpgrp() and row["pgid"] not in groups:
++                    os.killpg(row["pgid"], sig)
++                    groups.add(row["pgid"])
++                elif row["pgid"] == os.getpgrp():
++                    os.kill(pid, sig)
++            except ProcessLookupError:
++                pass
++    signal_known(signal.SIGTERM)
++    deadline = time.monotonic() + timeout_s
++    while time.monotonic() < deadline:
++        table = process_table()
++        known.update(owned_processes(directory, table=table))
++        if not any(same_process(table.get(pid), row) for pid, row in known.items()):
++            return {"terminated": True, "forced": forced, "remaining_pids": []}
++        time.sleep(.03)
++    forced = True
++    # Refresh before each signal: child creation during graceful shutdown is
++    # still part of the same execution domain.
++    known.update(owned_processes(directory))
++    signal_known(signal.SIGKILL)
++    deadline = time.monotonic() + 1.0
++    while True:
++        table = process_table()
++        remaining = [pid for pid, row in known.items() if same_process(table.get(pid), row)]
++        if not remaining or time.monotonic() >= deadline:
++            return {"terminated": not remaining, "forced": forced, "remaining_pids": remaining}
++        time.sleep(.03)
+--- before/robosys/runtime/run_state.py
++++ after/robosys/runtime/run_state.py
+@@ -0,0 +1,67 @@
++"""Exclusive run ownership and durable protection against accidental overwrite."""
++from functools import wraps
++import fcntl
++import json
++from pathlib import Path
++
++
++class RunReservation:
++    def __init__(self, output_dir, run_id, config_hash):
++        if not run_id or Path(run_id).name != run_id or run_id in {".", ".."}:
++            raise ValueError("run_id must be a single nonempty directory name")
++        self.root = Path(output_dir).resolve() / run_id
++        self.config_hash = config_hash
++        self.handle = None
++        self._context_token = None
++
++    def acquire(self):
++        control = self.root / ".control"
++        control.mkdir(parents=True, exist_ok=True)
++        self.handle = (control / "run.lock").open("a+")
++        try:
++            try:
++                fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
++            except BlockingIOError:
++                raise RuntimeError("run_id is already owned by an active experiment") from None
++            claim = control / "run.json"
++            status = self.root / "status.json"
++            previous = json.loads(claim.read_text()) if claim.exists() else (
++                json.loads(status.read_text()) if status.exists() else None)
++            if previous is not None:
++                if not (control / "resume.json").is_file():
++                    raise ValueError("run_id already exists; use explicit rerun/resume or a new run_id")
++                if previous.get("config_hash") != self.config_hash:
++                    raise ValueError("resume configuration does not match the original run")
++            temporary = claim.with_suffix(".tmp")
++            temporary.write_text(json.dumps({"config_hash": self.config_hash}) + "\n")
++            temporary.replace(claim)
++            from .processes import LEASE_FDS, resource_fds
++            self._context_token = LEASE_FDS.set((*resource_fds(), self.handle.fileno()))
++        except BaseException:
++            self.close()
++            raise
++        return self
++
++    def close(self):
++        if self._context_token is not None:
++            from .processes import LEASE_FDS
++            LEASE_FDS.reset(self._context_token)
++            self._context_token = None
++        if self.handle is not None:
++            self.handle.close()
++            self.handle = None
++
++
++def reserve_evaluation(function):
++    @wraps(function)
++    async def wrapped(*args, _reservation=None, **kwargs):
++        reservation = _reservation or RunReservation(kwargs["output_dir"], kwargs["run_id"],
++                                                     kwargs["params"].content_hash).acquire()
++        try:
++            if reservation.handle is None:
++                raise RuntimeError("run reservation is not active")
++            return await function(*args, **kwargs)
++        finally:
++            if _reservation is None:
++                reservation.close()
++    return wrapped
+--- before/robosys/runtime/runner.py
++++ after/robosys/runtime/runner.py
+@@ -20,7 +20,7 @@
+ from ..envs import bind_environment, environment
+ from ..contracts.serialization import jsonable
+ from ..infra.params import Params, merge_parameter_values
+-from ..runtime.config import LoadedConfigs, load_application_config
++from ..runtime.config import LoadedConfigs, load_request_config
+ from ..runtime.factory import build_environment_adapter, initialize_application
+ from ..runtime.terminal import TerminalLogger
+ from ..schemas import SessionSpec
+@@ -68,6 +68,7 @@
+     resource_root: str | Path | None = None
+     # Provider-owned session options; never interpreted by the runner.
+     environment_parameters: dict[str, Any] | None = None
++    config_snapshot: dict[str, Any] | str | Path | None = None
+ 
+ 
+ def _required_param(params: Any, name: str, expected: type) -> Any:
+@@ -320,7 +321,7 @@
+ 
+     episode_started = time.perf_counter()
+     config_path = Path(request.config)
+-    loaded = loaded or load_application_config(config_path, request.experiment_config)
++    loaded = loaded or load_request_config(request)
+     params = _apply_request_overrides(loaded.params, request, case=case)
+     graph_id = _graph_selector(loaded, params, request)
+     from .result_projection import require_episode_outputs
+@@ -525,6 +526,7 @@
+             body_runtime["stop_executor"] = session_stop
+         app = await initialize_application(
+             config_path,
++            loaded=loaded,
+             experiment_config=request.experiment_config,
+             environment_service=session,
+             body_runtime=body_runtime,
+@@ -675,18 +677,18 @@
+     from dataclasses import replace
+ 
+     from ..task_adapters.base import TaskAdapterRunContext, TaskCase
+-    from .config import TaskAdapterConfig
++    from .config import TaskAdapterConfig, freeze_config
+     from .execution import ExecutionOptions, ResourceLease
+     from .execution_registry import build_execution_backend
+     from .factory import build_task_adapters
+     from .observability import PortalRuntime, SharedObservability
+     from .worker import WorkerRuntime
+ 
+-    loaded = loaded or load_application_config(request.config, request.experiment_config)
++    loaded = loaded or load_request_config(request)
+     params = _apply_request_overrides(loaded.params, request, case=case)
+     execution = ExecutionOptions.from_params(params)
+     execution.validate_tools(loaded.tools)
+-    lease = ResourceLease([*execution.resource_ids, *(f"gpu:{x}" for x in execution.gpu_ids)])
++    lease = ResourceLease([*execution.resource_ids, *(f"gpu:{x}" for x in execution.gpu_ids)], share_with_children=True)
+     output = Path(request.output or params.resolve("runtime.output_path") or "data/runs/result.json").resolve()
+     settings = params.resolve("runtime.web") or {}
+     trace_dir = request.trace_dir or params.resolve("runtime.trace_dir")
+@@ -697,6 +699,7 @@
+     identity = request.identity or ExecutionIdentity.create(
+         task_id=_required_param(params, "task.task_id", str), experiment_id=Path(request.config).stem)
+     request = replace(request, identity=identity, output=output, observability=source,
++                      config_snapshot=freeze_config(loaded),
+                       memory_enabled=execution.memory_mode != "disabled")
+     worker = WorkerRuntime(request, loaded=loaded, terminal=terminal)
+     shared = portal = backend = None
+--- before/robosys/runtime/runner_cli.py
++++ after/robosys/runtime/runner_cli.py
+@@ -30,6 +30,7 @@
+     )
+     parser.add_argument("--batch", action="store_true", help="run all enabled Task Adapters in config order")
+     parser.add_argument("--config", default="configs/config.json")
++    parser.add_argument("--config-snapshot", default=None, help="frozen merged configuration for this run")
+     parser.add_argument("--experiment-config", default=None)
+     parser.add_argument("--task-id", default=None)
+     parser.add_argument("--env-id", default=None)
+@@ -90,6 +91,7 @@
+ def request_from_args(args: argparse.Namespace) -> EpisodeRequest:
+     return EpisodeRequest(
+         config=args.config,
++        config_snapshot=args.config_snapshot,
+         environment_parameters=getattr(args, "environment_parameters", None),
+         experiment_config=args.experiment_config,
+         task_id=args.task_id,
+@@ -117,6 +119,7 @@
+ def experiment_request_from_args(args: argparse.Namespace) -> ExperimentRequest:
+     return ExperimentRequest(
+         config=args.config,
++        config_snapshot=args.config_snapshot,
+         environment_parameters=getattr(args, "environment_parameters", None),
+         task_adapter_overrides=getattr(args, "task_adapter_overrides", None),
+         experiment_config=args.experiment_config,
+--- before/robosys/runtime/worker.py
++++ after/robosys/runtime/worker.py
+@@ -2,27 +2,32 @@
+ 
+ from __future__ import annotations
+ 
++import asyncio
+ import os
++from copy import deepcopy
+ from pathlib import Path
+ from uuid import uuid4
+ 
+-from .config import load_application_config
++from .config import load_request_config
+ from .factory import initialize_tool_runtime
+ 
+ 
+ class WorkerRuntime:
+     def __init__(self, request, *, loaded=None, terminal=None):
+         self.request = request
+-        self.loaded = loaded or load_application_config(
+-            request.config, request.experiment_config
+-        )
++        self.loaded = deepcopy(loaded) if loaded is not None else load_request_config(request)
+         self.terminal = terminal
+         self.tools = None
+         self._busy = False
++        self._poisoned = False
++        self._cleanup_failure = None
++        self._close_lock = asyncio.Lock()
+         self._environment = {}
+         self.worker_id = os.environ.get("ROBOSYS_WORKER_ID") or str(uuid4())
+ 
+     async def start(self):
++        if self._poisoned:
++            raise RuntimeError("worker resources could not be cleaned up; worker must be replaced")
+         if self.tools is not None:
+             return
+         from .runner import _apply_request_overrides, _graph_selector
+@@ -96,18 +101,48 @@
+                 terminal=self.terminal,
+                 tools=self.tools,
+             )
++        except BaseException as error:
++            # A failed/cancelled task may have left provider session state behind.
++            # Retire it before another task can reuse the resident tools.
++            self._poisoned = True
++            try:
++                await self.close()
++            except BaseException as cleanup_error:
++                self._poisoned = True
++                if hasattr(error, "add_note"):
++                    error.add_note(f"worker cleanup failed: {cleanup_error}")
++            raise
+         finally:
+             self._busy = False
+ 
+     async def close(self):
+-        try:
+-            if self.tools is not None:
+-                await self.tools.close()
+-                self.tools = None
+-        finally:
+-            for key, value in self._environment.items():
+-                if value is None:
+-                    os.environ.pop(key, None)
+-                else:
+-                    os.environ[key] = value
+-            self._environment.clear()
++        async with self._close_lock:
++            if self._cleanup_failure is not None:
++                raise RuntimeError("worker cleanup failed; replacement process required") from self._cleanup_failure
++            try:
++                if self.tools is not None:
++                    from .execution import ExecutionOptions
++                    timeout = ExecutionOptions.from_params(self.loaded.params).shutdown_timeout_s
++                    cleanup = asyncio.create_task(self.tools.close())
++                    cleanup.add_done_callback(lambda task: task.exception() if not task.cancelled() else None)
++                    try:
++                        done, _ = await asyncio.wait({cleanup}, timeout=timeout)
++                        if not done:
++                            raise TimeoutError("worker tool cleanup deadline exceeded")
++                        cleanup.result()
++                    finally:
++                        if not cleanup.done():
++                            cleanup.cancel()
++                    self.tools = None
++                self._poisoned = False
++            except BaseException as exc:
++                self._cleanup_failure = exc
++                self._poisoned = True
++                raise
++            finally:
++                for key, value in self._environment.items():
++                    if value is None:
++                        os.environ.pop(key, None)
++                    else:
++                        os.environ[key] = value
++                self._environment.clear()
+--- before/robosys/services/body.py
++++ after/robosys/services/body.py
+@@ -4,6 +4,8 @@
+ 
+ import asyncio
+ import inspect
++import hashlib
++import json
+ import os
+ import threading
+ import time
+@@ -13,6 +15,7 @@
+ from typing import Any
+ 
+ from ..bodies.base import BaseBodyService
++from ..contracts.serialization import jsonable
+ from ..runtime.safety import (
+     GLOBAL_SAFETY_STATE,
+     SafetyGate,
+@@ -59,6 +62,7 @@
+         idempotency_store_config: Mapping[str, Any] | None = None,
+         stop_timeout_s: float = 0.5,
+         heartbeat_ttl_s: float | None = None,
++        idempotency_scope: str | None = None,
+     ) -> None:
+         if poll_hz <= 0 or stop_timeout_s <= 0 or (
+             heartbeat_ttl_s is not None and heartbeat_ttl_s <= 0
+@@ -84,6 +88,9 @@
+         # when the watchdog observes P3/P4.
+         self.stop_executor = stop_executor
+         self.stop_timeout_s = stop_timeout_s
++        self.idempotency_scope = idempotency_scope or f"{type(self).__module__}.{type(self).__qualname__}"
++        self._stop_task: asyncio.Task[bool] | None = None
++        self._stop_failed = False
+         configured_ledger = idempotency_db or os.environ.get("ROBOSYS_ACTION_DB")
+         if idempotency_store_config is not None and (idempotency_store is not None or idempotency_db is not None):
+             raise ValueError("select one action store configuration or injected store")
+@@ -155,20 +162,24 @@
+                 status=BodyExecutionStatus.SUCCEEDED,
+                 executed_actions=0,
+             )
+-        if self._sync_driver_busy.is_set():
++        if self._sync_driver_busy.is_set() or self._stop_failed:
+             return BodyExecutionResult(
+                 chunk_id=action_chunk.chunk_id,
+                 session_id=action_chunk.session_id,
+                 status=BodyExecutionStatus.REJECTED,
+-                error="body driver is still completing a timed-out action",
++                error="body driver is busy or its last stop was not confirmed",
+             )
+         async with self._lock:
++            if self._sync_driver_busy.is_set() or self._stop_failed:
++                return BodyExecutionResult(chunk_id=action_chunk.chunk_id, session_id=action_chunk.session_id,
++                    status=BodyExecutionStatus.REJECTED, error="body driver is busy or its last stop was not confirmed")
+             if self._active_task is not None and not self._active_task.done():
+                 raise RuntimeError("body is already executing an action chunk")
+             self._active_task = asyncio.current_task()
+             self._active_chunk = action_chunk
+             self._interrupt_event.clear()
+             self._interrupt_reason = None
++            self._stop_task = None
+             executed = 0
+             last_feedback = None
+             action_results: list[ActionExecution] = []
+@@ -181,12 +192,23 @@
+                     self._validate_action(action_chunk, action)
+                     key = action.idempotency_key or str(action.action_id)
+                     cache_key = (str(action.session_id), key)
++                    request_hash = self._request_hash(action)
+                     cached = self._completed_idempotency.get(cache_key)
+                     if cached is None and self.idempotency_store is not None:
+                         cached = await self._load_idempotency(action.session_id, key)
+                         if cached is not None:
+                             self._completed_idempotency[cache_key] = cached
+                     if cached is not None and cached.status == "succeeded":
++                        if cached.metadata.get("request_hash") != request_hash:
++                            return BodyExecutionResult(
++                                chunk_id=action_chunk.chunk_id, session_id=action_chunk.session_id,
++                                status=BodyExecutionStatus.REJECTED, executed_actions=executed,
++                                error="idempotency_conflict: key has a different or unverifiable request",
++                                action_results=action_results + [ActionExecution(
++                                    action_id=action.action_id, idempotency_key=key,
++                                    status="rejected", error="idempotency_conflict",
++                                )],
++                            )
+                         action_results.append(cached)
+                         continue
+                     snapshot = await self._safety_snapshot()
+@@ -215,7 +237,7 @@
+                     self._active_action_key = key
+                     self._active_action_started = action_started
+                     if action.deadline_ns is not None and time.time_ns() >= action.deadline_ns:
+-                        await self._invoke_stop(f"action_deadline:{action.action_id}")
++                        await self._ensure_stop(f"action_deadline:{action.action_id}")
+                         await self._raise_deadline_signal(
+                             f"action_deadline:{action.action_id}",
+                             "action deadline already expired",
+@@ -256,7 +278,7 @@
+                         absolute_remaining = (action.deadline_ns - time.time_ns()) / 1_000_000_000.0
+                     timeout = min(action.timeout_ms / 1000.0, chunk_remaining, absolute_remaining)
+                     if timeout <= 0:
+-                        await self._invoke_stop(f"action_chunk_deadline:{action_chunk.chunk_id}")
++                        await self._ensure_stop(f"action_chunk_deadline:{action_chunk.chunk_id}")
+                         await self._raise_deadline_signal(
+                             f"action_chunk_deadline:{action_chunk.chunk_id}",
+                             "action chunk deadline exceeded",
+@@ -291,7 +313,7 @@
+                         else:
+                             deadline_code = f"action_deadline:{action.action_id}"
+                             deadline_error = f"action timeout after {action.timeout_ms} ms"
+-                        await self._invoke_stop(deadline_code)
++                        await self._ensure_stop(deadline_code)
+                         await self._raise_deadline_signal(
+                             deadline_code,
+                             deadline_error,
+@@ -332,6 +354,7 @@
+                         started_at=action_started,
+                         ended_at=datetime.now(timezone.utc),
+                         metadata={
++                            "request_hash": request_hash,
+                             "deadline_unix_s": action_deadline,
+                             "relative_deadline_unix_s": action_deadline,
+                             "absolute_deadline_ns": action.deadline_ns,
+@@ -379,8 +402,13 @@
+                     action_results=action_results,
+                 )
+             except asyncio.CancelledError:
++                external_cancel = self._interrupt_reason is None
+                 reason = self._interrupt_reason or "body_execution_cancelled"
++                self._interrupt_reason = reason
++                await self._ensure_stop(reason)
+                 snapshot = await self._safety_snapshot()
++                if external_cancel:
++                    raise
+                 if current_action is not None and current_key is not None and not any(
+                     item.action_id == current_action.action_id for item in action_results
+                 ):
+@@ -427,7 +455,7 @@
+             self._interrupt_reason = reason
+             self._interrupt_event.set()
+             if self.stop_executor is not None:
+-                await self._invoke_stop(reason)
++                await self._ensure_stop(reason)
+             active = self._active_task
+             current = asyncio.current_task()
+             if active is not None and active is not current and not active.done():
+@@ -476,10 +504,11 @@
+         active = self._active_chunk
+         watchdog_stopped = self._safety_task is None or self._safety_task.done()
+         return EnvironmentHealth(
+-            ready=not self._closed and not watchdog_stopped,
+-            degraded=active is not None or self._sync_driver_busy.is_set() or watchdog_stopped,
++            ready=not self._closed and not watchdog_stopped and not self._stop_failed,
++            degraded=active is not None or self._sync_driver_busy.is_set() or watchdog_stopped or self._stop_failed,
+             message=(
+                 f"executing:{active.chunk_id}" if active is not None
++                else "low_level_stop_failed" if self._stop_failed
+                 else "driver_busy_after_timeout" if self._sync_driver_busy.is_set()
+                 else "body safety watchdog stopped" if watchdog_stopped
+                 else None
+@@ -491,6 +520,12 @@
+         active = self._active_task
+         if active is not None and not active.done():
+             await self.interrupt("body_service_close")
++            if active is not asyncio.current_task():
++                done, _ = await asyncio.wait({active}, timeout=self.stop_timeout_s)
++                if not done:
++                    raise TimeoutError("body execution did not stop during close")
++        elif self._sync_driver_busy.is_set():
++            await self._ensure_stop("body_service_close")
+         if self._safety_task is not None:
+             self._safety_task.cancel()
+             try:
+@@ -505,6 +540,11 @@
+                 result = close()
+                 if inspect.isawaitable(result):
+                     await result
++        deadline = time.monotonic() + self.stop_timeout_s
++        while self._sync_driver_busy.is_set() and time.monotonic() < deadline:
++            await asyncio.sleep(min(.01, self.stop_timeout_s))
++        if self._sync_driver_busy.is_set():
++            raise TimeoutError("body driver is still running after close deadline")
+ 
+     @staticmethod
+     def _validate_action(action_chunk: ActionChunk, action: Action) -> None:
+@@ -542,6 +582,19 @@
+ 
+         return await async_safety_call(self.safety_state, "snapshot")
+ 
++    def _request_hash(self, action: Action) -> str:
++        request = {"version": 1, "scope": self.idempotency_scope,
++                   "action_type": action.action_type, "payload": action.payload}
++        encoded = json.dumps(jsonable(request), sort_keys=True, separators=(",", ":"), allow_nan=False)
++        return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
++
++    async def _ensure_stop(self, reason: str) -> bool:
++        # Watchdog, caller cancellation and close share the same stop attempt.
++        # Shield it so a second cancellation cannot cancel hardware cleanup.
++        if self._stop_task is None:
++            self._stop_task = asyncio.create_task(self._invoke_stop(reason))
++        return await asyncio.shield(self._stop_task)
++
+     async def _invoke_stop(self, reason: str) -> bool:
+         if self.stop_executor is None:
+             return True
+@@ -554,13 +607,22 @@
+                 # failure is escalated to latched P4 below.
+                 stop_result = asyncio.to_thread(self.stop_executor, reason)
+             if inspect.isawaitable(stop_result):
+-                await asyncio.wait_for(stop_result, timeout=self.stop_timeout_s)
++                stop_task = asyncio.ensure_future(stop_result)
++                stop_task.add_done_callback(lambda task: task.exception() if not task.cancelled() else None)
++                done, _ = await asyncio.wait({stop_task}, timeout=self.stop_timeout_s)
++                if not done:
++                    stop_task.cancel()
++                    raise TimeoutError("low-level stop deadline exceeded")
++                stop_result = stop_task.result()
++            if stop_result is False:
++                raise RuntimeError("driver rejected stop")
+             return True
+         except Exception:
+             # A failed low-level stop must not prevent cancellation of the
+             # cooperative task. Expose the count and raise a latched P4 so a
+             # supervisor/hardware controller cannot continue in normal mode.
+             self.stop_errors += 1
++            self._stop_failed = True
+             try:
+                 await async_safety_call(
+                     self.safety_state,
+@@ -598,13 +660,19 @@
+                 raise RuntimeError("body driver is still completing a previous action")
+ 
+             def call_sync():
+-                self._sync_driver_busy.set()
+                 try:
+                     return self.executor(action)
+                 finally:
+                     self._sync_driver_busy.clear()
+ 
+-            result = await asyncio.to_thread(call_sync)
++            self._sync_driver_busy.set()
++            try:
++                future = asyncio.get_running_loop().run_in_executor(None, call_sync)
++            except BaseException:
++                self._sync_driver_busy.clear()
++                raise
++            future.add_done_callback(lambda f: f.exception() if not f.cancelled() else None)
++            result = await asyncio.shield(future)
+         if inspect.isawaitable(result):
+             result = await result
+         return result
+@@ -680,7 +748,7 @@
+ 
+     async def _execute_safe_chunk(self, chunk: ActionChunk) -> None:
+         for action in chunk.actions:
+-            await self._invoke_executor(action)
++            await asyncio.wait_for(self._invoke_executor(action), timeout=self.stop_timeout_s)
+ 
+ 
+ __all__ = ["InProcessBodyService"]
+--- before/robosys/task_adapters/base.py
++++ after/robosys/task_adapters/base.py
+@@ -52,7 +52,8 @@
+     def key(self) -> str:
+         """Stable human-readable key used in status and summary files."""
+ 
+-        return f"{self.adapter_id}:{self.task_id}:{self.episode}"
++        # index is unique within an adapter, including repeated tasks/seeds.
++        return f"{self.adapter_id}:{self.index}"
+ 
+     def to_dict(self) -> dict[str, Any]:
+         return {
+--- before/robosys/task_adapters/evaluator.py
++++ after/robosys/task_adapters/evaluator.py
+@@ -14,6 +14,7 @@
+ from typing import Any
+ 
+ from ..infra.params import Params
++from ..runtime.run_state import reserve_evaluation
+ from .base import (
+     ConfiguredTaskAdapter,
+     TaskAdapterRunContext,
+@@ -227,6 +228,7 @@
+     }
+ 
+ 
++@reserve_evaluation
+ async def evaluate_task_adapters(
+     *,
+     config_path: str | Path,
+@@ -253,6 +255,8 @@
+ 
+     if not adapters:
+         raise ValueError("at least one enabled task adapter is required")
++    if len({adapter.instance_id for adapter in adapters}) != len(adapters):
++        raise ValueError("duplicate task adapter identities")
+     root = Path(output_dir)
+     output_root = root / run_id
+     output_root.mkdir(parents=True, exist_ok=True)
+@@ -284,6 +288,11 @@
+             raise ValueError(
+                 f"task adapter {configured.instance_id!r} produced no task cases"
+             )
++        if any(case.adapter_id != configured.instance_id or type(case.index) is not int
++               or case.index < 0 for case in cases):
++            raise ValueError("task cases require the configured adapter_id and a nonnegative integer index")
++        if len({case.key for case in cases}) != len(cases):
++            raise ValueError("task adapters produced duplicate case identities")
+         adapter_cases.append((configured, cases))
+         total += len(cases)
+ 
+@@ -598,6 +607,8 @@
+                     records.append(lesson)
+         write_json(resolved_memory, {"records": records})
+ 
++    if completed_count != total:
++        raise RuntimeError(f"experiment cannot complete: {completed_count}/{total} cases are terminal")
+     final_summary = _summary(
+         run_id=run_id,
+         adapters=adapters,
+--- before/robosys/web/access.py
++++ after/robosys/web/access.py
+@@ -3,15 +3,16 @@
+ from __future__ import annotations
+ 
+ from urllib.parse import urlsplit
++import base64
++import binascii
++import hmac
+ 
+ 
+ class PortalAccess:
+-    def __init__(self, host: str, *, control: bool, token=None, allowed_hosts=()):
+-        # The complete Portal is intentionally local/SSH-tunnel protected and
+-        # no longer uses a bearer token.  Keep ``token`` in the constructor
+-        # for API compatibility with older callers, but never generate or
+-        # retain one.
+-        self.token = None
++    def __init__(self, host: str, *, control: bool, token=None, allowed_hosts=(), loopback_published=False):
++        if host not in {"localhost", "127.0.0.1", "::1"} and not token and not loopback_published:
++            raise ValueError("non-loopback Portal requires ROBOSYS_PORTAL_TOKEN; use SSH for local access")
++        self.token = token or None
+         self.allowed_hosts = {"localhost", "127.0.0.1", "::1"}
+         if host not in {"", "0.0.0.0", "::"}:
+             self.allowed_hosts.add(host.lower())
+@@ -53,6 +54,16 @@
+                     return 403, "cross-origin requests are not allowed"
+         except ValueError:
+             return 403, "invalid request origin or Host"
++        if self.token:
++            authorization = headers.get("Authorization", "")
++            supplied = authorization[7:] if authorization.startswith("Bearer ") else ""
++            if authorization.startswith("Basic "):
++                try:
++                    supplied = base64.b64decode(authorization[6:], validate=True).decode().split(":", 1)[1]
++                except (ValueError, IndexError, UnicodeError, binascii.Error):
++                    supplied = ""
++            if not hmac.compare_digest(supplied.encode(), self.token.encode()):
++                return 401, "authentication required"
+         if write and headers.get_content_type() != "application/json":
+             return 415, "Content-Type must be application/json"
+         return None
+--- before/robosys/web/experiments.py
++++ after/robosys/web/experiments.py
+@@ -20,7 +20,7 @@
+ from typing import Any
+ from urllib.parse import quote, unquote, urlsplit
+ 
+-from ..runtime.config import load_application_config
++from ..runtime.config import load_application_config, freeze_config, load_config_snapshot
+ from ..infra.trace_query import TraceQuery
+ 
+ 
+@@ -117,6 +117,8 @@
+         for job in waiting:
+             env = os.environ.copy()
+             env["PYTHONPATH"] = str(self.project_root) + os.pathsep + env.get("PYTHONPATH", "")
++            registry = self._job_path(job, "output_root") / ".processes"
++            env["ROBOSYS_PROCESS_REGISTRY"] = str(registry)
+             try:
+                 with self._job_path(job, "log_path").open("ab") as log_file:
+                     process = subprocess.Popen(
+@@ -131,6 +133,8 @@
+                 continue
+             job.update(status="running", pid=process.pid, started_at=_now())
+             self._processes[job["job_id"]] = process
++            from ..runtime.processes import register_process
++            job["process_identity"] = register_process(registry, process.pid, role="coordinator")
+             self._persist_jobs()
+             break
+ 
+@@ -162,7 +166,7 @@
+         """Return whether a job still represents a live experiment run."""
+ 
+         status = str(job.get("status", "")).lower()
+-        if status == "running":
++        if status in {"running", "stopping", "stop_failed"}:
+             return True
+         progress = job.get("progress")
+         return isinstance(progress, Mapping) and str(progress.get("status", "")).lower() == "running"
+@@ -183,7 +187,11 @@
+         """
+ 
+         if process is not None:
+-            return True
++            return process.poll() is None
++        from ..runtime.processes import process_table, same_process
++        record = self._jobs.get(job_id, {}).get("process_identity")
++        if record:
++            return same_process(record, process_table().get(pid))
+         proc_cmdline = Path(f"/proc/{int(pid)}/cmdline")
+         try:
+             command = proc_cmdline.read_bytes().replace(b"\x00", b" ").decode(
+@@ -217,6 +225,35 @@
+         return True
+ 
+     def _terminate_process_group(
++        self, job_id, job, *, term_timeout_s=None,
++    ):
++        from ..runtime.processes import register_process, remember_descendants, terminate_owned
++        registry = self._job_path(job, "output_root") / ".processes"
++        process = self._processes.get(job_id)
++        pid = process.pid if process is not None else job.get("pid")
++        if pid and self._pid_is_experiment(int(pid), process=process, job_id=job_id):
++            register_process(registry, int(pid), role="coordinator")
++        remember_descendants(registry)
++        if term_timeout_s is None:
++            term_timeout_s = 3.0
++            try:
++                loaded = self._load_job_config(job)
++                from ..runtime.execution import ExecutionOptions
++                execution = ExecutionOptions.from_params(loaded.params)
++                term_timeout_s = execution.shutdown_timeout_s + max(
++                    (t.deployment.shutdown_timeout_s for t in loaded.tools.tools if t.deployment), default=0) + 2
++            except (ValueError, OSError, AttributeError):
++                pass
++        result = self._terminate_coordinator(job_id, job, term_timeout_s=term_timeout_s)
++        descendants = terminate_owned(registry)
++        result["terminated"] = result["terminated"] and descendants["terminated"]
++        result["forced"] = result["forced"] or descendants["forced"]
++        result["remaining_pids"] = descendants["remaining_pids"]
++        if not descendants["terminated"]:
++            result["reason"] = "owned_processes_still_alive"
++        return result
++
++    def _terminate_coordinator(
+         self,
+         job_id: str,
+         job: Mapping[str, Any],
+@@ -237,6 +274,8 @@
+             pid = int(raw_pid)
+         except (TypeError, ValueError):
+             return {"pid": None, "terminated": False, "forced": False, "reason": "missing_pid"}
++        if (process is not None and process.poll() is not None) or not self._pid_exists(pid):
++            return {"pid": pid, "terminated": True, "forced": False, "reason": "already_exited"}
+         if not self._pid_is_experiment(pid, process=process, job_id=job_id):
+             return {"pid": pid, "terminated": False, "forced": False, "reason": "pid_identity_mismatch"}
+ 
+@@ -527,7 +566,7 @@
+ 
+     def _refresh_job(self, job_id: str) -> dict[str, Any]:
+         job = self._jobs[job_id]
+-        if job.get("status") == "waiting":
++        if job.get("status") in {"waiting", "stopping", "stop_failed"}:
+             return dict(job)
+         process = self._processes.get(job_id)
+         status_path = self._job_path(job, "status_path")
+@@ -631,6 +670,15 @@
+                 # Keep historical jobs visible even if their original config
+                 # was moved or a child manifest is no longer available.
+                 job["parameters_error"] = f"{type(exc).__name__}: {exc}"
++        if job.get("status") in {"completed", "failed", "cancelled"}:
++            from ..runtime.processes import owned_processes
++            remaining = owned_processes(self._job_path(job, "output_root") / ".processes")
++            if remaining:
++                if job.get("pid") in remaining:
++                    job["status"] = "running"
++                else:
++                    job.update(status="stop_failed", error="experiment exited with owned processes still alive",
++                               termination={"terminated": False, "remaining_pids": sorted(remaining)})
+         return dict(job)
+ 
+     def _job_path(self, job: Mapping[str, Any], key: str) -> Path:
+@@ -642,6 +690,8 @@
+         return raw.resolve()
+ 
+     def _load_job_config(self, job: dict[str, Any]):
++        if job.get("config_snapshot_path"):
++            return load_config_snapshot(self._job_path(job, "config_snapshot_path"))
+         config_path = job.get("config_path")
+         if not config_path:
+             raise ValueError("job does not contain config_path")
+@@ -2968,6 +3018,8 @@
+         record = dict(job)
+         if "progress" in record:
+             record["progress"] = cls._compact_progress(record.get("progress"))
++            if job.get("status") in {"stopping", "stop_failed"} and isinstance(record["progress"], dict):
++                record["progress"]["status"] = job["status"]
+         if "summary" in record:
+             record["summary"] = cls._compact_summary(record.get("summary"))
+         if not include_parameters:
+@@ -3070,7 +3122,19 @@
+                     "target": {"adapter_id": adapter_id, "global_index": global_index},
+                     "job": self._public_job(job, include_parameters=False),
+                 }
+-            termination = self._terminate_process_group(job_id, job)
++            job["status"] = "stopping"
++            self._jobs[job_id] = job
++            self._persist_jobs()
++            try:
++                termination = self._terminate_process_group(job_id, job)
++            except Exception as exc:
++                job.update(status="stop_failed", error=str(exc))
++                self._persist_jobs()
++                raise
++            job["termination"] = termination
++            if not termination.get("terminated"):
++                job["status"] = "stop_failed"
++                self._persist_jobs()
+             if termination.get("reason") == "pid_identity_mismatch":
+                 raise ValueError("refusing to signal a persisted PID that is not the experiment runner")
+             if not termination.get("terminated"):
+@@ -3138,6 +3202,8 @@
+                 raise KeyError(job_id)
+             job = self._refresh_job(job_id)
+             if tasks is not None:
++                if job.get("status") in {"stopping", "stop_failed"}:
++                    raise ValueError("实验资源尚未释放，请先完成整个实验的停止操作")
+                 available = {(item.get("adapter_id"), self._value_at(item, "global_index", "index"))
+                              for item in self.list_episodes(job_id)}
+                 if any((item["adapter_id"], item["global_index"]) not in available for item in tasks):
+@@ -3163,11 +3229,23 @@
+                         raise ValueError("实验正在释放运行资源，请稍后重试")
+                     if not job.get("command"):
+                         raise ValueError("experiment has no saved execution command")
++                    if not job.get("config_snapshot_path"):
++                        loaded = self._load_job_config(job)
++                        previous = self._read_json_cached(root / "status.json") if (root / "status.json").is_file() else {}
++                        expected = job.get("parameter_hash") or previous.get("config_hash")
++                        if expected != loaded.params.content_hash:
++                            raise ValueError("cannot resume historical run: original configuration cannot be verified")
++                        snapshot_path = root / "config.snapshot.json"
++                        write_json(snapshot_path, freeze_config(loaded))
++                        job["config_snapshot_path"] = str(snapshot_path)
++                        job["command"] = [*job["command"], "--config-snapshot", str(snapshot_path)]
++                        job["parameter_hash"] = expected
+                     write_json(control / "resume.json", request)
+                     # Stale commands belonged to the terminated coordinator.
+                     for path in control.glob("command-*.json"):
+                         path.unlink()
+-                    write_json(root / "status.json", {"run_id": job_id, "status": "waiting"})
++                    write_json(root / "status.json", {"run_id": job_id, "status": "waiting",
++                                                      "config_hash": job.get("parameter_hash")})
+                     job.update(status="waiting", pid=None, returncode=None)
+                     for key in ("ended_at", "error", "cancelled_at", "termination"):
+                         job.pop(key, None)
+@@ -3255,7 +3333,12 @@
+             },
+         }
+         try:
+-            draft["config_document"] = self.get_config_document(config)
++            if source.get("config_snapshot_path"):
++                draft["config_document"] = {"id": config, "label": config,
++                    "json": self._load_job_config(source).bundle.config}
++                draft["overrides"] = {}
++            else:
++                draft["config_document"] = self.get_config_document(config)
+         except Exception:
+             # The editable form can still use the source config and effective
+             # parameters when an old config file is no longer readable.
+@@ -3290,7 +3373,7 @@
+         save_traces = bool(options.get("save_traces")) if "save_traces" in options else None
+         child = self.submit(
+             config,
+-            overrides=overrides,
++            config_snapshot=freeze_config(self._load_job_config(source)),
+             save_videos=save_videos,
+             save_traces=save_traces,
+         )
+@@ -3308,16 +3391,34 @@
+         save_videos: bool | None = None,
+         save_traces: bool | None = None,
+         forked_from: str | None = None,
++        config_snapshot: dict[str, Any] | None = None,
+     ) -> dict[str, Any]:
+-        path = self._config_path(config)
+-        descriptor = self._describe(path)
++        if forked_from and config_snapshot is None:
++            with self._lock:
++                if forked_from not in self._jobs:
++                    raise ValueError("source experiment does not exist")
++                config_snapshot = freeze_config(self._load_job_config(self._jobs[forked_from]))
++        path = self._config_path(config) if config_snapshot is None else Path(config)
++        if not path.is_absolute():
++            path = self.config_root / path
++        path = path.resolve()
++        if config_snapshot is None:
++            descriptor = self._describe(path)
++        else:
++            frozen = load_config_snapshot(config_snapshot)
++            descriptor = {"id": self._relative_config(path), "path": str(path),
++                "task_adapters": [{"id": x.id or x.name, "name": x.name, "kind": x.kind, "enabled": x.enabled}
++                                  for x in frozen.task_adapters.task_adapters if x.enabled]}
+         if not descriptor["task_adapters"]:
+             raise ValueError("selected config has no enabled task adapter")
+         job_id = f"exp-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
+         override_values = dict(overrides or {})
+         override_path = self.output_root / job_id / "experiment_override.json"
+         try:
+-            loaded = load_application_config(path, override_values or None)
++            loaded = (load_config_snapshot(config_snapshot) if config_snapshot is not None
++                      else load_application_config(path, override_values or None))
++            if config_snapshot is not None and override_values:
++                loaded = load_application_config(loaded.bundle.config, override_values)
+             from ..runtime.runner import EpisodeRequest, _graph_selector
+             from ..runtime.result_projection import require_episode_outputs
+             selected = _graph_selector(loaded, loaded.params, EpisodeRequest(config=path))
+@@ -3347,6 +3448,9 @@
+             effective_descriptor = dict(descriptor)
+             effective_descriptor["task_adapters"] = effective_adapters
+         log_path = self.output_root / f"{job_id}.log"
++        snapshot_path = self.output_root / job_id / "config.snapshot.json"
++        from ..task_adapters.evaluator import write_json
++        write_json(snapshot_path, freeze_config(loaded))
+         status_path = self.output_root / job_id / "status.json"
+         command = [
+             self.python_executable,
+@@ -3354,6 +3458,8 @@
+             "--batch",
+             "--config",
+             str(path),
++            "--config-snapshot",
++            str(snapshot_path),
+             "--output-dir",
+             str(self.output_root),
+             "--run-id",
+@@ -3369,6 +3475,7 @@
+             "job_id": job_id,
+             "config": effective_descriptor["id"],
+             "config_path": effective_descriptor["path"],
++            "config_snapshot_path": str(snapshot_path),
+             "task_adapters": effective_descriptor["task_adapters"],
+             "experiment_config_path": str(override_path) if override_values else None,
+             "status": "waiting",
+--- before/robosys/web/grafana.py
++++ after/robosys/web/grafana.py
+@@ -1,5 +1,7 @@
+ """Optional local Grafana startup, invoked only by the CLI."""
+ import platform
++import os
++import secrets
+ import shutil
+ import subprocess
+ import time
+@@ -152,6 +154,14 @@
+             hint = "start the Docker daemon and retry"
+         print("Docker daemon is not ready; %s. %s" % (hint, daemon_error))
+         return False
++    if not os.getenv("GRAFANA_ADMIN_PASSWORD"):
++        try:
++            fd = os.open(root / ".env", os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
++        except FileExistsError:
++            pass
++        else:
++            with os.fdopen(fd, "w") as stream:
++                stream.write("GRAFANA_ADMIN_PASSWORD=" + secrets.token_urlsafe(32) + "\n")
+     compose = command + ["up", "-d", "grafana", "prometheus", "metricsd"]
+     print("Starting Grafana Compose; image pull/build progress follows…", flush=True)
+     try:
+@@ -179,4 +189,3 @@
+         print("Grafana containers started but health check timed out: %s" % url)
+     return False
+ 
+-
+--- before/robosys/web/server.py
++++ after/robosys/web/server.py
+@@ -73,6 +73,8 @@
+         self.send_header("Connection", "close")
+         self.send_header("Cache-Control", cache_control)
+         self.send_header("Referrer-Policy", "no-referrer")
++        if status == 401:
++            self.send_header("WWW-Authenticate", 'Basic realm="RoboSys Portal", charset="UTF-8"')
+         self.send_header("Vary", "Accept-Encoding")
+         if compressed:
+             self.send_header("Content-Encoding", "gzip")
+@@ -472,10 +474,12 @@
+     experiment_manager: ExperimentManager | None = None,
+     control_token: str | None = None,
+     allowed_hosts: tuple[str, ...] = (),
++    loopback_published: bool = False,
+ ) -> ThreadingHTTPServer:
+     handler = type("RoboSysPortalHandler", (PortalHandler,), {})
+     handler.access = PortalAccess(host, control=experiment_manager is not None,
+-                                  token=control_token, allowed_hosts=allowed_hosts)
++                                  token=control_token, allowed_hosts=allowed_hosts,
++                                  loopback_published=loopback_published)
+     handler.data = data
+     handler.experiments = experiment_manager
+     if experiment_manager is not None:
+@@ -509,7 +513,15 @@
+     parser.add_argument("--experiment-python", default=None, help="Python executable used for submitted experiments")
+     parser.add_argument("--no-experiment-submit", action="store_true", help="disable config discovery and experiment submission endpoints")
+     parser.add_argument("--allowed-host", action="append", default=[], help="additional trusted browser hostname (repeatable)")
++    parser.add_argument("--loopback-published", action="store_true",
++                        help="container-only: host publishes this port exclusively on loopback")
+     args = parser.parse_args(argv)
++    try:
++        PortalAccess(args.host, control=not args.no_experiment_submit,
++                     token=os.getenv("ROBOSYS_PORTAL_TOKEN"), allowed_hosts=args.allowed_host,
++                     loopback_published=args.loopback_published)
++    except ValueError as exc:
++        parser.error(str(exc))
+     if args.source:
+         from ..runtime.observability import ObservabilitySource
+         source = ObservabilitySource(**json.loads(Path(args.source).read_text(encoding="utf-8")))
+@@ -547,6 +559,8 @@
+             grafana_url=grafana_url,
+             experiment_manager=experiment_manager,
+             allowed_hosts=tuple(args.allowed_host),
++            control_token=os.getenv("ROBOSYS_PORTAL_TOKEN"),
++            loopback_published=args.loopback_published,
+         )
+     except OSError as exc:
+         data.traces.close()
+--- before/robosys/web/static/portal.js
++++ after/robosys/web/static/portal.js
+@@ -367,7 +367,7 @@
+  try{baseConfigDocument=await getJson('/api/configs/'+encodeURIComponent(select.value));document.getElementById('base-config-json').value=JSON.stringify(baseConfigDocument.json||{},null,2);var override=pendingForkOverride;pendingForkOverride=null;document.getElementById('custom-config-json').value=JSON.stringify(override||{},null,2);parseCustomOverride()}catch(e){pendingForkOverride=null;baseConfigDocument=null;document.getElementById('base-config-json').value='加载失败：'+String(e);document.getElementById('custom-config-status').textContent='基础配置加载失败';document.getElementById('custom-config-status').className='error';updateMergedConfigPreview()}
+ }
+ async function refreshConfigs(){try{renderExperimentConfigs((await getJson('/api/configs')).configs||[]);await loadSelectedConfig()}catch(e){document.getElementById('experiment-config-status').textContent='配置加载失败：'+String(e);document.getElementById('experiment-config-status').className='error'}}
+-function jobProgress(job){var progress=job&&job.progress||{};return {status:progress.status||job.status||'—',completed:progress.completed_episodes,total:progress.total_episodes}}
++function jobProgress(job){var progress=job&&job.progress||{};return {status:(['stopping','stop_failed'].indexOf(job&&job.status)>=0?job.status:progress.status||job.status)||'—',completed:progress.completed_episodes,total:progress.total_episodes}}
+ function jobSummaryText(job){var summary=job&&job.summary||{},progress=jobProgress(job),total=summary.num_episodes;if(total===undefined||(Number(total)===0&&Number(summary.num_errors||0)>0&&progress.total!==undefined))total=progress.total;return total===undefined?'—':String(summary.successes||0)+' / '+String(total)}
+ var experimentListRecords=[],experimentListPage=1,experimentListPageSize=20;
+ function experimentListSlice(records,query,page,size){
+@@ -1065,7 +1065,7 @@
+ Object.assign(portalText.en,{refreshNow:'Refresh',totalExperiments:'All experiments',runningExperiments:'Running',completedExperiments:'Completed',failedExperiments:'Errors',overviewAllHelp:'Recorded experiments',overviewRunningHelp:'Evaluations in progress',overviewCompletedHelp:'Results ready to review',overviewFailedHelp:'Inspect logs for details',experimentHistory:'Experiment history',experimentId:'Experiment',statusLabel:'Status',progressLabel:'Progress',submittedLabel:'Created',searchTasks:'Search task name or index',taskStatus:'Task status',completedSuccessTasks:'Completed · Success',allTasks:'All statuses',noMatchingTasks:'No matching tasks',followLatest:'Follow latest',nodeDetails:'Node details',connectionRetry:'Connection lost · retrying',refreshPaused:'Background refresh paused'});
+ function filterTrajectoryTasks(items,query,status){var needle=String(query||'').trim().toLowerCase();return (items||[]).filter(function(item){var value=String(item.status||'unknown').toLowerCase(),matchesStatus=status==='all'||!status||(status==='running'?trajectoryEpisodeIsRunning(item):status==='error'?['error','failed','failure'].indexOf(value)>=0:status==='completed_success'?value==='completed'&&item.task_success===true:status==='completed'?value==='completed'&&item.task_success!==true:value===status);return matchesStatus&&(!needle||(String(item.task_id||'')+' '+trajectoryItemLabel(item)+' '+trajectoryIndex(item)).toLowerCase().indexOf(needle)>=0)})}
+ function experimentProgressMarkup(progress){var completed=Number(progress.completed),total=Number(progress.total),valid=Number.isFinite(total)&&total>0&&Number.isFinite(completed);return '<span class="experiment-progress"><span>'+esc(progress.completed===undefined?'—':String(progress.completed)+' / '+String(progress.total===undefined?'?':progress.total))+'</span>'+(valid?'<progress value="'+Math.max(0,Math.min(total,completed))+'" max="'+total+'" aria-label="'+esc(t('progressLabel'))+'"></progress>':'')+'</span>'}
+-function renderExperimentOverview(items){var counts={total:items.length,running:0,waiting:0,completed:0,failed:0};items.forEach(function(item){var status=String(jobProgress(item).status).toLowerCase();if(['waiting','queued'].indexOf(status)>=0)counts.waiting++;else if(['running','starting'].indexOf(status)>=0)counts.running++;else if(['completed','success','succeeded'].indexOf(status)>=0)counts.completed++;else if(['failed','failure','error'].indexOf(status)>=0)counts.failed++});Object.keys(counts).forEach(function(key){var el=document.getElementById('overview-'+key);if(el&&el.textContent!==String(counts[key]))el.textContent=String(counts[key])})}
++function renderExperimentOverview(items){var counts={total:items.length,running:0,waiting:0,completed:0,failed:0};items.forEach(function(item){var status=String(jobProgress(item).status).toLowerCase();if(['waiting','queued'].indexOf(status)>=0)counts.waiting++;else if(['running','starting','stopping'].indexOf(status)>=0)counts.running++;else if(['completed','success','succeeded'].indexOf(status)>=0)counts.completed++;else if(['failed','failure','error','stop_failed'].indexOf(status)>=0)counts.failed++});Object.keys(counts).forEach(function(key){var el=document.getElementById('overview-'+key);if(el&&el.textContent!==String(counts[key]))el.textContent=String(counts[key])})}
+ function updateTrajectoryFollowButton(){var button=document.getElementById('trajectory-follow-latest');if(!button)return;button.classList.toggle('hidden',!trajectorySelectedDetail||!trajectoryEpisodeIsRunning(trajectorySelectedDetail));button.setAttribute('aria-pressed',String(trajectoryFollowLatest&&!trajectoryPlaybackActive&&!trajectoryPlaybackPaused))}
+ var taskFilterTimer=null;
+ document.getElementById('trajectory-task-search').addEventListener('input',function(){clearTimeout(taskFilterTimer);taskFilterTimer=setTimeout(function(){if(trajectoryAdapterId)renderTrajectoryAdapter(trajectoryAdapterId)},120)});
+--- before/tests/test_audit_repairs.py
++++ after/tests/test_audit_repairs.py
+@@ -0,0 +1,662 @@
++"""Expected-behaviour regressions for the independent 2026-09-20 audit."""
++import asyncio
++import json
++import threading
++from types import SimpleNamespace
++from uuid import uuid4
++
++import pytest
++from test_execution_backends import make_config
++
++from robosys.infra.params import Params
++from robosys.modules.verify import VerifyModule
++from robosys.runtime.experiment import ExperimentRequest, run_experiment
++from robosys.runtime.runner import EpisodeRequest
++from robosys.runtime.worker import WorkerRuntime
++
++
++@pytest.mark.parametrize('output', [None, {}, {'subtask_success': 'false'},
++    {'subtask_success': 'true'}, {'subtask_success': 0}, {'subtask_success': 1},
++    {'subtask_success': None}, {'subtask_success': []}, {'subtask_success': {}},
++    {'subtask_success': True, 'physical_belief_update': []}])
++def test_verifier_rejects_invalid_output_without_mutating_memory(output):
++    async def scenario():
++        async def tool(*args):
++            return SimpleNamespace(ok=True, output=output, metadata={})
++        ctx = SimpleNamespace(inputs={'instruction': 'pick'}, values={'unchanged': True}, feedback=None,
++            params=Params({'model': {'hlp_tool': 'fake'}, 'task': {'task_id': 'pick'}}), call_tool=tool)
++        with pytest.raises(ValueError, match='verifier'):
++            await VerifyModule().run(ctx)
++        assert ctx.values == {'unchanged': True}
++    asyncio.run(scenario())
++
++
++@pytest.mark.parametrize('success', [False, True])
++def test_verifier_accepts_only_actual_boolean(success):
++    async def scenario():
++        async def tool(*args):
++            return SimpleNamespace(ok=True, output={'subtask_success': success}, metadata={})
++        ctx = SimpleNamespace(inputs={'instruction': 'pick'}, values={}, feedback=None,
++            params=Params({'model': {'hlp_tool': 'fake'}, 'task': {'task_id': 'pick'}}), call_tool=tool)
++        result = await VerifyModule().run(ctx)
++        assert result['subtask_success'] is success
++        assert result['stm']['completed'] == (['pick'] if success else [])
++        assert result['stm']['remaining'] == ([] if success else ['pick'])
++    asyncio.run(scenario())
++
++
++def test_worker_uses_snapshot_after_config_file_changes(tmp_path):
++    async def scenario():
++        config = make_config(tmp_path, trials=1)
++        value = json.loads(config.read_text())
++        value['modules'][0]['params'] = {'prefix': 'before'}
++        value['graphs'][0]['outputs']['marker'] = 'nodes.echo.outputs.prefix'
++        config.write_text(json.dumps(value))
++        request = EpisodeRequest(config=config, output=tmp_path/'episode.json')
++        worker = WorkerRuntime(request)
++        try:
++            first = await worker.run_task(request)
++            value['modules'][0]['params']['prefix'] = 'after'
++            config.write_text(json.dumps(value))
++            second = await worker.run_task(request)
++            assert first['outputs']['marker'] == second['outputs']['marker'] == 'before'
++        finally:
++            await worker.close()
++        fresh = WorkerRuntime(request)
++        try:
++            assert (await fresh.run_task(request))['outputs']['marker'] == 'after'
++        finally:
++            await fresh.close()
++    asyncio.run(scenario())
++
++
++def test_multiseed_cases_have_independent_running_slots(tmp_path):
++    from robosys.task_adapters.base import BaseTaskAdapter, ConfiguredTaskAdapter, TaskCase
++    from robosys.task_adapters.evaluator import evaluate_task_adapters
++    async def scenario():
++        gate, fast_done = asyncio.Event(), asyncio.Event()
++        calls, finished = [], []
++        class Adapter(BaseTaskAdapter):
++            def enumerate_cases(self, *, adapter_id, params):
++                for index, seed in enumerate((10, 20)):
++                    yield TaskCase(adapter_id=adapter_id, task_id='same', environment_id='fake', index=index, seed=seed)
++        class Backend:
++            max_workers = 2
++            async def execute(self, configured, case, context):
++                calls.append(case.index)
++                if case.index == 0:
++                    await gate.wait()
++                else:
++                    fast_done.set()
++                finished.append(case.index)
++                return {'task_success': True}
++        configured = ConfiguredTaskAdapter('adapter', SimpleNamespace(name='fixture'), Adapter())
++        task = asyncio.create_task(evaluate_task_adapters(config_path=tmp_path/'config.json', params=Params({}),
++            adapters=[configured], output_dir=tmp_path, run_id='seeds', run_episode=None,
++            execution_backend=Backend(), options={'memory_mode': 'disabled'}))
++        try:
++            await asyncio.wait_for(fast_done.wait(), 1)
++            await asyncio.sleep(.15)
++            assert not task.done()
++            gate.set()
++            result = await asyncio.wait_for(task, 1)
++            assert result['num_completed'] == result['successes'] == 2
++            assert sorted(calls) == sorted(finished) == [0, 1]
++        finally:
++            gate.set()
++            if not task.done(): task.cancel()
++            await asyncio.gather(task, return_exceptions=True)
++    asyncio.run(scenario())
++
++
++def test_duplicate_case_index_is_rejected_before_dispatch(tmp_path):
++    from robosys.task_adapters.base import BaseTaskAdapter, ConfiguredTaskAdapter, TaskCase
++    from robosys.task_adapters.evaluator import evaluate_task_adapters
++    class Adapter(BaseTaskAdapter):
++        def enumerate_cases(self, *, adapter_id, params):
++            for seed in (1, 2):
++                yield TaskCase(adapter_id=adapter_id, task_id='same', environment_id='fake', index=0, seed=seed)
++    configured = ConfiguredTaskAdapter('adapter', SimpleNamespace(name='fixture'), Adapter())
++    with pytest.raises(ValueError, match='duplicate case identities'):
++        asyncio.run(evaluate_task_adapters(config_path=tmp_path/'config.json', params=Params({}),
++            adapters=[configured], output_dir=tmp_path, run_id='duplicate', run_episode=None))
++
++
++def test_idle_ingest_connections_are_closed_without_client_cooperation():
++    import tempfile
++    from pathlib import Path
++    from robosys.infra.ingest_server import IngestServer
++    async def scenario():
++        with tempfile.TemporaryDirectory(dir='/tmp', prefix='robosys-close-') as directory:
++            server = await IngestServer(Path(directory)/'i.sock', SimpleNamespace(ingest_batch=lambda _: None)).start()
++            reader, writer = await asyncio.open_unix_connection(str(server.path))
++            writer.write(b'{')
++            await writer.drain()
++            await asyncio.sleep(.01)
++            try:
++                await asyncio.wait_for(server.close(), .5)
++                assert await asyncio.wait_for(reader.read(), .5) == b''
++                assert not server.path.exists()
++                assert not server.handlers
++            finally:
++                writer.close()
++                await writer.wait_closed()
++                await server.close()
++    asyncio.run(scenario())
++
++
++def test_worker_rebuilds_tools_after_session_cleanup_failure(tmp_path):
++    from robosys.tools.base import BaseTool
++    from robosys.tools.registry import register_tool
++    events = []
++    class PoisonTool(BaseTool):
++        async def call(self, arguments, context): return {}
++        async def start(self): events.append('start')
++        async def end_session(self, session_id):
++            events.append('cleanup_failed')
++            raise RuntimeError('cleanup failed')
++        async def close(self): events.append('close')
++    name = 'poison-' + uuid4().hex
++    register_tool(name)(PoisonTool)
++    config = make_config(tmp_path, trials=2)
++    value = json.loads(config.read_text())
++    value['tools'] = [{'name': name}]
++    config.write_text(json.dumps(value))
++    result = asyncio.run(run_experiment(ExperimentRequest(config=config, output_dir=tmp_path/'out', run_id='poison')))
++    assert result['num_errors'] == 2
++    assert events == ['start', 'cleanup_failed', 'close'] * 2
++
++
++def test_external_body_cancel_stops_driver_and_blocks_reuse_until_it_exits():
++    from robosys.runtime.safety import SafetyStateStore
++    from robosys.services.body import InProcessBodyService
++    from robosys.schemas import Action, ActionChunk
++    async def scenario():
++        entered, release = threading.Event(), threading.Event()
++        stops = []
++        def execute(action):
++            entered.set()
++            release.wait(3)
++        body = InProcessBodyService(execute, safety_state=SafetyStateStore(),
++            stop_executor=stops.append, stop_timeout_s=.03)
++        session = uuid4()
++        chunk = lambda: ActionChunk(session_id=session, actions=[Action(session_id=session)])
++        task = asyncio.create_task(body.execute(chunk()))
++        try:
++            while not entered.is_set(): await asyncio.sleep(.001)
++            task.cancel()
++            with pytest.raises(asyncio.CancelledError): await task
++            assert stops == ['body_execution_cancelled']
++            assert (await body.execute(chunk())).status == 'rejected'
++            with pytest.raises(TimeoutError, match='driver is still running'):
++                await body.close()
++            assert (await body.health()).degraded
++        finally:
++            release.set()
++            while body._sync_driver_busy.is_set(): await asyncio.sleep(.001)
++            await body.close()
++    asyncio.run(scenario())
++
++
++def test_real_robot_sync_sdk_is_isolated_from_watchdog_and_deadline():
++    import time
++    from robosys.bodies.real_robot_body import RealRobotBody
++    from robosys.runtime.safety import SafetyStateStore
++    from robosys.schemas import Action, ActionChunk
++    async def scenario():
++        release = threading.Event()
++        calls, ticks = [], []
++        loop_thread = threading.get_ident()
++        class Driver:
++            def connect(self): calls.append(('connect', threading.get_ident()))
++            def execute(self, action):
++                calls.append(('execute', threading.get_ident()))
++                release.wait(3)
++            def hold(self, reason):
++                calls.append(('hold', threading.get_ident()))
++                release.set()
++            def close(self): calls.append(('close', threading.get_ident()))
++        body = RealRobotBody(driver=Driver(), safety_state=SafetyStateStore(), stop_timeout_s=.2)
++        session = uuid4()
++        asyncio.get_running_loop().call_later(.01, lambda: ticks.append(time.monotonic()))
++        started = time.monotonic()
++        try:
++            result = await asyncio.wait_for(body.execute(ActionChunk(session_id=session,
++                actions=[Action(session_id=session, timeout_ms=25)])), 1)
++            assert result.deadline_exceeded and result.status == 'failed'
++            assert ticks and ticks[0] - started < .2
++            assert [name for name, _ in calls].count('hold') == 1
++        finally:
++            release.set()
++            await body.close()
++        assert all(tid != loop_thread for _, tid in calls)
++        assert len({tid for name, tid in calls if name in {'connect', 'execute', 'close'}}) == 1
++    asyncio.run(scenario())
++
++
++@pytest.mark.parametrize('durable', [False, True])
++def test_idempotency_rejects_changed_payload_and_accepts_identical_retry(tmp_path, durable):
++    from robosys.runtime.safety import SafetyStateStore
++    from robosys.services.body import InProcessBodyService
++    from robosys.schemas import Action, ActionChunk
++    async def scenario():
++        calls = []
++        async def execute(action): calls.append(action.payload)
++        def new_body():
++            return InProcessBodyService(execute, safety_state=SafetyStateStore(),
++                idempotency_db=tmp_path/'actions.sqlite3' if durable else None)
++        body = new_body()
++        session = uuid4()
++        async def run(payload, key='same'):
++            return await body.execute(ActionChunk(session_id=session,
++                actions=[Action(session_id=session, idempotency_key=key, payload=payload)]))
++        try:
++            first = await run({'target': [1, 2], 'speed': 1})
++            assert first.status == 'succeeded'
++            if durable:
++                await body.close()
++                body = new_body()
++            retry = await run({'speed': 1, 'target': [1, 2]})
++            assert retry.status == 'succeeded' and retry.executed_actions == 0
++            conflict = await run({'speed': 1, 'target': [3, 4]})
++            assert conflict.status == 'rejected' and 'idempotency_conflict' in conflict.error
++            assert len(calls) == 1
++            assert (await run({'target': [3, 4]}, key='new')).status == 'succeeded'
++            assert len(calls) == 2
++        finally: await body.close()
++    asyncio.run(scenario())
++
++
++def test_idempotency_legacy_success_cannot_acknowledge_unverified_request(tmp_path):
++    from robosys.runtime.safety import SafetyStateStore
++    from robosys.services.body import InProcessBodyService
++    from robosys.services.action_ledger import SQLiteActionExecutionStore
++    from robosys.schemas import Action, ActionChunk, ActionExecution
++    async def scenario():
++        session = uuid4()
++        store = SQLiteActionExecutionStore(tmp_path/'old.sqlite3')
++        store.save(session, ActionExecution(action_id=uuid4(), idempotency_key='old', status='succeeded'))
++        calls = []
++        body = InProcessBodyService(calls.append, safety_state=SafetyStateStore(), idempotency_store=store)
++        try:
++            result = await body.execute(ActionChunk(session_id=session,
++                actions=[Action(session_id=session, idempotency_key='old')]))
++            assert result.status == 'rejected' and calls == []
++        finally:
++            await body.close()
++            store.close()
++    asyncio.run(scenario())
++
++
++def test_ingest_reports_unfinished_write_without_closing_underneath_it():
++    import tempfile
++    from pathlib import Path
++    from robosys.infra.ingest_server import IngestServer
++    async def scenario():
++        entered, release = threading.Event(), threading.Event()
++        def ingest(batch):
++            entered.set()
++            release.wait(3)
++        with tempfile.TemporaryDirectory(dir='/tmp', prefix='robosys-write-') as directory:
++            server = await IngestServer(Path(directory)/'i.sock', SimpleNamespace(ingest_batch=ingest), close_timeout_s=.03).start()
++            reader, writer = await asyncio.open_unix_connection(str(server.path))
++            writer.write(b'{}\n')
++            await writer.drain()
++            try:
++                while not entered.is_set(): await asyncio.sleep(.001)
++                with pytest.raises(TimeoutError, match='write is still running'):
++                    await asyncio.wait_for(server.close(), .5)
++                assert any(not task.done() for task in server.writes)
++            finally:
++                release.set()
++                writer.close()
++                await writer.wait_closed()
++                await server.close()
++    asyncio.run(scenario())
++
++
++@pytest.mark.parametrize('backend', ['in_process', 'process'])
++def test_frozen_config_crosses_execution_boundary(tmp_path, backend):
++    from robosys.runtime.config import load_application_config, freeze_config
++    config = make_config(tmp_path, backend=backend, trials=1)
++    value = json.loads(config.read_text())
++    value['modules'][0]['params'] = {'prefix': 'frozen'}
++    value['graphs'][0]['outputs']['marker'] = 'nodes.echo.outputs.prefix'
++    config.write_text(json.dumps(value))
++    snapshot = freeze_config(load_application_config(config))
++    value['modules'][0]['params'] = {'prefix': 'mutated'}
++    config.write_text(json.dumps(value))
++    asyncio.run(run_experiment(ExperimentRequest(config=config, config_snapshot=snapshot,
++        output_dir=tmp_path/'runs', run_id='frozen')))
++    episode = next((tmp_path/'runs/frozen/test').glob('episode_*.json'))
++    assert json.loads(episode.read_text())['result']['outputs']['marker'] == 'frozen'
++
++
++def test_portal_queue_and_fork_keep_complete_config_snapshot(tmp_path, monkeypatch):
++    from robosys.web.experiments import ExperimentManager
++    config = make_config(tmp_path, trials=1)
++    manager = ExperimentManager(project_root=tmp_path, config_root='.', output_root='runs')
++    monkeypatch.setattr(manager, '_dispatch_waiting', lambda: None)
++    job = manager.submit(config)
++    original = manager._load_job_config(job).params.content_hash
++    value = json.loads(config.read_text())
++    value['modules'][0]['params'] = {'prefix': 'changed'}
++    config.write_text(json.dumps(value))
++    assert manager._load_job_config(job).params.content_hash == original
++    child = manager.fork(job['job_id'])
++    assert manager._load_job_config(child).params.content_hash == original
++    assert '--config-snapshot' in child['command']
++
++
++def test_new_run_rejects_overwrite_but_explicit_resume_works(tmp_path):
++    config = make_config(tmp_path, trials=1)
++    request = ExperimentRequest(config=config, output_dir=tmp_path/'runs', run_id='same')
++    asyncio.run(run_experiment(request))
++    root = tmp_path/'runs/same'
++    episode = next((root/'test').glob('episode_*.json'))
++    old = episode.read_bytes()
++    with pytest.raises(ValueError, match='already exists'):
++        asyncio.run(run_experiment(request))
++    assert episode.read_bytes() == old
++    (root/'.control/resume.json').write_text(json.dumps({'action': 'rerun', 'tasks': None}))
++    asyncio.run(run_experiment(request))
++    assert episode.read_bytes() != old
++
++
++def test_run_reservation_is_atomic_and_allows_precreated_portal_directory(tmp_path):
++    from robosys.runtime.run_state import RunReservation
++    root = tmp_path/'precreated'
++    root.mkdir()
++    (root/'experiment_override.json').write_text('{}')
++    first = RunReservation(tmp_path, 'precreated', 'hash').acquire()
++    try:
++        with pytest.raises(RuntimeError, match='already owned'):
++            RunReservation(tmp_path, 'precreated', 'hash').acquire()
++    finally: first.close()
++    with pytest.raises(ValueError, match='already exists'):
++        RunReservation(tmp_path, 'precreated', 'hash').acquire()
++
++
++def test_remote_portal_requires_and_checks_authentication():
++    from email.message import Message
++    from robosys.web.access import PortalAccess
++    with pytest.raises(ValueError, match='requires ROBOSYS_PORTAL_TOKEN'):
++        PortalAccess('0.0.0.0', control=True)
++    headers = Message()
++    headers['Host'] = '127.0.0.1:8765'
++    headers['Content-Type'] = 'application/json'
++    access = PortalAccess('0.0.0.0', control=True, token='configured-secret')
++    assert access.check(headers, write=True, control=True)[0] == 401
++    headers['Authorization'] = 'Bearer configured-secret'
++    assert access.check(headers, write=True, control=True) is None
++    headers.replace_header('Authorization', 'Bearer wrong')
++    assert access.check(headers, write=True, control=True)[0] == 401
++    headers.replace_header('Authorization', 'Basic dXNlcjpjb25maWd1cmVkLXNlY3JldA==')
++    assert access.check(headers, write=True, control=True) is None
++
++
++def test_compose_exposes_only_loopback_and_anonymous_viewing():
++    from pathlib import Path
++    import re
++    text = (Path(__file__).parents[1]/'docker-compose.yml').read_text()
++    ports = re.findall(r'(?m)^    ports:\n((?:      - .*\n)+)', text)
++    assert len(ports) == 4
++    assert all(line.strip().startswith('- "127.0.0.1:') for group in ports for line in group.splitlines())
++    assert 'GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer' in text
++    assert 'GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?' in text
++
++
++@pytest.mark.parametrize('prekill', [False, True])
++def test_portal_force_stop_reaps_independent_worker_and_model_and_keeps_lease(tmp_path, monkeypatch, prekill):
++    import os
++    import signal
++    import sys
++    import time
++    from pathlib import Path
++    from robosys.runtime.execution import ResourceLease
++    from robosys.runtime.processes import process_table
++    from robosys.web.experiments import ExperimentManager
++    module_name = 'stop_fixture_' + uuid4().hex
++    worker_pid_file = tmp_path/'worker.pid'
++    model_pid_file = tmp_path/'model.pid'
++    (tmp_path/(module_name+'.py')).write_text('''
++import os, time
++from pathlib import Path
++from robosys.tools.base import BaseTool
++from robosys.tools.registry import register_tool
++from robosys.task_adapters.single import SingleTaskAdapter
++from robosys.task_adapters import register_task_adapter
++@register_task_adapter('blocking-worker', replace=True)
++class Blocking(SingleTaskAdapter):
++    async def run_case(self, case, context):
++        Path(context.params.resolve('worker_pid_file')).write_text(str(os.getpid()))
++        time.sleep(30)
++        return {'task_success': False}
++@register_tool('stop-test-model', replace=True)
++class Client(BaseTool):
++    def bind_deployment(self, host, port, model_path): pass
++    async def call(self, arguments, context): return {}
++''')
++    server_script = tmp_path/'model.py'
++    server_script.write_text('''
++import os, signal, socket, sys
++from pathlib import Path
++signal.signal(signal.SIGTERM, signal.SIG_IGN)
++Path(sys.argv[3]).write_text(str(os.getpid()))
++with socket.socket() as server:
++    server.bind((sys.argv[1], int(sys.argv[2])))
++    server.listen()
++    while True:
++        connection, _ = server.accept()
++        connection.close()
++''')
++    entrypoint = tmp_path/'entrypoint.py'
++    entrypoint.write_text('from robosys.runtime.runner_cli import main\nif __name__ == "__main__":\n    raise SystemExit(main())\n')
++    config = make_config(tmp_path, backend='process', trials=1)
++    value = json.loads(config.read_text())
++    value['plugin_task_adapters'] = value['plugin_tools'] = [module_name]
++    value['task_adapters'][0]['name'] = 'blocking-worker'
++    value['parameters']['worker_pid_file'] = str(worker_pid_file)
++    resource = 'test-resource-' + uuid4().hex
++    value['parameters']['runtime']['execution'].update(gpu_ids=[resource], resource_ids=[resource],
++        shutdown_timeout_s=10, task_timeout_s=40)
++    value['tools'] = [{'name': 'stop-test-model', 'deployment': {'backend': 'command', 'gpu_ids': [0],
++        'startup_timeout_s': 5, 'shutdown_timeout_s': .1,
++        'command': [sys.executable, str(server_script), '{host}', '{port}', str(model_pid_file)]}}]
++    config.write_text(json.dumps(value))
++    root = Path(__file__).parents[1]
++    monkeypatch.setenv('PYTHONPATH', os.pathsep.join((str(tmp_path), str(root), os.environ.get('PYTHONPATH', ''))))
++    monkeypatch.syspath_prepend(str(tmp_path))
++    manager = ExperimentManager(project_root=tmp_path, config_root='.', output_root='out',
++        entrypoint=entrypoint, python_executable=sys.executable)
++    process = None
++    pids = []
++    try:
++        job = manager.submit(config)
++        process = manager._processes[job['job_id']]
++        deadline = time.monotonic() + 15
++        while not worker_pid_file.exists():
++            assert process.poll() is None, Path(job['log_path']).read_text()
++            assert time.monotonic() < deadline, 'worker startup deadline'
++            time.sleep(.02)
++        pids = [int(path.read_text()) for path in (worker_pid_file, model_pid_file)]
++        assert os.getpgid(pids[0]) == pids[0]
++        # Simulate the coordinator being SIGKILLed before it can clean up.
++        if prekill:
++            os.killpg(process.pid, signal.SIGKILL)
++            process.wait(timeout=3)
++        with pytest.raises(RuntimeError, match='already reserved'):
++            ResourceLease([resource]).acquire()
++        if prekill:
++            assert manager._refresh_job(job['job_id'])['status'] == 'stop_failed'
++            assert manager.get_job(job['job_id'])['status'] == 'stop_failed'
++        terminate = manager._terminate_process_group
++        monkeypatch.setattr(manager, '_terminate_process_group',
++            lambda job_id, job: terminate(job_id, job, term_timeout_s=.05))
++        stopped = manager.stop_job(job['job_id'])
++        assert stopped['released'] is True
++        assert not set(pids) & process_table().keys()
++        lease = ResourceLease([resource])
++        lease.acquire()
++        lease.close()
++        assert manager._refresh_job(job['job_id'])['status'] == 'cancelled'
++    finally:
++        manager.close()
++        for pid in pids:
++            try: os.kill(pid, signal.SIGKILL)
++            except ProcessLookupError: pass
++        if process is not None:
++            if process.poll() is None: os.killpg(process.pid, signal.SIGKILL)
++            process.wait(timeout=5)
++
++
++def test_stop_failure_blocks_queue_and_cannot_be_overwritten_by_terminal_status(tmp_path, monkeypatch):
++    from robosys.web.experiments import ExperimentManager
++    manager = ExperimentManager(project_root=tmp_path, config_root='.', output_root='runs')
++    root = tmp_path/'runs/one'
++    root.mkdir()
++    (root/'status.json').write_text('{"status":"completed"}')
++    manager._jobs['one'] = {'job_id': 'one', 'status': 'stop_failed', 'output_root': str(root),
++        'status_path': str(root/'status.json')}
++    manager._jobs['two'] = {'job_id': 'two', 'status': 'waiting'}
++    manager._dispatch_waiting()
++    assert manager._jobs['two']['status'] == 'waiting'
++    assert manager._refresh_job('one')['status'] == 'stop_failed'
++
++
++def test_process_identity_rejects_stale_records_without_signalling(tmp_path, monkeypatch):
++    from robosys.runtime import processes
++    (tmp_path/'42.json').write_text(json.dumps({'pid': 42, 'pgid': 42, 'start': 'old'}))
++    monkeypatch.setattr(processes, 'process_table', lambda: {42: {'pid': 42, 'ppid': 1, 'pgid': 42, 'start': 'new'}})
++    signals = []
++    monkeypatch.setattr(processes.os, 'kill', lambda *args: signals.append(args))
++    assert processes.terminate_owned(tmp_path, timeout_s=.01)['terminated']
++    assert signals == []
++
++
++def test_failed_worker_cleanup_permanently_retires_that_worker(tmp_path):
++    from robosys.tools.base import BaseTool
++    from robosys.tools.registry import register_tool
++    events = []
++    name = 'unreleasable-' + uuid4().hex
++    @register_tool(name)
++    class Tool(BaseTool):
++        async def call(self, arguments, context): return {}
++        async def start(self): events.append('start')
++        async def end_session(self, session_id): raise RuntimeError('session failure')
++        async def close(self):
++            events.append('close')
++            raise RuntimeError('resources still busy')
++    config = make_config(tmp_path, trials=1)
++    value = json.loads(config.read_text())
++    value['tools'] = [{'name': name}]
++    config.write_text(json.dumps(value))
++    async def scenario():
++        request = EpisodeRequest(config=config, output=tmp_path/'result.json')
++        worker = WorkerRuntime(request)
++        with pytest.raises(RuntimeError, match='session failure'):
++            await worker.run_task(request)
++        for _ in range(2):
++            with pytest.raises(RuntimeError, match='must be replaced'):
++                await worker.run_task(request)
++        with pytest.raises(RuntimeError, match='replacement process required'):
++            await worker.close()
++        assert events == ['start', 'close']
++    asyncio.run(scenario())
++
++
++def test_portal_fork_editor_uses_saved_snapshot_and_applies_explicit_changes(tmp_path, monkeypatch):
++    from robosys.web.experiments import ExperimentManager
++    config = make_config(tmp_path, trials=1)
++    manager = ExperimentManager(project_root=tmp_path, config_root='.', output_root='runs')
++    monkeypatch.setattr(manager, '_dispatch_waiting', lambda: None)
++    job = manager.submit(config)
++    value = json.loads(config.read_text())
++    value['modules'][0]['params'] = {'prefix': 'disk-change'}
++    config.write_text(json.dumps(value))
++    draft = manager.fork_draft(job['job_id'])
++    assert 'disk-change' not in json.dumps(draft['config_document'])
++    child = manager.submit(config, forked_from=job['job_id'], overrides={'parameters': {'task': {'seed': 99}}})
++    loaded = manager._load_job_config(child)
++    assert loaded.params.resolve('task.seed') == 99
++    assert loaded.modules.modules[0].params == {}
++
++
++def test_linux_process_identity_uses_boot_and_start_tick_without_ps(tmp_path, monkeypatch):
++    from pathlib import Path
++    from robosys.runtime import processes
++    (tmp_path/'self').mkdir()
++    (tmp_path/'self/stat').write_text('')
++    (tmp_path/'sys/kernel/random').mkdir(parents=True)
++    (tmp_path/'sys/kernel/random/boot_id').write_text('boot-id')
++    for pid, state in [(101, 'S'), (102, 'Z')]:
++        (tmp_path/str(pid)).mkdir()
++        fields = [state, '1', '101'] + ['0']*16 + ['98765']
++        (tmp_path/str(pid)/'stat').write_text(f'{pid} (name with ) bracket) ' + ' '.join(fields))
++    actual_path = Path
++    monkeypatch.setattr(processes, 'Path', lambda value: tmp_path / str(value).removeprefix('/proc/').removeprefix('/proc')
++        if str(value).startswith('/proc') else actual_path(value))
++    monkeypatch.setattr(processes.subprocess, 'run', lambda *a, **k: pytest.fail('Linux must not need ps'))
++    assert processes.process_table() == {101: {'pid': 101, 'ppid': 1, 'pgid': 101, 'start': 'boot-id:98765'}}
++
++
++def test_default_run_ids_remain_unique_with_frozen_wall_clock(tmp_path, monkeypatch):
++    from datetime import datetime
++    from robosys.runtime import experiment
++    class Clock:
++        @staticmethod
++        def now(): return datetime(2026, 9, 20, 12, 0, 0)
++    monkeypatch.setattr(experiment, 'datetime', Clock)
++    config = make_config(tmp_path, trials=1)
++    first = asyncio.run(run_experiment(ExperimentRequest(config=config, output_dir=tmp_path/'runs')))
++    second = asyncio.run(run_experiment(ExperimentRequest(config=config, output_dir=tmp_path/'runs')))
++    assert first['run_id'] != second['run_id']
++    assert (tmp_path/'runs'/first['run_id']/'summary.json').is_file()
++    assert (tmp_path/'runs'/second['run_id']/'summary.json').is_file()
++
++
++def test_portal_authentication_protects_read_and_control_http_endpoints():
++    import http.client
++    from robosys.web.server import build_server
++    calls = []
++    manager = SimpleNamespace(shutdown_all=lambda **kwargs: calls.append(kwargs) or {'count': 0})
++    server = build_server('127.0.0.1', 0, SimpleNamespace(traces=None),
++        experiment_manager=manager, control_token='secret-for-test')
++    thread = threading.Thread(target=server.serve_forever, daemon=True)
++    thread.start()
++    def request(method, path, auth=None):
++        client = http.client.HTTPConnection('127.0.0.1', server.server_port, timeout=2)
++        try:
++            headers = {'Content-Type': 'application/json'}
++            if auth: headers['Authorization'] = auth
++            client.request(method, path, body='{}' if method == 'POST' else None, headers=headers)
++            response = client.getresponse()
++            result = response.status, response.getheader('WWW-Authenticate'), response.read()
++            return result
++        finally: client.close()
++    try:
++        assert request('GET', '/')[0:2] == (401, 'Basic realm="RoboSys Portal", charset="UTF-8"')
++        assert request('POST', '/api/system/shutdown')[0] == 401
++        assert calls == []
++        assert request('POST', '/api/system/shutdown', 'Bearer secret-for-test')[0] == 200
++        assert len(calls) == 1
++        assert request('GET', '/', 'Bearer secret-for-test')[0] == 200
++    finally:
++        server.shutdown()
++        server.server_close()
++        thread.join()
++
++
++def test_resume_rejects_changed_config_without_touching_prior_result(tmp_path):
++    config = make_config(tmp_path, trials=1)
++    request = ExperimentRequest(config=config, output_dir=tmp_path/'runs', run_id='original')
++    asyncio.run(run_experiment(request))
++    root = tmp_path/'runs/original'
++    summary = (root/'summary.json').read_bytes()
++    (root/'.control/resume.json').write_text('{"action":"rerun"}')
++    value = json.loads(config.read_text())
++    value['modules'][0]['params'] = {'prefix': 'changed'}
++    config.write_text(json.dumps(value))
++    with pytest.raises(ValueError, match='configuration does not match'):
++        asyncio.run(run_experiment(request))
++    assert (root/'summary.json').read_bytes() == summary
+--- before/tests/test_experiment_manager.py
++++ after/tests/test_experiment_manager.py
+@@ -990,6 +990,7 @@
+ 
+ 
+ def test_experiment_manager_persists_effective_run_parameters(tmp_path: Path, monkeypatch):
++    monkeypatch.setattr('robosys.runtime.processes.process_table', lambda: {})
+     project_root = Path(__file__).parents[1]
+ 
+     class FakeProcess:
+@@ -1022,7 +1023,7 @@
+     forked = manager.fork(job["job_id"])
+     assert forked["forked_from"] == job["job_id"]
+     assert forked["parameters"] == job["parameters"]
+-    assert json.loads(Path(forked["experiment_config_path"]).read_text(encoding="utf-8"))["parameters"] == job["parameters"]
++    assert json.loads(Path(forked["config_snapshot_path"]).read_text(encoding="utf-8"))["config"] == job["parameters"]
+ 
+ 
+ def test_experiment_manager_accepts_wrapped_and_keyed_episode_shapes():
+@@ -1225,7 +1226,7 @@
+     else:
+         raise AssertionError("stop_job must fail when the process group remains live")
+ 
+-    assert manager._jobs[job_id]["status"] == "running"
++    assert manager._jobs[job_id]["status"] == "stop_failed"
+     assert json.loads(status_path.read_text(encoding="utf-8"))["status"] == "running"
+ 
+ 
+@@ -1260,6 +1261,7 @@
+ 
+ 
+ def test_rerun_selected_robocasa_case_narrows_the_adapter_override(tmp_path: Path, monkeypatch):
++    monkeypatch.setattr('robosys.runtime.processes.process_table', lambda: {})
+     project_root = Path(__file__).parents[1]
+     class FakeProcess:
+         next_pid = 20000
+@@ -1339,6 +1341,7 @@
+ 
+ 
+ def test_waiting_queue_serializes_concurrent_submissions_and_recovers(tmp_path, monkeypatch):
++    monkeypatch.setattr('robosys.runtime.processes.process_table', lambda: {})
+     from concurrent.futures import ThreadPoolExecutor
+ 
+     processes = []
+@@ -1373,6 +1376,7 @@
+ 
+ 
+ def test_waiting_queue_cancellation_and_background_dispatch(tmp_path, monkeypatch):
++    monkeypatch.setattr('robosys.runtime.processes.process_table', lambda: {})
+     import time
+     processes = []
+ 

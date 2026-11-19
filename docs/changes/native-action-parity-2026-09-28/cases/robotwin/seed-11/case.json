@@ -1,0 +1,108 @@
+{
+  "benchmark": "robotwin",
+  "class": "robosys_robotwin.native.benchmark:RoboTwinBenchmark",
+  "upstream_class": "vla_eval.benchmarks.robotwin.benchmark:RoboTwinBenchmark",
+  "params": {
+    "task_name": "grab_roller",
+    "task_config": "demo_clean",
+    "seed": 11,
+    "test_num": 1,
+    "skip_expert_check": true,
+    "fast_init": true,
+    "fast_render": false
+  },
+  "actions": [
+    {
+      "actions": [
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        -0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "seed": 11,
+  "render": "gpu"
+}

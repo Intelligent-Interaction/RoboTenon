@@ -1,0 +1,2 @@
+# Compatibility requirements; implementation belongs to the system Tool.
+-r ../systems/robocasa_hierarchical/tool/xiaomi/requirements.txt

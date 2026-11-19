@@ -1,0 +1,1930 @@
+[
+  {
+    "benchmark": "kinetix",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/viewport": {
+            "upstream_changed_channels": 96,
+            "roboclaw_changed_channels": 96,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/viewport": {
+            "upstream_changed_channels": 177,
+            "roboclaw_changed_channels": 177,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/viewport": {
+            "upstream_changed_channels": 162,
+            "roboclaw_changed_channels": 162,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/viewport": {
+            "upstream_changed_channels": 291,
+            "roboclaw_changed_channels": 291,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/viewport": {
+            "upstream_changed_channels": 376,
+            "roboclaw_changed_channels": 376,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "kinetix",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/viewport": {
+            "upstream_changed_channels": 96,
+            "roboclaw_changed_channels": 96,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/viewport": {
+            "upstream_changed_channels": 177,
+            "roboclaw_changed_channels": 177,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/viewport": {
+            "upstream_changed_channels": 162,
+            "roboclaw_changed_channels": 162,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/viewport": {
+            "upstream_changed_channels": 291,
+            "roboclaw_changed_channels": 291,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/viewport": {
+            "upstream_changed_channels": 376,
+            "roboclaw_changed_channels": 376,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "libero",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1693,
+            "roboclaw_changed_channels": 1693,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              1,
+              244
+            ],
+            "roboclaw_frame_range": [
+              1,
+              244
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1908,
+            "roboclaw_changed_channels": 1908,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              1,
+              249
+            ],
+            "roboclaw_frame_range": [
+              1,
+              249
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1218,
+            "roboclaw_changed_channels": 1218,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              1,
+              249
+            ],
+            "roboclaw_frame_range": [
+              1,
+              249
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 579,
+            "roboclaw_changed_channels": 579,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              1,
+              249
+            ],
+            "roboclaw_frame_range": [
+              1,
+              249
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1007,
+            "roboclaw_changed_channels": 1007,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              1,
+              249
+            ],
+            "roboclaw_frame_range": [
+              1,
+              249
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "libero",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1687,
+            "roboclaw_changed_channels": 1687,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              1,
+              244
+            ],
+            "roboclaw_frame_range": [
+              1,
+              244
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1905,
+            "roboclaw_changed_channels": 1905,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              1,
+              249
+            ],
+            "roboclaw_frame_range": [
+              1,
+              249
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1225,
+            "roboclaw_changed_channels": 1225,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              1,
+              249
+            ],
+            "roboclaw_frame_range": [
+              1,
+              249
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 585,
+            "roboclaw_changed_channels": 585,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              1,
+              249
+            ],
+            "roboclaw_frame_range": [
+              1,
+              249
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1008,
+            "roboclaw_changed_channels": 1008,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              1,
+              249
+            ],
+            "roboclaw_frame_range": [
+              1,
+              249
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "libero_mem",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 3979,
+            "roboclaw_changed_channels": 3979,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 4519,
+            "roboclaw_changed_channels": 4519,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 6188,
+            "roboclaw_changed_channels": 6188,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 6418,
+            "roboclaw_changed_channels": 6418,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 4836,
+            "roboclaw_changed_channels": 4836,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "libero_mem",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 3979,
+            "roboclaw_changed_channels": 3979,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 4519,
+            "roboclaw_changed_channels": 4519,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 6188,
+            "roboclaw_changed_channels": 6188,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 6418,
+            "roboclaw_changed_channels": 6418,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 4836,
+            "roboclaw_changed_channels": 4836,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "libero_plus",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1861,
+            "roboclaw_changed_channels": 1861,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              247
+            ],
+            "roboclaw_frame_range": [
+              5,
+              247
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1907,
+            "roboclaw_changed_channels": 1907,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              248
+            ],
+            "roboclaw_frame_range": [
+              5,
+              248
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1356,
+            "roboclaw_changed_channels": 1356,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              249
+            ],
+            "roboclaw_frame_range": [
+              5,
+              249
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 672,
+            "roboclaw_changed_channels": 672,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              249
+            ],
+            "roboclaw_frame_range": [
+              5,
+              249
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1039,
+            "roboclaw_changed_channels": 1039,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              249
+            ],
+            "roboclaw_frame_range": [
+              5,
+              249
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "libero_plus",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1852,
+            "roboclaw_changed_channels": 1852,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              247
+            ],
+            "roboclaw_frame_range": [
+              5,
+              247
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1901,
+            "roboclaw_changed_channels": 1901,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              248
+            ],
+            "roboclaw_frame_range": [
+              5,
+              248
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1349,
+            "roboclaw_changed_channels": 1349,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              249
+            ],
+            "roboclaw_frame_range": [
+              5,
+              249
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 667,
+            "roboclaw_changed_channels": 667,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              249
+            ],
+            "roboclaw_frame_range": [
+              5,
+              249
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1031,
+            "roboclaw_changed_channels": 1031,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              249
+            ],
+            "roboclaw_frame_range": [
+              5,
+              249
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "libero_pro",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 2029,
+            "roboclaw_changed_channels": 2029,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              242
+            ],
+            "roboclaw_frame_range": [
+              4,
+              242
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 2110,
+            "roboclaw_changed_channels": 2110,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              242
+            ],
+            "roboclaw_frame_range": [
+              4,
+              242
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1057,
+            "roboclaw_changed_channels": 1057,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              242
+            ],
+            "roboclaw_frame_range": [
+              4,
+              242
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1297,
+            "roboclaw_changed_channels": 1297,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              242
+            ],
+            "roboclaw_frame_range": [
+              4,
+              242
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1820,
+            "roboclaw_changed_channels": 1820,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              242
+            ],
+            "roboclaw_frame_range": [
+              4,
+              242
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "libero_pro",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 2029,
+            "roboclaw_changed_channels": 2029,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              242
+            ],
+            "roboclaw_frame_range": [
+              4,
+              242
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 2110,
+            "roboclaw_changed_channels": 2110,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              242
+            ],
+            "roboclaw_frame_range": [
+              4,
+              242
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1057,
+            "roboclaw_changed_channels": 1057,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              242
+            ],
+            "roboclaw_frame_range": [
+              4,
+              242
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1297,
+            "roboclaw_changed_channels": 1297,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              242
+            ],
+            "roboclaw_frame_range": [
+              4,
+              242
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1820,
+            "roboclaw_changed_channels": 1820,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              242
+            ],
+            "roboclaw_frame_range": [
+              4,
+              242
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "robocasa365",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 382,
+            "roboclaw_changed_channels": 390,
+            "delta_equal": false,
+            "delta_max_abs": 32,
+            "upstream_frame_range": [
+              8,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 395,
+            "roboclaw_changed_channels": 419,
+            "delta_equal": false,
+            "delta_max_abs": 39,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 2728,
+            "roboclaw_changed_channels": 3471,
+            "delta_equal": false,
+            "delta_max_abs": 85,
+            "upstream_frame_range": [
+              8,
+              240
+            ],
+            "roboclaw_frame_range": [
+              6,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 665,
+            "roboclaw_changed_channels": 659,
+            "delta_equal": false,
+            "delta_max_abs": 14,
+            "upstream_frame_range": [
+              8,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 654,
+            "roboclaw_changed_channels": 655,
+            "delta_equal": false,
+            "delta_max_abs": 38,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 3451,
+            "roboclaw_changed_channels": 4787,
+            "delta_equal": false,
+            "delta_max_abs": 129,
+            "upstream_frame_range": [
+              8,
+              240
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 236,
+            "roboclaw_changed_channels": 248,
+            "delta_equal": false,
+            "delta_max_abs": 40,
+            "upstream_frame_range": [
+              8,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 266,
+            "roboclaw_changed_channels": 269,
+            "delta_equal": false,
+            "delta_max_abs": 38,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 1483,
+            "roboclaw_changed_channels": 2046,
+            "delta_equal": false,
+            "delta_max_abs": 173,
+            "upstream_frame_range": [
+              8,
+              240
+            ],
+            "roboclaw_frame_range": [
+              8,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 174,
+            "roboclaw_changed_channels": 173,
+            "delta_equal": false,
+            "delta_max_abs": 38,
+            "upstream_frame_range": [
+              8,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 264,
+            "roboclaw_changed_channels": 268,
+            "delta_equal": false,
+            "delta_max_abs": 45,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 2078,
+            "roboclaw_changed_channels": 2505,
+            "delta_equal": false,
+            "delta_max_abs": 100,
+            "upstream_frame_range": [
+              7,
+              240
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 342,
+            "roboclaw_changed_channels": 359,
+            "delta_equal": false,
+            "delta_max_abs": 38,
+            "upstream_frame_range": [
+              8,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 422,
+            "roboclaw_changed_channels": 438,
+            "delta_equal": false,
+            "delta_max_abs": 41,
+            "upstream_frame_range": [
+              10,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 2735,
+            "roboclaw_changed_channels": 3616,
+            "delta_equal": false,
+            "delta_max_abs": 156,
+            "upstream_frame_range": [
+              8,
+              240
+            ],
+            "roboclaw_frame_range": [
+              8,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": false,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "robocasa365",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 413,
+            "roboclaw_changed_channels": 413,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              7,
+              255
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 399,
+            "roboclaw_changed_channels": 399,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 1978,
+            "roboclaw_changed_channels": 1978,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              255
+            ],
+            "roboclaw_frame_range": [
+              4,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 685,
+            "roboclaw_changed_channels": 685,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              7,
+              255
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 745,
+            "roboclaw_changed_channels": 745,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 2657,
+            "roboclaw_changed_channels": 2657,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              255
+            ],
+            "roboclaw_frame_range": [
+              4,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 294,
+            "roboclaw_changed_channels": 294,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              7,
+              255
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 273,
+            "roboclaw_changed_channels": 273,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 1081,
+            "roboclaw_changed_channels": 1081,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              255
+            ],
+            "roboclaw_frame_range": [
+              4,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 244,
+            "roboclaw_changed_channels": 244,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              7,
+              255
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 256,
+            "roboclaw_changed_channels": 256,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 1501,
+            "roboclaw_changed_channels": 1501,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              4,
+              255
+            ],
+            "roboclaw_frame_range": [
+              4,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/video.robot0_agentview_left": {
+            "upstream_changed_channels": 378,
+            "roboclaw_changed_channels": 378,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              7,
+              255
+            ],
+            "roboclaw_frame_range": [
+              7,
+              255
+            ]
+          },
+          "root/images/video.robot0_agentview_right": {
+            "upstream_changed_channels": 414,
+            "roboclaw_changed_channels": 414,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          },
+          "root/images/video.robot0_eye_in_hand": {
+            "upstream_changed_channels": 2050,
+            "roboclaw_changed_channels": 2050,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              5,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "robocerebra",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1301,
+            "roboclaw_changed_channels": 1301,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1425,
+            "roboclaw_changed_channels": 1425,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 940,
+            "roboclaw_changed_channels": 940,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 911,
+            "roboclaw_changed_channels": 911,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1006,
+            "roboclaw_changed_channels": 1006,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "robocerebra",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1416,
+            "roboclaw_changed_channels": 1416,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1478,
+            "roboclaw_changed_channels": 1478,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1092,
+            "roboclaw_changed_channels": 1092,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1045,
+            "roboclaw_changed_channels": 1045,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/agentview": {
+            "upstream_changed_channels": 1025,
+            "roboclaw_changed_channels": 1025,
+            "delta_equal": true,
+            "delta_max_abs": 0,
+            "upstream_frame_range": [
+              0,
+              255
+            ],
+            "roboclaw_frame_range": [
+              0,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": true,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "vlabench",
+    "seed": 0,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 61614,
+            "roboclaw_changed_channels": 61880,
+            "delta_equal": false,
+            "delta_max_abs": 317,
+            "upstream_frame_range": [
+              4,
+              255
+            ],
+            "roboclaw_frame_range": [
+              3,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 56718,
+            "roboclaw_changed_channels": 57061,
+            "delta_equal": false,
+            "delta_max_abs": 246,
+            "upstream_frame_range": [
+              3,
+              255
+            ],
+            "roboclaw_frame_range": [
+              4,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 61490,
+            "roboclaw_changed_channels": 61328,
+            "delta_equal": false,
+            "delta_max_abs": 248,
+            "upstream_frame_range": [
+              4,
+              255
+            ],
+            "roboclaw_frame_range": [
+              5,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 31735,
+            "roboclaw_changed_channels": 32075,
+            "delta_equal": false,
+            "delta_max_abs": 159,
+            "upstream_frame_range": [
+              4,
+              255
+            ],
+            "roboclaw_frame_range": [
+              4,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 59546,
+            "roboclaw_changed_channels": 60293,
+            "delta_equal": false,
+            "delta_max_abs": 289,
+            "upstream_frame_range": [
+              4,
+              255
+            ],
+            "roboclaw_frame_range": [
+              4,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": false,
+    "each_step_has_visual_change": true
+  },
+  {
+    "benchmark": "vlabench",
+    "seed": 11,
+    "steps": [
+      {
+        "action_index": 0,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 65585,
+            "roboclaw_changed_channels": 65013,
+            "delta_equal": false,
+            "delta_max_abs": 162,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 1,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 60899,
+            "roboclaw_changed_channels": 60825,
+            "delta_equal": false,
+            "delta_max_abs": 175,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 2,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 63787,
+            "roboclaw_changed_channels": 65204,
+            "delta_equal": false,
+            "delta_max_abs": 161,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 3,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 35129,
+            "roboclaw_changed_channels": 36049,
+            "delta_equal": false,
+            "delta_max_abs": 276,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          }
+        }
+      },
+      {
+        "action_index": 4,
+        "images": {
+          "root/images/primary": {
+            "upstream_changed_channels": 63383,
+            "roboclaw_changed_channels": 62801,
+            "delta_equal": false,
+            "delta_max_abs": 154,
+            "upstream_frame_range": [
+              1,
+              255
+            ],
+            "roboclaw_frame_range": [
+              1,
+              255
+            ]
+          }
+        }
+      }
+    ],
+    "all_step_deltas_equal": false,
+    "each_step_has_visual_change": true
+  }
+]

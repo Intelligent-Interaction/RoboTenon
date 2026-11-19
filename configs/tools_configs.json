@@ -1,0 +1,40 @@
+{
+  "plugin_tools": [],
+  "tools": [
+    {
+      "id": "model_main",
+      "name": "model",
+      "version": "1.0.0",
+      "kind": "model",
+      "params": {
+        "backend": "echo",
+        "model": "mock-model"
+      }
+    },
+    {
+      "id": "memory_main",
+      "name": "memory",
+      "version": "1.0.0",
+      "kind": "memory",
+      "params": {
+        "path": "./runs/memory.sqlite3"
+      }
+    },
+    {
+      "id": "skill_main",
+      "name": "skill",
+      "version": "1.0.0",
+      "kind": "skill",
+      "params": {}
+    },
+    {
+      "id": "tool_echo",
+      "name": "echo",
+      "version": "1.0.0",
+      "kind": "utility",
+      "params": {
+        "prefix": "robotenon"
+      }
+    }
+  ]
+}

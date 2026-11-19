@@ -1,0 +1,14 @@
+{
+  "name": "duobench",
+  "episodes_per_task": 1,
+  "params": {
+    "task_ids": [
+      "ball_maze"
+    ],
+    "seed": 0,
+    "send_state": true
+  },
+  "benchmark_id": "duobench_benchmark",
+  "source_config": "configs/benchmarks/duobench/smoke_test.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

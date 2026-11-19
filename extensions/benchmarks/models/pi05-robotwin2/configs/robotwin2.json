@@ -1,0 +1,7 @@
+{
+  "model_path": "/path/to/resources/models/pi0.5_robotwin2",
+  "tokenizer_path": "/path/to/resources/models/paligemma-tokenizer/tokenizer.model",
+  "device": "cuda",
+  "inference_steps": 10,
+  "action_chunk": 8
+}

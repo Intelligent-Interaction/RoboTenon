@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="450" viewBox="0 0 1120 450" role="img" aria-labelledby="title desc">
+<title id="title">Choosing a plugin registry</title><desc id="desc">Select the registry that owns the capability. Serializable settings describe how to construct the component.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="450" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">Choosing a plugin registry</text>
+<text x="36" y="78" class="sub" fill="#586779">Select the registry that owns the capability. Serializable settings describe how to construct the component.</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="139" width="324" height="218" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 153 v190" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="171" class="head" fill="#3458a4">Application components</text>
+<text x="54" y="200" class="body" fill="#172b46">Module: one workflow step</text>
+<text x="54" y="226" class="body" fill="#172b46">Tool: model or shared service</text>
+<text x="54" y="252" class="body" fill="#172b46">TaskAdapter: enumerate tasks</text>
+<text x="54" y="278" class="body" fill="#172b46">Monitor: assess observations</text>
+<rect x="398" y="139" width="324" height="218" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M399 153 v190" stroke="#3458a4" stroke-width="3"/>
+<text x="416" y="171" class="head" fill="#3458a4">Devices and environments</text>
+<text x="416" y="200" class="body" fill="#172b46">Environment: state and sensors</text>
+<text x="416" y="226" class="body" fill="#172b46">Body: execute and stop actions</text>
+<text x="416" y="252" class="body" fill="#172b46">Build the SDK inside the Worker</text>
+<text x="416" y="278" class="body" fill="#172b46">Pass config across processes</text>
+<rect x="760" y="139" width="324" height="218" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M761 153 v190" stroke="#3458a4" stroke-width="3"/>
+<text x="778" y="171" class="head" fill="#3458a4">Infrastructure</text>
+<text x="778" y="200" class="body" fill="#172b46">Execution: scheduling, isolation</text>
+<text x="778" y="226" class="body" fill="#172b46">Storage: read, write, persist</text>
+<text x="778" y="252" class="body" fill="#172b46">RPC: service transport</text>
+<text x="778" y="278" class="body" fill="#172b46">Observation formats: codecs</text>
+<text x="36" y="426" class="small" fill="#586779">Register plugins on import. Connect devices, load weights, and allocate resources at initialization or startup.</text>
+</svg>

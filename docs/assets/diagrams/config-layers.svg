@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="400" viewBox="0 0 1120 400" role="img" aria-labelledby="title desc">
+<title id="title">Configuration and plugin assembly</title><desc id="desc">Paths resolve from the main configuration. JSON selects components and parameters. Factories create runtime objects.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="400" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">Configuration and plugin assembly</text>
+<text x="36" y="78" class="sub" fill="#586779">Paths resolve from the main configuration. JSON selects components and parameters. Factories create runtime objects.</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="147" width="230" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 161 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="179" class="head" fill="#3458a4">Configuration manifests</text>
+<text x="54" y="208" class="body" fill="#172b46">Components and Graph</text>
+<text x="54" y="234" class="body" fill="#172b46">Plugin import paths</text>
+<rect x="315" y="147" width="230" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M316 161 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="333" y="179" class="head" fill="#3458a4">Experiment overrides</text>
+<text x="333" y="208" class="body" fill="#172b46">Merge objects recursively</text>
+<text x="333" y="234" class="body" fill="#172b46">Replace arrays and scalars</text>
+<rect x="594" y="147" width="230" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M595 161 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="612" y="179" class="head" fill="#3458a4">Effective configuration</text>
+<text x="612" y="208" class="body" fill="#172b46">Preflight and snapshot</text>
+<text x="612" y="234" class="body" fill="#172b46">Parameters and components</text>
+<rect x="873" y="147" width="211" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M874 161 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="891" y="179" class="head" fill="#3458a4">Worker setup</text>
+<text x="891" y="208" class="body" fill="#172b46">Load registries</text>
+<text x="891" y="234" class="body" fill="#172b46">Create runtime objects</text>
+<path d="M266 210 L315 210" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M545 210 L594 210" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M824 210 L873 210" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="376" class="small" fill="#586779">When overriding task_adapters, tools, or graphs, supply the full array for the run.</text>
+</svg>

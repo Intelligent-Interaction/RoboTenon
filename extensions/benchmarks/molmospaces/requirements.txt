@@ -1,0 +1,3 @@
+# Python 3.11; benchmark resources are installed separately with molmospaces-resources.
+torch==2.3.1
+molmo-spaces[mujoco] @ git+https://github.com/allenai/molmospaces.git@v0.2.0

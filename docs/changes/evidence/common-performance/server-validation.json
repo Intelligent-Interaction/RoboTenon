@@ -1,0 +1,150 @@
+{
+  "source_commit": "c18ab58c1790aa9761966639b8f7a672ebf89908",
+  "output": "/path/to/deployment/xiaomi-128worker-smoke-20260929-143300",
+  "scope": "128 real-model smoke episodes, horizon32; not official accuracy evaluation",
+  "completed": 128,
+  "errors": 0,
+  "unique_episode_ids": 128,
+  "workers": 128,
+  "gpu_episodes": {
+    "0": 16,
+    "5": 16,
+    "6": 16,
+    "3": 16,
+    "4": 16,
+    "2": 16,
+    "1": 16,
+    "7": 16
+  },
+  "task_episodes": {
+    "CloseToasterOvenDoor": 16,
+    "OpenCabinet": 16,
+    "CloseFridge": 16,
+    "NavigateKitchen": 16,
+    "CloseBlenderLid": 16,
+    "OpenStandMixerHead": 16,
+    "OpenDrawer": 16,
+    "CoffeeSetupMug": 16
+  },
+  "env_steps": {
+    "32": 128
+  },
+  "batch_metrics": {
+    "0-7.json": {
+      "batches": 32,
+      "requests": 32,
+      "batch_sizes": {
+        "1": 32
+      },
+      "queue_wait_sec": 1.6065963273867965,
+      "inference_sec": 14.411516214720905,
+      "pending_peak": 1,
+      "status": "closed",
+      "updated_at": 1790664187.5267768,
+      "pending": 0,
+      "sessions": 0
+    },
+    "0-2.json": {
+      "batches": 32,
+      "requests": 32,
+      "batch_sizes": {
+        "1": 32
+      },
+      "queue_wait_sec": 1.6121969921514392,
+      "inference_sec": 12.211590410675853,
+      "pending_peak": 1,
+      "status": "closed",
+      "updated_at": 1790664187.464974,
+      "pending": 0,
+      "sessions": 0
+    },
+    "0-0.json": {
+      "batches": 29,
+      "requests": 32,
+      "batch_sizes": {
+        "1": 26,
+        "2": 3
+      },
+      "queue_wait_sec": 1.8132297610864043,
+      "inference_sec": 12.098742104601115,
+      "pending_peak": 2,
+      "status": "closed",
+      "updated_at": 1790664187.5055768,
+      "pending": 0,
+      "sessions": 0
+    },
+    "0-1.json": {
+      "batches": 32,
+      "requests": 32,
+      "batch_sizes": {
+        "1": 32
+      },
+      "queue_wait_sec": 1.607999940868467,
+      "inference_sec": 14.359102573245764,
+      "pending_peak": 1,
+      "status": "closed",
+      "updated_at": 1790664187.4924314,
+      "pending": 0,
+      "sessions": 0
+    },
+    "0-6.json": {
+      "batches": 32,
+      "requests": 32,
+      "batch_sizes": {
+        "1": 32
+      },
+      "queue_wait_sec": 1.6127479458227754,
+      "inference_sec": 14.27658211812377,
+      "pending_peak": 1,
+      "status": "closed",
+      "updated_at": 1790664187.4727051,
+      "pending": 0,
+      "sessions": 0
+    },
+    "0-5.json": {
+      "batches": 31,
+      "requests": 32,
+      "batch_sizes": {
+        "1": 30,
+        "2": 1
+      },
+      "queue_wait_sec": 1.5769803235307336,
+      "inference_sec": 14.281301135662943,
+      "pending_peak": 2,
+      "status": "closed",
+      "updated_at": 1790664187.4926279,
+      "pending": 0,
+      "sessions": 0
+    },
+    "0-3.json": {
+      "batches": 32,
+      "requests": 32,
+      "batch_sizes": {
+        "1": 32
+      },
+      "queue_wait_sec": 1.608044688589871,
+      "inference_sec": 14.599627640098333,
+      "pending_peak": 1,
+      "status": "closed",
+      "updated_at": 1790664187.4932365,
+      "pending": 0,
+      "sessions": 0
+    },
+    "0-4.json": {
+      "batches": 31,
+      "requests": 32,
+      "batch_sizes": {
+        "1": 30,
+        "2": 1
+      },
+      "queue_wait_sec": 1.5867482153698802,
+      "inference_sec": 13.093437761068344,
+      "pending_peak": 2,
+      "status": "closed",
+      "updated_at": 1790664187.5246122,
+      "pending": 0,
+      "sessions": 0
+    }
+  },
+  "gpu_after": "0, 0 MiB, 0 %\n1, 0 MiB, 0 %\n2, 0 MiB, 0 %\n3, 0 MiB, 0 %\n4, 0 MiB, 0 %\n5, 0 MiB, 0 %\n6, 0 MiB, 0 %\n7, 0 MiB, 0 %\n"
+}

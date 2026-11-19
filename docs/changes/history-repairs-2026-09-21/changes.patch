@@ -1,0 +1,2783 @@
+--- a/configs/operations/retention-policy.json
++++ b/configs/operations/retention-policy.json
+@@ -2,5 +2,6 @@
+   "logs_days": 30,
+   "traces_days": 30,
+   "videos_days": 7,
+-  "failed_days": 90
++  "failed_days": 90,
++  "min_free_gb": 5
+ }
+--- a/robosys/runtime/retention.py
++++ b/robosys/runtime/retention.py
+@@ -6,6 +6,9 @@
+ 
+ import fcntl
+ import json
++import os
++import shutil
++import sqlite3
+ import time
+ from contextlib import contextmanager
+ from dataclasses import dataclass
+@@ -20,16 +23,22 @@
+     traces_days: int = 30
+     videos_days: int = 7
+     failed_days: int = 90
++    min_free_gb: float = 5.0
+ 
+     def __post_init__(self):
+-        if any(type(value) is not int or value < 1 for value in vars(self).values()):
++        if any(
++            type(getattr(self, key)) is not int or getattr(self, key) < 1
++            for key in ("logs_days", "traces_days", "videos_days", "failed_days")
++        ):
+             raise ValueError("retention days must be positive integers")
++        if not isinstance(self.min_free_gb, (int, float)) or self.min_free_gb < 0:
++            raise ValueError("min_free_gb must be nonnegative")
+ 
+ 
+ @contextmanager
+ def _terminal_lease(root):
+     lock = root / ".control" / "run.lock"
+-    if not lock.is_file() or lock.is_symlink():
++    if not lock.is_file() or lock.is_symlink() or lock.parent.is_symlink():
+         yield False
+         return
+     with lock.open("r+") as handle:
+@@ -46,85 +55,267 @@
+             fcntl.flock(handle, fcntl.LOCK_UN)
+ 
+ 
++def _jobs_after(root, after, limit=128):
++    database = root / "jobs.sqlite3"
++    if database.exists():
++        conn = sqlite3.connect(f"{database.as_uri()}?mode=ro", uri=True, timeout=1)
++        try:
++            return [
++                json.loads(row[0])
++                for row in conn.execute(
++                    "SELECT record_json FROM jobs WHERE job_id>? AND status IN ('completed','failed','cancelled') "
++                    "ORDER BY job_id LIMIT ?",
++                    (after, limit),
++                )
++            ]
++        finally:
++            conn.close()
++    legacy = root / "jobs.json"
++    values = json.loads(legacy.read_text()) if legacy.exists() else []
++    values = values.values() if isinstance(values, dict) else values
++    return sorted(
++        (
++            job
++            for job in values
++            if job.get("job_id", "") > after
++            and job.get("status") in {"completed", "failed", "cancelled"}
++        ),
++        key=lambda job: job["job_id"],
++    )[:limit]
++
++
++def _days(path, policy, failed=False):
++    if path.suffix.lower() in {".mp4", ".webm", ".avi"}:
++        days = policy.videos_days
++    elif path.suffix == ".log" or path.name in {"stdout.txt", "stderr.txt"}:
++        days = policy.logs_days
++    elif any(part.endswith(".trace") for part in path.parts) or path.name.startswith(
++        ("trace.", "traces.")
++    ):
++        days = policy.traces_days
++    else:
++        return None
++    return max(days, policy.failed_days) if failed else days
++
++
++def _safe_child(root, relative):
++    path = root / relative
++    if path.is_symlink() or not path.resolve().is_relative_to(root):
++        return None
++    current = root
++    for part in Path(relative).parts:
++        current = current / part
++        if current.is_symlink():
++            return None
++    return path
++
++
++def _walk_slice(conn, root, job_id, policy, report, now, deadline, quota, apply):
++    # Persist directory enumeration separately from deletion. Deleting children
++    # cannot shift the saved enumeration offset of an unfinished directory.
++    if not conn.execute("SELECT 1 FROM scans WHERE job_id=?", (job_id,)).fetchone():
++        conn.execute("INSERT INTO scans VALUES (?)", (job_id,))
++        conn.execute(
++            "INSERT INTO directories(job_id,path,position) VALUES (?,'.',0)", (job_id,)
++        )
++        conn.execute(
++            "INSERT OR IGNORE INTO files VALUES (?,NULL,?)", (job_id, job_id + ".log")
++        )
++    used = 0
++    while used < quota and time.monotonic() < deadline:
++        candidates = conn.execute(
++            "SELECT directory,path FROM files f WHERE job_id=? AND (directory IS NULL OR "
++            "NOT EXISTS (SELECT 1 FROM directories d WHERE d.job_id=f.job_id AND d.path=f.directory)) LIMIT 64",
++            (job_id,),
++        ).fetchall()
++        if candidates:
++            for directory, relative in candidates:
++                if used >= quota or time.monotonic() >= deadline:
++                    break
++                used += 1
++                path = (
++                    root.parent / relative
++                    if directory is None
++                    else _safe_child(root, relative)
++                )
++                if path is not None and not path.is_symlink() and path.is_file():
++                    days = _days(
++                        path.relative_to(root.parent), policy, report["_failed"]
++                    )
++                    try:
++                        stat = path.stat()
++                        if days is not None and now - stat.st_mtime >= days * 86400:
++                            if apply:
++                                path.unlink()
++                            report["files"].append(str(path.relative_to(root.parent)))
++                            report["bytes"] += stat.st_size
++                    except FileNotFoundError:
++                        pass
++                conn.execute(
++                    "DELETE FROM files WHERE job_id=? AND path=?", (job_id, relative)
++                )
++            continue
++        item = conn.execute(
++            "SELECT path,position FROM directories WHERE job_id=? ORDER BY seq LIMIT 1",
++            (job_id,),
++        ).fetchone()
++        if item is None:
++            conn.execute("DELETE FROM scans WHERE job_id=?", (job_id,))
++            return used, False
++        relative, position = item
++        directory = _safe_child(root, relative)
++        if directory is None or not directory.is_dir():
++            conn.execute(
++                "DELETE FROM directories WHERE job_id=? AND path=?", (job_id, relative)
++            )
++            continue
++        complete = True
++        processed_new = False
++        try:
++            with os.scandir(directory) as entries:
++                for number, entry in enumerate(entries):
++                    if number < position:
++                        continue
++                    # Replaying a large directory prefix may itself exceed the
++                    # soft deadline. Still advance one entry so a saved cursor
++                    # cannot remain stuck forever on slow storage.
++                    if used >= quota or (
++                        processed_new and time.monotonic() >= deadline
++                    ):
++                        complete = False
++                        break
++                    used += 1
++                    processed_new = True
++                    position = number + 1
++                    name = str(Path(relative) / entry.name)
++                    if entry.is_symlink() or entry.name in {".control", ".processes"}:
++                        continue
++                    if entry.is_dir(follow_symlinks=False):
++                        conn.execute(
++                            "INSERT OR IGNORE INTO directories(job_id,path,position) VALUES (?,?,0)",
++                            (job_id, name),
++                        )
++                    elif _days(Path(name), policy) is not None:
++                        conn.execute(
++                            "INSERT OR IGNORE INTO files VALUES (?,?,?)",
++                            (job_id, relative, name),
++                        )
++        except FileNotFoundError:
++            pass
++        if complete:
++            conn.execute(
++                "DELETE FROM directories WHERE job_id=? AND path=?", (job_id, relative)
++            )
++        else:
++            conn.execute(
++                "UPDATE directories SET position=? WHERE job_id=? AND path=?",
++                (position, job_id, relative),
++            )
++        conn.commit()
++    return used, True
++
++
+ def prune_artifacts(
+     output_root, policy, *, apply=False, now=None, budget_s=5, max_entries=20000
+ ):
++    """Resume bounded, round-robin cleanup; dry runs never advance the saved cursor."""
++    if budget_s <= 0 or max_entries < 1:
++        raise ValueError("cleanup budgets must be positive")
+     output_root = Path(output_root).resolve()
++    disk = shutil.disk_usage(output_root)
+     report = {
+         "applied": apply,
+         "files": [],
+         "bytes": 0,
+         "skipped_runs": [],
+         "truncated": False,
++        "disk": {
++            "free_bytes": disk.free,
++            "total_bytes": disk.total,
++            "low_space": disk.free < policy.min_free_gb * 1024**3,
++        },
+     }
+-    jobs_file = output_root / "jobs.json"
+-    if not jobs_file.is_file():
+-        return report
+-    jobs = json.loads(jobs_file.read_text())
+-    jobs = jobs.values() if isinstance(jobs, dict) else jobs
+-    deadline, now = time.monotonic() + budget_s, time.time() if now is None else now
+-    inspected = 0
+-    for job in jobs:
+-        if inspected >= max_entries or time.monotonic() >= deadline:
+-            report["truncated"] = True
+-            break
+-        if job.get("status") not in {"completed", "failed", "cancelled"}:
+-            continue
+-        root = Path(job["output_root"])
+-        if (
+-            root.is_symlink()
+-            or root.resolve().parent != output_root
+-            or not root.is_dir()
+-        ):
+-            continue
+-        with _terminal_lease(root) as safe:
+-            if not safe:
+-                report["skipped_runs"].append(job["job_id"])
+-                continue
+-            stack = [root]
+-            external_log = output_root / (job["job_id"] + ".log")
+-            candidates = [external_log] if external_log.is_file() else []
+-            while stack:
+-                directory = stack.pop()
+-                for path in directory.iterdir():
+-                    inspected += 1
+-                    if inspected >= max_entries or time.monotonic() >= deadline:
++    state_path = output_root / ".retention.sqlite3"
++    with (output_root / ".retention.lock").open("a+") as lock:
++        try:
++            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
++        except BlockingIOError:
++            return {**report, "busy": True}
++        conn = sqlite3.connect(state_path if apply else ":memory:", timeout=1)
++        try:
++            if not apply and state_path.exists():
++                saved = sqlite3.connect(f"{state_path.as_uri()}?mode=ro", uri=True)
++                try:
++                    saved.backup(conn)
++                finally:
++                    saved.close()
++            conn.executescript(
++                "CREATE TABLE IF NOT EXISTS scans(job_id TEXT PRIMARY KEY);"
++                "CREATE TABLE IF NOT EXISTS directories(seq INTEGER PRIMARY KEY AUTOINCREMENT, job_id TEXT, path TEXT, position INTEGER, UNIQUE(job_id,path));"
++                "CREATE TABLE IF NOT EXISTS files(job_id TEXT, directory TEXT, path TEXT, PRIMARY KEY(job_id,path));"
++                "CREATE TABLE IF NOT EXISTS cursor(value TEXT);"
++            )
++            saved = conn.execute("SELECT value FROM cursor LIMIT 1").fetchone()
++            after = saved[0] if saved else ""
++            visited, used = set(), 0
++            deadline = time.monotonic() + budget_s
++            now = time.time() if now is None else now
++            while used < max_entries and time.monotonic() < deadline:
++                jobs = _jobs_after(output_root, after)
++                if not jobs:
++                    jobs = _jobs_after(output_root, "")
++                if not jobs:
++                    break
++                for job in jobs:
++                    job_id = job["job_id"]
++                    if (
++                        not isinstance(job_id, str)
++                        or Path(job_id).name != job_id
++                        or job_id in {".", ".."}
++                    ):
++                        raise ValueError(
++                            "invalid experiment identity in retention registry"
++                        )
++                    if job_id in visited:
++                        return {**report, "inspected": used, "next_job_after": after}
++                    if used >= max_entries or time.monotonic() >= deadline:
+                         report["truncated"] = True
+-                        stack.clear()
+                         break
+-                    if path.is_symlink() or any(
+-                        part in {".control", ".processes"}
+-                        for part in path.relative_to(root).parts
++                    visited.add(job_id)
++                    after = job_id
++                    used += 1
++                    root = Path(job["output_root"])
++                    if (
++                        not root.is_symlink()
++                        and root.resolve().parent == output_root
++                        and root.is_dir()
+                     ):
+-                        continue
+-                    if path.is_dir():
+-                        stack.append(path)
+-                    elif path.is_file():
+-                        candidates.append(path)
+-            for path in candidates:
+-                if time.monotonic() >= deadline:
+-                    report["truncated"] = True
+-                    break
+-                if path.is_symlink():
+-                    continue
+-                relative = path.relative_to(output_root)
+-                if path.suffix.lower() in {".mp4", ".webm", ".avi"}:
+-                    days = policy.videos_days
+-                elif path.suffix == ".log" or path.name in {"stdout.txt", "stderr.txt"}:
+-                    days = policy.logs_days
+-                elif any(
+-                    part.endswith(".trace") for part in relative.parts
+-                ) or path.name.startswith(("trace.", "traces.")):
+-                    days = policy.traces_days
+-                else:
+-                    continue
+-                if job.get("status") == "failed":
+-                    days = max(days, policy.failed_days)
+-                stat = path.stat()
+-                if now - stat.st_mtime < days * 86400:
+-                    continue
+-                if apply:
+-                    path.unlink()
+-                report["files"].append(str(relative))
+-                report["bytes"] += stat.st_size
+-    return report
++                        root = root.resolve()
++                        with _terminal_lease(root) as safe:
++                            if safe:
++                                report["_failed"] = job.get("status") == "failed"
++                                count, pending = _walk_slice(
++                                    conn,
++                                    root,
++                                    job_id,
++                                    policy,
++                                    report,
++                                    now,
++                                    deadline,
++                                    min(2048, max_entries - used),
++                                    apply,
++                                )
++                                used += count
++                                report["truncated"] |= pending
++                                report.pop("_failed", None)
++                            else:
++                                report["skipped_runs"].append(job_id)
++                    conn.execute("DELETE FROM cursor")
++                    conn.execute("INSERT INTO cursor VALUES (?)", (after,))
++                    conn.commit()
++            if used >= max_entries or time.monotonic() >= deadline:
++                report["truncated"] = True
++            return {**report, "inspected": used, "next_job_after": after}
++        finally:
++            conn.commit()
++            conn.close()
+--- /dev/null
++++ b/robosys/storage/jobs.py
+@@ -0,0 +1,280 @@
++"""Indexed experiment registry with a bounded working set and legacy import."""
++
++import base64
++import json
++import sqlite3
++import threading
++import time
++from collections import OrderedDict
++from collections.abc import MutableMapping
++from contextlib import closing
++from pathlib import Path
++
++from ..infra.history import page_window
++
++
++class JobStore(MutableMapping):
++    def __init__(self, root, *, cache_size=128, cache_bytes=8 * 1024 * 1024):
++        self.path = Path(root) / "jobs.sqlite3"
++        self.path.parent.mkdir(parents=True, exist_ok=True)
++        self.cache_size, self.cache_bytes = cache_size, cache_bytes
++        self._cache = OrderedDict()
++        self._original = {}
++        self._sizes = {}
++        self._lock = threading.RLock()
++        with self._connect() as conn, conn:
++            conn.execute("PRAGMA journal_mode=WAL")
++            conn.execute(
++                "CREATE TABLE IF NOT EXISTS jobs (job_id TEXT PRIMARY KEY, "
++                "submitted_at TEXT NOT NULL, status TEXT NOT NULL, active INTEGER NOT NULL, "
++                "search_text TEXT NOT NULL, record_json TEXT NOT NULL)"
++            )
++            conn.execute(
++                "CREATE INDEX IF NOT EXISTS jobs_time ON jobs(submitted_at DESC, job_id DESC)"
++            )
++            conn.execute(
++                "CREATE INDEX IF NOT EXISTS jobs_active ON jobs(active, submitted_at, job_id)"
++            )
++            conn.execute(
++                "CREATE INDEX IF NOT EXISTS jobs_status ON jobs(status, submitted_at, job_id)"
++            )
++            conn.execute(
++                "CREATE TABLE IF NOT EXISTS registry_meta (key TEXT PRIMARY KEY, value TEXT)"
++            )
++            if not conn.execute(
++                "SELECT 1 FROM registry_meta WHERE key='legacy_imported'"
++            ).fetchone():
++                legacy = self.path.with_name("jobs.json")
++                if legacy.exists():
++                    values = json.loads(legacy.read_text(encoding="utf-8"))
++                    values = values.values() if isinstance(values, dict) else values
++                    if not isinstance(values, (list, type({}.values()))):
++                        raise ValueError(
++                            "legacy jobs.json must contain an experiment list or object"
++                        )
++                    for value in values:
++                        if isinstance(value, dict) and value.get("job_id"):
++                            self._save(conn, value)
++                conn.execute("INSERT INTO registry_meta VALUES ('legacy_imported','1')")
++
++    def _connect(self):
++        return closing(sqlite3.connect(self.path, timeout=1))
++
++    @staticmethod
++    def _encode(value):
++        return json.dumps(value, ensure_ascii=False, separators=(",", ":"), default=str)
++
++    @classmethod
++    def _save(cls, conn, value, encoded=None):
++        status = str(value.get("status", ""))
++        progress = value.get("progress") or {}
++        if not isinstance(progress, dict):
++            progress = {}
++        active = (
++            status in {"running", "stopping", "stop_failed"}
++            or progress.get("status") == "running"
++        )
++        conn.execute(
++            "INSERT INTO jobs VALUES (?,?,?,?,?,?) ON CONFLICT(job_id) DO UPDATE SET "
++            "submitted_at=excluded.submitted_at, status=excluded.status, active=excluded.active, "
++            "search_text=excluded.search_text, record_json=excluded.record_json",
++            (
++                str(value["job_id"]),
++                value.get("submitted_at", ""),
++                status,
++                int(active),
++                " ".join(
++                    str(value.get(k, ""))
++                    for k in ("job_id", "config", "status", "submitted_at")
++                ).lower(),
++                encoded if encoded is not None else cls._encode(value),
++            ),
++        )
++
++    def _flush_keys(self, keys):
++        changes = [(key, self._encode(self._cache[key])) for key in keys]
++        changes = [
++            (key, encoded)
++            for key, encoded in changes
++            if encoded != self._original.get(key)
++        ]
++        if changes:
++            with self._connect() as conn, conn:
++                for key, encoded in changes:
++                    self._save(conn, self._cache[key], encoded)
++            self._original.update(changes)
++            self._sizes.update(
++                (key, len(encoded.encode("utf-8"))) for key, encoded in changes
++            )
++
++    def flush(self):
++        with self._lock:
++            self._flush_keys(list(self._cache))
++            self._trim()
++
++    def _trim(self):
++        # Retain the newest object even when one individual record exceeds the budget.
++        while len(self._cache) > 1 and (
++            len(self._cache) > self.cache_size
++            or sum(self._sizes.values()) > self.cache_bytes
++        ):
++            key = next(iter(self._cache))
++            self._flush_keys([key])
++            self._cache.pop(key)
++            self._original.pop(key, None)
++            self._sizes.pop(key, None)
++
++    def __getitem__(self, key):
++        with self._lock:
++            if key not in self._cache:
++                with self._connect() as conn:
++                    row = conn.execute(
++                        "SELECT record_json FROM jobs WHERE job_id=?", (key,)
++                    ).fetchone()
++                if row is None:
++                    raise KeyError(key)
++                self._cache[key] = json.loads(row[0])
++                self._original[key] = row[0]
++                self._sizes[key] = len(row[0].encode("utf-8"))
++            self._cache.move_to_end(key)
++            self._trim()
++            return self._cache[key]
++
++    def __setitem__(self, key, value):
++        if str(value.get("job_id")) != str(key):
++            raise ValueError("experiment registry key does not match job_id")
++        with self._lock:
++            self._cache[key] = value
++            self._sizes[key] = len(self._encode(value).encode("utf-8"))
++            self._cache.move_to_end(key)
++            self._trim()
++
++    def __delitem__(self, key):
++        with self._lock, self._connect() as conn, conn:
++            if key not in self:
++                raise KeyError(key)
++            conn.execute("DELETE FROM jobs WHERE job_id=?", (key,))
++            self._cache.pop(key, None)
++            self._original.pop(key, None)
++            self._sizes.pop(key, None)
++
++    def __contains__(self, key):
++        with self._lock:
++            if key in self._cache:
++                return True
++            with self._connect() as conn:
++                return (
++                    conn.execute("SELECT 1 FROM jobs WHERE job_id=?", (key,)).fetchone()
++                    is not None
++                )
++
++    def __len__(self):
++        self.flush()
++        with self._lock, self._connect() as conn:
++            return conn.execute("SELECT count(*) FROM jobs").fetchone()[0]
++
++    def __iter__(self):
++        self.flush()
++        last = ""
++        while True:
++            with self._lock, self._connect() as conn:
++                rows = conn.execute(
++                    "SELECT job_id FROM jobs WHERE job_id>? ORDER BY job_id LIMIT 256",
++                    (last,),
++                ).fetchall()
++            if not rows:
++                return
++            for (last,) in rows:
++                yield last
++
++    def active_keys(self, *, waiting=True):
++        self.flush()
++        with self._lock, self._connect() as conn:
++            rows = conn.execute(
++                "SELECT job_id FROM jobs WHERE active=1"
++                + (" OR status='waiting'" if waiting else "")
++                + " ORDER BY submitted_at, job_id"
++            ).fetchall()
++        return [row[0] for row in rows]
++
++    def waiting_keys(self):
++        self.flush()
++        stamp, key = "", ""
++        while True:
++            with self._lock, self._connect() as conn:
++                rows = conn.execute(
++                    "SELECT submitted_at,job_id FROM jobs WHERE status='waiting' "
++                    "AND (submitted_at,job_id)>(?,?) ORDER BY submitted_at,job_id LIMIT 128",
++                    (stamp, key),
++                ).fetchall()
++            if not rows:
++                return
++            for stamp, key in rows:
++                yield key
++
++    def page(
++        self, *, limit=100, offset=0, since=None, until=None, search="", cursor=None
++    ):
++        limit, offset, since, until = page_window(limit, offset, since, until)
++        if cursor and offset:
++            raise ValueError("use cursor or offset, not both")
++        filters, args = [], []
++        for value, clause in (
++            (since, "submitted_at>=?"),
++            (until, "submitted_at<=?"),
++            (str(search).lower() if search else None, "instr(search_text,?)>0"),
++        ):
++            if value is not None:
++                filters.append(clause)
++                args.append(value)
++        where = " WHERE " + " AND ".join(filters) if filters else ""
++        self.flush()
++        deadline = time.monotonic() + 1
++        with self._lock, self._connect() as conn:
++            conn.set_progress_handler(lambda: int(time.monotonic() >= deadline), 1000)
++            try:
++                overview = dict(
++                    conn.execute(
++                        "SELECT status,count(*) FROM jobs" + where + " GROUP BY status",
++                        args,
++                    )
++                )
++                if cursor:
++                    try:
++                        stamp, key, scope = json.loads(base64.urlsafe_b64decode(cursor))
++                        if scope != [since, until, search]:
++                            raise ValueError("cursor belongs to a different query")
++                    except Exception as exc:
++                        raise ValueError("invalid experiment cursor") from exc
++                    filters.append("(submitted_at,job_id)<(?,?)")
++                    args.extend((stamp, key))
++                where = " WHERE " + " AND ".join(filters) if filters else ""
++                rows = conn.execute(
++                    "SELECT job_id,submitted_at FROM jobs"
++                    + where
++                    + " ORDER BY submitted_at DESC,job_id DESC LIMIT ? OFFSET ?",
++                    (*args, limit + 1, offset),
++                ).fetchall()
++            except sqlite3.OperationalError as exc:
++                if "interrupted" in str(exc):
++                    raise TimeoutError(
++                        "experiment query exceeded its time budget; narrow the query"
++                    ) from exc
++                raise
++        more, rows = len(rows) > limit, rows[:limit]
++        token = (
++            base64.urlsafe_b64encode(
++                json.dumps([rows[-1][1], rows[-1][0], [since, until, search]]).encode()
++            ).decode()
++            if more
++            else None
++        )
++        return {
++            "job_ids": [row[0] for row in rows],
++            "overview": overview,
++            "total": sum(overview.values()),
++            "limit": limit,
++            "offset": offset,
++            "next_offset": offset + len(rows) if more else None,
++            "next_cursor": token,
++        }
+--- a/robosys/task_adapters/evaluator.py
++++ b/robosys/task_adapters/evaluator.py
+@@ -7,9 +7,10 @@
+ import os
+ import re
+ import shutil
++import tempfile
+ import time
+ from collections import Counter
+-from .result_index import ResultIndex
++from .result_writer import with_result_writer
+ 
+ from collections.abc import Callable, Mapping, Sequence
+ from datetime import datetime, timezone
+@@ -30,12 +31,19 @@
+     """Write a JSON artifact atomically so status readers never see half JSON."""
+ 
+     path.parent.mkdir(parents=True, exist_ok=True)
+-    temporary = path.with_name(f".{path.name}.tmp")
+-    temporary.write_text(
+-        json.dumps(value, ensure_ascii=False, indent=2, default=str) + "\n",
+-        encoding="utf-8",
+-    )
+-    temporary.replace(path)
++    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
++                                     prefix=f".{path.name}.", suffix=".tmp", delete=False) as handle:
++        temporary = Path(handle.name)
++        try:
++            json.dump(value, handle, ensure_ascii=False, indent=2, default=str)
++            handle.write("\n")
++        except BaseException:
++            temporary.unlink(missing_ok=True)
++            raise
++    try:
++        temporary.replace(path)
++    finally:
++        temporary.unlink(missing_ok=True)
+ 
+ 
+ def clear_case_artifacts(path: Path) -> None:
+@@ -232,6 +240,7 @@
+ 
+ 
+ @reserve_evaluation
++@with_result_writer
+ async def evaluate_task_adapters(
+     *,
+     config_path: str | Path,
+@@ -247,6 +256,7 @@
+     on_case_start: Callable[[int, int, Mapping[str, Any]], None] | None = None,
+     on_case_complete: Callable[[int, int, Mapping[str, Any]], None] | None = None,
+     on_case_reset: Callable[[str, str], None] | None = None,
++    _writer=None,
+ ) -> dict[str, Any]:
+     """Execute adapter cases through a backend and persist queryable artifacts.
+ 
+@@ -273,7 +283,7 @@
+     if resolved_memory.exists():
+         initial_memory = json.loads(resolved_memory.read_text())
+     if memory_mode == "snapshot":
+-        write_json(output_root / "memory_snapshot.json", initial_memory)
++        await _writer.write(output_root / "memory_snapshot.json", initial_memory)
+     active = {}
+ 
+     status_path = output_root / "status.json"
+@@ -323,11 +333,10 @@
+             for case in cases:
+                 path = _case_path(output_root, case, adapter_count=len(adapter_cases))
+                 if path.exists():
+-                    adapter_stats[configured.instance_id]["episodes"].append(json.loads(path.read_text()))
++                    adapter_stats[configured.instance_id]["episodes"].append(_compact_episode(json.loads(path.read_text())))
+     records = {key: {item["global_index"]: item for item in stats["episodes"]}
+                for key, stats in adapter_stats.items()}
+     counts = {key: Counter() for key in records}
+-    result_index = ResultIndex(output_root)
+     index_ready = False
+     completed_count = 0
+ 
+@@ -351,11 +360,9 @@
+             counts[key].subtract(contribution(previous))
+             completed_count -= contribution(previous)["num_episodes"]
+         record.setdefault("updated_at", _now())
+-        records[key][index] = record
++        records[key][index] = _compact_episode(record)
+         counts[key].update(contribution(record))
+         completed_count += contribution(record)["num_episodes"]
+-        if index_ready:
+-            result_index.put(_compact_episode(record))
+ 
+     def progress_summary():
+         aggregate = Counter()
+@@ -375,7 +382,7 @@
+         return _summary(run_id=run_id, adapters=adapters, adapter_stats=adapter_stats, options=effective_options)
+ 
+     stopped = set()
+-    write_json(
++    await _writer.write(
+         status_path,
+         {
+             "run_id": run_id,
+@@ -427,50 +434,51 @@
+             else None
+         )
+         live_case["trace_dir"] = str(trace_dir) if trace_dir is not None else None
+-        if case.key not in stopped:
+-            write_json(episode_path, live_case)
+-            remember(live_case)
+-        write_json(
+-            status_path,
+-            {
+-                "run_id": run_id,
+-                "status": "running",
+-                "config": str(resolved_config),
+-                "config_hash": params.content_hash,
+-                "total_episodes": total,
+-                "completed_episodes": completed_count,
+-                "adapter_order": [item.instance_id for item, _ in adapter_cases],
+-                "summary": progress_summary(),
+-                "active": [*active.values(), live_case],
+-                "current": live_case,
+-            },
+-        )
+-        if on_case_start is not None:
+-            on_case_start(
+-                completed_count,
+-                total,
+-                live_case,
+-            )
+-        active[case.key] = live_case
+-        case_memory = resolved_memory
+-        if memory_mode == "disabled":
+-            case_memory = None
+-        elif memory_mode == "snapshot":
+-            case_memory = episode_path.with_suffix(".memory.json")
+-            write_json(case_memory, initial_memory)
+-        context = TaskAdapterRunContext(
+-            params=params,
+-            config_path=resolved_config,
+-            output_root=output_root,
+-            run_id=run_id,
+-            memory_path=case_memory,
+-            run_episode=run_episode,
+-            options=effective_options,
+-            case_output=episode_path,
+-            case_trace_dir=trace_dir,
+-        )
+         case_started = time.perf_counter()
+         try:
++            if case.key not in stopped:
++                await _writer.write(episode_path, live_case, record=_compact_episode(live_case))
++                remember(live_case)
++            await _writer.write(
++                status_path,
++                {
++                    "run_id": run_id,
++                    "status": "running",
++                    "config": str(resolved_config),
++                    "config_hash": params.content_hash,
++                    "total_episodes": total,
++                    "completed_episodes": completed_count,
++                    "adapter_order": [item.instance_id for item, _ in adapter_cases],
++                    "summary": progress_summary(),
++                    "active": [*active.values(), live_case],
++                    "current": live_case,
++                },
++            )
++            if on_case_start is not None:
++                on_case_start(
++                    completed_count,
++                    total,
++                    live_case,
++                )
++            active[case.key] = live_case
++            case_memory = resolved_memory
++            if memory_mode == "disabled":
++                case_memory = None
++            elif memory_mode == "snapshot":
++                case_memory = episode_path.with_suffix(".memory.json")
++                await _writer.write(case_memory, initial_memory)
++            context = TaskAdapterRunContext(
++                params=params,
++                config_path=resolved_config,
++                output_root=output_root,
++                run_id=run_id,
++                memory_path=case_memory,
++                run_episode=run_episode,
++                options=effective_options,
++                case_output=episode_path,
++                case_trace_dir=trace_dir,
++            )
++            case_started = time.perf_counter()
+             if case.key in stopped:
+                 raise asyncio.CancelledError()
+             result = dict(await backend.execute(configured, case, context))
+@@ -495,7 +503,7 @@
+                 record["error"] = result.get("error") or "Graph execution failed"
+             record["generation_started_at_ns"] = generation
+             record["updated_at"] = _now()
+-            write_json(episode_path, record)
++            await _writer.write(episode_path, record, record=_compact_episode(record))
+         except asyncio.CancelledError:
+             if case.key not in stopped:
+                 raise
+@@ -506,7 +514,7 @@
+             record.update(_last_known_progress(episode_path, run_id))
+             record["generation_started_at_ns"] = generation
+             record["updated_at"] = _now()
+-            write_json(episode_path, record)
++            await _writer.write(episode_path, record, record=_compact_episode(record))
+         except Exception as exc:  # preserve the batch and expose the case error
+             record = {
+                 "adapter_id": configured.instance_id,
+@@ -525,12 +533,12 @@
+             record.update(_last_known_progress(episode_path, run_id))
+             record["generation_started_at_ns"] = generation
+             record["updated_at"] = _now()
+-            write_json(episode_path, record)
++            await _writer.write(episode_path, record, record=_compact_episode(record))
+ 
+         active.pop(case.key, None)
+         remember(record)
+         current_summary = progress_summary()
+-        write_json(
++        await _writer.write(
+             status_path,
+             {
+                 "run_id": run_id,
+@@ -561,31 +569,31 @@
+                if resume is None or matches(case, resume.get("tasks"))]
+     running = {}
+ 
+-    def reset_case(configured, case):
++    async def reset_case(configured, case):
+         path = _case_path(output_root, case, adapter_count=len(adapter_cases))
+         if path.exists() and on_case_reset is not None:
+             on_case_reset(run_id, f"{case.adapter_id}:{case.index}:{case.episode}")
+-        clear_case_artifacts(path)
++        await _writer.run(clear_case_artifacts, path)
+         record = {**case.to_dict(), "global_index": case.index, "status": "pending",
+                   "task_success": False, "episode_json": str(path),
+                   "generation_started_at_ns": time.time_ns(), "updated_at": _now()}
+-        write_json(path, record)
++        await _writer.write(path, record, record=_compact_episode(record) if index_ready else None)
+         live = path.parent / ".live" / path.name
+         live.unlink(missing_ok=True)
+         remember(record)
+ 
+     for configured, case in pending:
+-        reset_case(configured, case)
+-    result_index.initialize(_compact_episode(item) for values in records.values() for item in values.values())
++        await reset_case(configured, case)
++    await _writer.initialize(item for values in records.values() for item in values.values())
+     index_ready = True
+-    def publish_summary():
++    async def publish_summary():
+         # Constant-size counts are sufficient during execution. Full history
+         # is written once at termination and remains available in the index.
+-        write_json(output_root / "summary.json", progress_summary())
+-    publish_summary()
++        await _writer.write(output_root / "summary.json", progress_summary())
++    await publish_summary()
+     ready = control / "ready.json"
+     with control_lock(control):
+-        write_json(ready, {"pid": os.getpid()})
++        await _writer.write(ready, {"pid": os.getpid()})
+     try:
+         while True:
+             with control_lock(control):
+@@ -609,19 +617,22 @@
+                 cancelled = [running[key] for key in keys if key in running]
+                 for task in cancelled:
+                     task.cancel()
+-                await asyncio.gather(*cancelled, return_exceptions=True)
++                cancellation_results = await asyncio.gather(*cancelled, return_exceptions=True)
++                for error in cancellation_results:
++                    if isinstance(error, BaseException) and not isinstance(error, asyncio.CancelledError):
++                        raise error
+                 for key in keys:
+                     running.pop(key, None)
+                 if command["action"] == "rerun":
+                     stopped.difference_update(keys)
+                     for configured, case in selected:
+-                        reset_case(configured, case)
++                        await reset_case(configured, case)
+                     pending.extend(selected)
+                 else:
+                     for configured, case in selected:
+                         if case.key not in running_keys:
+                             await execute_case(configured, case)
+-                publish_summary()
++                await publish_summary()
+             for key, task in list(running.items()):
+                 if task.done():
+                     task.result()
+@@ -635,27 +646,30 @@
+         for task in running.values():
+             task.cancel()
+         await asyncio.gather(*running.values(), return_exceptions=True)
+-        write_json(output_root / "summary.json", full_summary())
+-        write_json(status_path, {"run_id": run_id, "status": "cancelled",
++        await _writer.write(output_root / "summary.json", await _writer.run(full_summary))
++        await _writer.write(status_path, {"run_id": run_id, "status": "cancelled",
+                                "total_episodes": total, "completed_episodes": completed_count,
+                                "active": [], "current": None})
+         raise
+     finally:
+         with control_lock(control):
+             ready.unlink(missing_ok=True)
+-    final_summary = full_summary()
++    final_summary = await _writer.run(full_summary)
+     if memory_mode == "snapshot":
+         memory_records = list(initial_memory.get("records", []))
+         for configured, _ in adapter_cases:
+             for record in adapter_stats[configured.instance_id]["episodes"]:
+-                lesson = record.get("result", {}).get("ltm_summary")
++                # Load only one full result at a time; compact records deliberately
++                # omit nested model output and observations.
++                full_record = await _writer.run(lambda path=record["episode_json"]: json.loads(Path(path).read_text()))
++                lesson = full_record.get("result", {}).get("ltm_summary")
+                 if lesson:
+                     memory_records.append(lesson)
+-        write_json(resolved_memory, {"records": memory_records})
++        await _writer.write(resolved_memory, {"records": memory_records})
+ 
+     if completed_count != total:
+         raise RuntimeError(f"experiment cannot complete: {completed_count}/{total} cases are terminal")
+-    write_json(output_root / "summary.json", final_summary)
++    await _writer.write(output_root / "summary.json", final_summary)
+     # Preserve per-task stats without copying the entire adapter into every task directory.
+     grouped = {}
+     for values in records.values():
+@@ -666,11 +680,11 @@
+         for item in values:
+             totals.update(contribution(item))
+         stats = adapter_stats[values[0]["adapter_id"]]
+-        write_json(directory / "stats.json", _compact_stats({
++        await _writer.write(directory / "stats.json", _compact_stats({
+             **stats, **dict(totals), "num_cases": len(values), "episodes": values,
+             "success_rate": totals["successes"] / totals["num_episodes"] if totals["num_episodes"] else None,
+         }))
+-    write_json(
++    await _writer.write(
+         status_path,
+         {
+             "run_id": run_id,
+--- a/robosys/task_adapters/result_index.py
++++ b/robosys/task_adapters/result_index.py
+@@ -1,6 +1,7 @@
+ """Incremental, disposable episode index; individual JSON artifacts remain authoritative."""
+ 
+ import json
++import os
+ import sqlite3
+ from contextlib import closing
+ from datetime import datetime, timezone
+@@ -10,28 +11,239 @@
+ from ..infra.trace_query import TraceQuery
+ 
+ 
++class IndexRecoveryPending(RuntimeError):
++    pass
++
++
+ class ResultIndex:
+     def __init__(self, root):
+         self.path = Path(root) / "episodes.sqlite3"
+ 
+-    def initialize(self, records):
++    @staticmethod
++    def schema(conn):
++        conn.execute(
++            "CREATE TABLE IF NOT EXISTS index_meta (key TEXT PRIMARY KEY, value TEXT)"
++        )
++        conn.execute(
++            "CREATE TABLE IF NOT EXISTS episodes (adapter_id TEXT, global_index INTEGER, "
++            "updated_at TEXT NOT NULL, record_json TEXT NOT NULL, PRIMARY KEY(adapter_id, global_index))"
++        )
++        conn.execute(
++            "CREATE INDEX IF NOT EXISTS episodes_time ON episodes(updated_at, global_index, adapter_id)"
++        )
++        conn.execute(
++            "CREATE INDEX IF NOT EXISTS episodes_order ON episodes(global_index, adapter_id)"
++        )
++
++    def initialize(self, records, *, clean=True):
+         with closing(sqlite3.connect(self.path, timeout=1)) as conn, conn:
+             conn.execute("PRAGMA journal_mode=WAL")
+-            conn.execute(
+-                "CREATE TABLE IF NOT EXISTS episodes (adapter_id TEXT, global_index INTEGER, "
+-                "updated_at TEXT NOT NULL, record_json TEXT NOT NULL, PRIMARY KEY(adapter_id, global_index))"
+-            )
+-            conn.execute(
+-                "CREATE INDEX IF NOT EXISTS episodes_time ON episodes(updated_at, global_index, adapter_id)"
+-            )
+-            conn.execute(
+-                "CREATE INDEX IF NOT EXISTS episodes_order ON episodes(global_index, adapter_id)"
+-            )
++            self.schema(conn)
+             conn.execute("DELETE FROM episodes")
+             conn.executemany(
+                 "INSERT INTO episodes VALUES (?,?,?,?)",
+-                [self._row(item) for item in records],
+-            )
++                (self._row(item) for item in records),
++            )
++            conn.execute(
++                "INSERT OR REPLACE INTO index_meta VALUES ('clean',?)",
++                (str(int(clean)),),
++            )
++
++    def needs_recovery(self):
++        if not self.path.is_file():
++            return True
++        try:
++            with closing(
++                sqlite3.connect(
++                    self.path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.2
++                )
++            ) as conn:
++                value = conn.execute(
++                    "SELECT value FROM index_meta WHERE key='clean'"
++                ).fetchone()
++                return value != ("1",)
++        except sqlite3.DatabaseError:
++            return True
++
++    def recover(self):
++        """Rebuild from authoritative case artifacts while holding the run lease.
++
++        A staging database protects the old index if any case is invalid. No
++        final summary is required; interrupted runs only have compact counts.
++        """
++        import tempfile
++
++        from ..runtime.retention import _terminal_lease
++        from .evaluator import _compact_episode, write_json
++
++        root = self.path.parent.resolve()
++        with _terminal_lease(root) as safe:
++            if not safe:
++                raise RuntimeError(
++                    "run is active, queued for resume, or has no verifiable run lease"
++                )
++            descriptor, temporary = tempfile.mkstemp(
++                prefix=".episodes-recovery-", suffix=".sqlite3", dir=root
++            )
++            os.close(descriptor)
++            temporary = Path(temporary)
++            count, counts, successes, adapters = 0, {}, 0, {}
++            try:
++                with closing(sqlite3.connect(temporary)) as conn, conn:
++                    self.schema(conn)
++                    for directory, dirs, names in os.walk(root, followlinks=False):
++                        dirs[:] = [
++                            name
++                            for name in dirs
++                            if name
++                            not in {
++                                ".control",
++                                ".processes",
++                                ".live",
++                                "workers",
++                                "attempts",
++                            }
++                            and not name.endswith(".trace")
++                            and not (Path(directory) / name).is_symlink()
++                        ]
++                        for name in names:
++                            path = Path(directory) / name
++                            if (
++                                not name.startswith("episode_")
++                                or not name.endswith(".json")
++                                or name.endswith(".memory.json")
++                                or path.is_symlink()
++                            ):
++                                continue
++                            record = json.loads(path.read_text(encoding="utf-8"))
++                            if (
++                                not isinstance(record, dict)
++                                or not isinstance(record.get("adapter_id"), str)
++                                or type(record.get("global_index")) is not int
++                                or record.get("status")
++                                not in {
++                                    "pending",
++                                    "running",
++                                    "completed",
++                                    "error",
++                                    "cancelled",
++                                }
++                            ):
++                                raise ValueError(f"invalid episode artifact: {path}")
++                            record["episode_json"] = str(path)
++                            compact = _compact_episode(record)
++                            conn.execute(
++                                "INSERT INTO episodes VALUES (?,?,?,?)",
++                                self._row(compact),
++                            )
++                            status = record["status"]
++                            counts[status] = counts.get(status, 0) + 1
++                            successes += int(
++                                status == "completed"
++                                and bool(record.get("task_success"))
++                            )
++                            stats = adapters.setdefault(
++                                record["adapter_id"],
++                                {
++                                    "num_cases": 0,
++                                    "num_episodes": 0,
++                                    "num_completed": 0,
++                                    "num_errors": 0,
++                                    "num_cancelled": 0,
++                                    "successes": 0,
++                                },
++                            )
++                            stats["num_cases"] += 1
++                            stats["num_episodes"] += int(
++                                status not in {"pending", "running"}
++                            )
++                            stats["num_completed"] += int(status == "completed")
++                            stats["num_errors"] += int(status == "error")
++                            stats["num_cancelled"] += int(status == "cancelled")
++                            stats["successes"] += int(
++                                status == "completed"
++                                and bool(record.get("task_success"))
++                            )
++                            count += 1
++                    if not count:
++                        raise ValueError(
++                            "no authoritative episode artifacts found; index was left unchanged"
++                        )
++                    conn.execute("INSERT INTO index_meta VALUES ('clean','0')")
++                status_path = root / "status.json"
++                status = (
++                    json.loads(status_path.read_text()) if status_path.exists() else {}
++                )
++                # The lease excludes the evaluator. Clear old WAL before the
++                # atomic replacement so it cannot be replayed onto the new DB.
++                if self.path.exists():
++                    try:
++                        with closing(sqlite3.connect(self.path, timeout=1)) as old:
++                            if old.execute(
++                                "PRAGMA wal_checkpoint(TRUNCATE)"
++                            ).fetchone()[0]:
++                                raise RuntimeError(
++                                    "episode index is busy; retry recovery"
++                                )
++                            old.execute("PRAGMA journal_mode=DELETE")
++                    except sqlite3.DatabaseError as exc:
++                        if "not a database" not in str(exc) and "malformed" not in str(
++                            exc
++                        ):
++                            raise
++                        for suffix in ("-wal", "-shm"):
++                            Path(str(self.path) + suffix).unlink(missing_ok=True)
++                temporary.replace(self.path)
++                terminal = sum(
++                    value
++                    for key, value in counts.items()
++                    if key not in {"pending", "running"}
++                )
++                summary = {
++                    "num_episodes": terminal,
++                    "num_completed": counts.get("completed", 0),
++                    "num_errors": counts.get("error", 0),
++                    "num_cancelled": counts.get("cancelled", 0),
++                    "successes": successes,
++                    "episode_success_rate": successes / terminal if terminal else None,
++                }
++                for key, stats in adapters.items():
++                    stats["success_rate"] = (
++                        stats["successes"] / stats["num_episodes"]
++                        if stats["num_episodes"]
++                        else None
++                    )
++                    adapters[key] = {
++                        **(
++                            status.get("summary", {}).get("task_adapters", {}).get(key)
++                            or {}
++                        ),
++                        **stats,
++                    }
++                summary["task_adapters"] = adapters
++                status.update(
++                    total_episodes=count,
++                    completed_episodes=terminal,
++                    summary={**(status.get("summary") or {}), **summary},
++                    active=[],
++                    current=None,
++                )
++                if status.get("status") in {None, "running", "starting"}:
++                    status.update(
++                        status="failed",
++                        error="run interrupted; result index recovered from episode artifacts",
++                    )
++                write_json(status_path, status)
++                with closing(sqlite3.connect(self.path)) as conn, conn:
++                    conn.execute("UPDATE index_meta SET value='1' WHERE key='clean'")
++                return {
++                    "indexed": count,
++                    "counts": counts,
++                    "summary": summary,
++                    "path": str(self.path),
++                }
++            finally:
++                temporary.unlink(missing_ok=True)
+ 
+     @staticmethod
+     def _row(record):
+--- /dev/null
++++ b/robosys/task_adapters/result_writer.py
+@@ -0,0 +1,126 @@
++"""One bounded writer per evaluation, with an owned SQLite connection."""
++
++import asyncio
++import sqlite3
++from concurrent.futures import ThreadPoolExecutor
++from functools import wraps
++from pathlib import Path
++
++from .result_index import ResultIndex
++
++
++class ResultWriter:
++    def __init__(self, root, write_json, *, capacity=16):
++        self.index = ResultIndex(root)
++        self.write_json = write_json
++        self.executor = ThreadPoolExecutor(
++            max_workers=1, thread_name_prefix="episode-writer"
++        )
++        self.slots = asyncio.Semaphore(capacity)
++        self.connection = None
++        self.closed = False
++
++    async def run(self, function, *args):
++        await self.slots.acquire()
++        try:
++            if self.closed:
++                raise RuntimeError("result writer is closed")
++            future = asyncio.get_running_loop().run_in_executor(
++                self.executor, function, *args
++            )
++        except BaseException:
++            self.slots.release()
++            raise
++        future.add_done_callback(
++            lambda done: (
++                self.slots.release(),
++                done.exception() if not done.cancelled() else None,
++            )
++        )
++        return await asyncio.shield(future)
++
++    def _start(self):
++        self.index.path.parent.mkdir(parents=True, exist_ok=True)
++        self.connection = sqlite3.connect(self.index.path, timeout=1)
++        self.connection.execute("PRAGMA journal_mode=WAL")
++        self.index.schema(self.connection)
++        with self.connection:
++            self.connection.execute(
++                "INSERT OR REPLACE INTO index_meta VALUES ('clean','0')"
++            )
++
++    async def start(self):
++        await self.run(self._start)
++
++    def _initialize(self, records):
++        with self.connection:
++            self.connection.execute("DELETE FROM episodes")
++            self.connection.executemany(
++                "INSERT INTO episodes VALUES (?,?,?,?)",
++                (self.index._row(item) for item in records),
++            )
++
++    async def initialize(self, records):
++        await self.run(self._initialize, records)
++
++    def _write(self, path, value, record):
++        self.write_json(path, value)
++        if record is not None:
++            with self.connection:
++                self.connection.execute(
++                    "INSERT OR REPLACE INTO episodes VALUES (?,?,?,?)",
++                    self.index._row(record),
++                )
++
++    async def write(self, path, value, *, record=None):
++        await self.run(self._write, path, value, record)
++
++    def _finish(self, clean):
++        if self.connection is not None:
++            try:
++                if clean:
++                    with self.connection:
++                        self.connection.execute(
++                            "INSERT OR REPLACE INTO index_meta VALUES ('clean','1')"
++                        )
++            finally:
++                self.connection.close()
++                self.connection = None
++
++    async def close(self, *, clean=False):
++        if self.closed:
++            return
++        self.closed = True
++        future = asyncio.get_running_loop().run_in_executor(
++            self.executor, self._finish, clean
++        )
++        cancelled = False
++        try:
++            while not future.done():
++                try:
++                    await asyncio.shield(future)
++                except asyncio.CancelledError:
++                    # Keep run ownership until every accepted write has finished.
++                    cancelled = True
++            future.result()
++        finally:
++            self.executor.shutdown(wait=False)
++        if cancelled:
++            raise asyncio.CancelledError
++
++
++def with_result_writer(function):
++    @wraps(function)
++    async def wrapped(*args, **kwargs):
++        root = Path(kwargs["output_dir"]) / kwargs["run_id"]
++        writer = ResultWriter(root, function.__globals__["write_json"])
++        clean = False
++        try:
++            await writer.start()
++            result = await function(*args, _writer=writer, **kwargs)
++            clean = True
++            return result
++        finally:
++            await writer.close(clean=clean)
++
++    return wrapped
+--- a/robosys/web/experiments.py
++++ b/robosys/web/experiments.py
+@@ -4,6 +4,7 @@
+ 
+ import json
+ import logging
++import queue
+ import errno
+ import hashlib
+ import os
+@@ -24,7 +25,8 @@
+ from ..runtime.config import load_application_config, freeze_config, load_config_snapshot
+ from ..infra.trace_query import TraceQuery, QueryBudgetExceeded
+ from ..infra.history import page_window
+-from ..task_adapters.result_index import ResultIndex
++from ..task_adapters.result_index import ResultIndex, IndexRecoveryPending
++from ..storage.jobs import JobStore
+ from .cache import BoundedCache
+ 
+ 
+@@ -69,7 +71,7 @@
+         self._json_cache = BoundedCache()
+         self._config_cache = BoundedCache(max_entries=64)
+         self._stop_threads: dict[str, threading.Thread] = {}
+-        self._jobs: dict[str, dict[str, Any]] = self._load_jobs()
++        self._jobs = self._load_jobs()
+         self._processes: dict[str, subprocess.Popen[Any]] = {}
+         # Detail responses use short opaque artifact ids instead of repeating
+         # absolute storage paths in every historical observation frame.
+@@ -77,6 +79,10 @@
+         self._video_faststart_locks = weakref.WeakValueDictionary()
+         self._scheduler_stop = threading.Event()
+         self._scheduler_thread: threading.Thread | None = None
++        self._recovery_queue = queue.Queue(maxsize=32)
++        self._recovery_thread = None
++        self._recovery_pending = set()
++        self._recovery_checks = BoundedCache(max_entries=128)
+ 
+     def start(self) -> None:
+         """Dispatch persisted waiting jobs even when no browser is polling."""
+@@ -84,7 +90,8 @@
+             if self._scheduler_thread and self._scheduler_thread.is_alive():
+                 return
+             # Resume an already authorised cleanup after a Portal restart.
+-            for job_id, job in list(self._jobs.items()):
++            for job_id in self._active_job_keys():
++                job = self._jobs[job_id]
+                 if job.get("status") == "stopping":
+                     self.stop_job(job_id, reason=job.get("stop_progress", {}).get("reason", "user_stop"), wait=False)
+             self._scheduler_stop.clear()
+@@ -98,13 +105,23 @@
+         self._scheduler_stop.set()
+         if self._scheduler_thread:
+             self._scheduler_thread.join(timeout=5)
++        if self._recovery_thread:
++            self._recovery_thread.join(timeout=5)
++        with self._lock:
++            self._persist_jobs()
++
++    def _active_job_keys(self, *, waiting=False):
++        if isinstance(self._jobs, JobStore):
++            return list(dict.fromkeys([*self._jobs.active_keys(waiting=waiting), *self._processes]))
++        return list(self._jobs)
+ 
+     def _scheduler_loop(self) -> None:
+         while not self._scheduler_stop.wait(1):
+             try:
+                 with self._lock:
+                     self._dispatch_waiting()
+-                if self.retention_policy and time.monotonic() - self._retention_checked_at > 3600:
++                retention_interval = 30 if (self.retention_report or {}).get("truncated") else 3600
++                if self.retention_policy and time.monotonic() - self._retention_checked_at > retention_interval:
+                     if self._retention_thread is None or not self._retention_thread.is_alive():
+                         self._retention_checked_at = time.monotonic()
+                         self._retention_thread = threading.Thread(target=self._prune_history, name="artifact-retention", daemon=True)
+@@ -119,10 +136,70 @@
+         except Exception:
+             logging.getLogger(__name__).exception("artifact retention failed")
+ 
++    def _queue_index_recovery(self, job):
++        if job.get("status") not in {"completed", "failed", "cancelled"} or not job.get("resources_released"):
++            return
++        root = self._job_path(job, "status_path").parent
++        if not (root / ".control/run.lock").is_file():
++            return
++        key = job["job_id"]
++        if key in self._recovery_pending:
++            return
++        if job.get("index_recovery", {}).get("retry_after", 0) > time.time():
++            return
++        index = ResultIndex(root)
++        stamp = index.path.stat().st_mtime_ns if index.path.exists() else None
++        if self._recovery_checks.get(key) == (stamp, job.get("ended_at")):
++            return
++        if not index.needs_recovery():
++            self._recovery_checks[key] = (stamp, job.get("ended_at"))
++            job.pop("index_recovery", None)
++            return
++        try:
++            self._recovery_queue.put_nowait((key, root))
++        except queue.Full:
++            raise IndexRecoveryPending("historical result recovery queue is full; retry shortly") from None
++        self._recovery_pending.add(key)
++        job["index_recovery"] = {"status": "pending"}
++        self._recovery_checks[key] = (stamp, job.get("ended_at"))
++        if self._recovery_thread is None or not self._recovery_thread.is_alive():
++            self._recovery_thread = threading.Thread(target=self._recover_indexes, name="episode-index-recovery", daemon=True)
++            self._recovery_thread.start()
++
++    def _recover_indexes(self):
++        while not self._scheduler_stop.is_set():
++            try:
++                key, root = self._recovery_queue.get(timeout=.2)
++            except queue.Empty:
++                continue
++            try:
++                with self._lock:
++                    self._jobs[key]["index_recovery"] = {"status": "running"}
++                result = ResultIndex(root).recover()
++                state = {"status": "completed", "indexed": result["indexed"]}
++            except Exception as exc:
++                state = {"status": "failed", "error": str(exc), "retry_after": time.time() + 30}
++            with self._lock:
++                self._jobs[key]["index_recovery"] = state
++                self._recovery_pending.discard(key)
++                if state["status"] == "failed":
++                    self._recovery_checks.pop(key, None)
++                self._persist_jobs()
++            self._recovery_queue.task_done()
++
++    def _result_index(self, job):
++        recovery = job.get("index_recovery", {})
++        if recovery.get("status") in {"pending", "running"}:
++            raise IndexRecoveryPending("historical result index is being recovered; retry shortly")
++        if recovery.get("status") == "failed":
++            raise RuntimeError("historical result index recovery failed: " + recovery.get("error", "unknown error"))
++        return ResultIndex(self._job_path(job, "status_path").parent)
++
+     def _dispatch_waiting(self) -> None:
+         # Caller holds _lock: concurrent submissions cannot both claim the slot.
+         changed = False
+-        for job_id, job in self._jobs.items():
++        for job_id in self._active_job_keys():
++            job = self._jobs[job_id]
+             if self._job_is_running(job) or job_id in self._processes:
+                 previous = job.get("status")
+                 self._refresh_job(job_id)
+@@ -132,15 +209,17 @@
+                     self._processes.pop(job_id, None)
+         if changed:
+             self._persist_jobs()
+-        for job_id, job in self._jobs.items():
++        for job_id in self._active_job_keys():
++            job = self._jobs[job_id]
+             process = self._processes.get(job_id)
+             if (process is not None and process.poll() is None) or self._job_is_running(job):
+                 return
+-        waiting = sorted(
+-            (job for job in self._jobs.values() if job.get("status") == "waiting"),
+-            key=lambda job: job.get("submitted_at", ""),
++        waiting = self._jobs.waiting_keys() if isinstance(self._jobs, JobStore) else sorted(
++            (key for key, job in self._jobs.items() if job.get("status") == "waiting"),
++            key=lambda key: self._jobs[key].get("submitted_at", ""),
+         )
+-        for job in waiting:
++        for job_id in waiting:
++            job = self._jobs[job_id]
+             env = os.environ.copy()
+             env["PYTHONPATH"] = str(self.project_root) + os.pathsep + env.get("PYTHONPATH", "")
+             registry = self._job_path(job, "output_root") / ".processes"
+@@ -164,28 +243,12 @@
+             self._persist_jobs()
+             break
+ 
+-    def _load_jobs(self) -> dict[str, dict[str, Any]]:
+-        if not self.jobs_path.exists():
+-            return {}
+-        try:
+-            value = json.loads(self.jobs_path.read_text(encoding="utf-8"))
+-        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+-            return {}
+-        if not isinstance(value, list):
+-            return {}
+-        return {
+-            str(item["job_id"]): dict(item)
+-            for item in value
+-            if isinstance(item, dict) and item.get("job_id")
+-        }
++    def _load_jobs(self):
++        return JobStore(self.output_root)
+ 
+     def _persist_jobs(self) -> None:
+-        temporary = self.jobs_path.with_name(f".{self.jobs_path.name}.tmp")
+-        temporary.write_text(
+-            json.dumps(list(self._jobs.values()), ensure_ascii=False, indent=2, default=str) + "\n",
+-            encoding="utf-8",
+-        )
+-        temporary.replace(self.jobs_path)
++        if isinstance(self._jobs, JobStore):
++            self._jobs.flush()
+ 
+     @staticmethod
+     def _job_is_running(job: Mapping[str, Any]) -> bool:
+@@ -733,6 +796,7 @@
+                                 break
+                         except (OSError, ValueError):
+                             pass
++        self._queue_index_recovery(job)
+         result = dict(job)
+         if isinstance(job.get("summary"), dict):
+             job["summary"] = self._compact_summary(job["summary"])
+@@ -774,7 +838,7 @@
+             job = self._refresh_job(job_id) if job_id in self._jobs else None
+         if job is None:
+             return []
+-        index = ResultIndex(self._job_path(job, "status_path").parent)
++        index = self._result_index(job)
+         if index.path.is_file():
+             episodes, offset = [], 0
+             while True:
+@@ -1017,7 +1081,7 @@
+                 return None
+             job = self._refresh_job(job_id)
+         summary = job.get("summary")
+-        index = ResultIndex(self._job_path(job, "status_path").parent)
++        index = self._result_index(job)
+         candidate: dict[str, Any] | None = index.get(adapter_id, global_index) if index.path.is_file() else None
+         for sequence, (item_adapter_id, item) in enumerate(self._iter_summary_episodes(summary) if candidate is None else []):
+             if item_adapter_id != adapter_id:
+@@ -3151,24 +3215,19 @@
+             job = dict(self._jobs[job_id])
+         return self._job_trace_query(job)
+ 
+-    def jobs_page(self, *, limit=100, offset=0, since=None, until=None, search=""):
+-        limit, offset, since, until = page_window(limit, offset, since, until)
++    def jobs_page(self, *, limit=100, offset=0, since=None, until=None, search="", cursor=None):
++        page = self._jobs.page(limit=limit, offset=offset, since=since, until=until, search=search, cursor=cursor)
+         deadline = time.monotonic() + 1
+         with self._lock:
+-            # Refresh active runs in the scheduler, history only on its requested page.
+-            jobs = [job for job in self._jobs.values()
+-                    if (not since or job.get("submitted_at", "") >= since)
+-                    and (not until or job.get("submitted_at", "") <= until)
+-                    and (not search or str(search).lower() in " ".join(str(job.get(key, "")) for key in ("job_id", "config", "status", "submitted_at")).lower())]
+-            jobs.sort(key=lambda job: (job.get("submitted_at", ""), job["job_id"]), reverse=True)
+             records = []
+-            for job in jobs[offset:offset+limit]:
++            for job_id in page.pop("job_ids"):
+                 if time.monotonic() > deadline:
+                     raise TimeoutError("experiment query exceeded its time budget; use a smaller page")
+-                records.append(self._public_job(self._refresh_job(job["job_id"]), include_parameters=False))
+-        overview = {status: sum(job.get("status") == status for job in jobs) for status in ("running", "waiting", "completed", "failed", "stop_failed", "stopping")}
+-        return {"experiments": records, "overview": overview, "total": len(jobs), "offset": offset, "limit": limit,
+-                "next_offset": offset+len(records) if offset+len(records) < len(jobs) else None}
++                records.append(self._public_job(self._refresh_job(job_id), include_parameters=False))
++            self._persist_jobs()
++        for status in ("running", "waiting", "completed", "failed", "stop_failed", "stopping"):
++            page["overview"].setdefault(status, 0)
++        return {"experiments": records, **page}
+ 
+     def episodes_page(self, job_id, *, limit=100, offset=0, since=None, until=None, include_runtime=False):
+         limit, offset, since, until = page_window(limit, offset, since, until)
+@@ -3177,7 +3236,7 @@
+             job = self._refresh_job(job_id) if job_id in self._jobs else None
+         if job is None:
+             return {"job_id": job_id, "episodes": [], "next_offset": None}
+-        index = ResultIndex(self._job_path(job, "status_path").parent)
++        index = self._result_index(job)
+         if index.path.is_file():
+             page = index.page(limit=limit, offset=offset, since=since, until=until)
+         else:
+@@ -3336,10 +3395,12 @@
+             if job_id not in self._jobs:
+                 raise KeyError(job_id)
+             job = self._refresh_job(job_id)
++            if action == "rerun" and job.get("index_recovery", {}).get("status") in {"pending", "running"}:
++                raise IndexRecoveryPending("wait for historical result recovery before rerunning")
+             if tasks is not None:
+                 if job.get("status") in {"stopping", "stop_failed"}:
+                     raise ValueError("实验资源尚未释放，请先完成整个实验的停止操作")
+-                index = ResultIndex(self._job_path(job, "status_path").parent)
++                index = self._result_index(job)
+                 if index.path.is_file():
+                     valid = index.contains_all(tasks)
+                 else:
+@@ -3387,7 +3448,7 @@
+                     write_json(root / "status.json", {"run_id": job_id, "status": "waiting",
+                                                       "config_hash": job.get("parameter_hash")})
+                     job.update(status="waiting", pid=None, returncode=None)
+-                    for key in ("ended_at", "error", "cancelled_at", "termination", "resources_released", "stop_progress"):
++                    for key in ("ended_at", "error", "cancelled_at", "termination", "resources_released", "stop_progress", "index_recovery"):
+                         job.pop(key, None)
+                     self._jobs[job_id] = job
+                     self._processes.pop(job_id, None)
+@@ -3407,7 +3468,7 @@
+         """Stop queued jobs first, then request cleanup for every active run."""
+         with self._lock:
+             job_ids = []
+-            for key in self._jobs:
++            for key in self._active_job_keys(waiting=True):
+                 job = self._refresh_job(key)
+                 if self._job_is_running(job) or job.get("status") == "waiting":
+                     job_ids.append(key)
+--- /dev/null
++++ b/robosys/web/http_server.py
+@@ -0,0 +1,78 @@
++"""Bounded HTTP connections and separate query/control admission budgets."""
++
++import json
++import threading
++from http.server import ThreadingHTTPServer
++
++
++class BoundedHTTPServer(ThreadingHTTPServer):
++    daemon_threads = True
++
++    def __init__(
++        self, address, handler, *, max_connections=32, max_queries=8, control_slots=4
++    ):
++        if (
++            min(max_queries, control_slots) < 1
++            or max_connections < max_queries + control_slots
++        ):
++            raise ValueError(
++                "connections must cover positive query and reserved control limits"
++            )
++        self._budget_lock = threading.Lock()
++        self._limits = {
++            "connections": max_connections,
++            "queries": max_queries,
++            "controls": control_slots,
++        }
++        self._active = {key: 0 for key in self._limits}
++        self._rejected = 0
++        super().__init__(address, handler)
++
++    def acquire(self, kind):
++        with self._budget_lock:
++            if self._active[kind] >= self._limits[kind]:
++                self._rejected += 1
++                return False
++            self._active[kind] += 1
++            return True
++
++    def release(self, kind):
++        with self._budget_lock:
++            self._active[kind] -= 1
++
++    def admission_snapshot(self):
++        with self._budget_lock:
++            return {
++                "limits": dict(self._limits),
++                "active": dict(self._active),
++                "rejected": self._rejected,
++            }
++
++    def process_request(self, request, client_address):
++        if not self.acquire("connections"):
++            body = json.dumps({"error": "Portal is busy; retry shortly"}).encode()
++            try:
++                request.settimeout(0.05)
++                request.sendall(
++                    b"HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n"
++                    b"Retry-After: 1\r\nContent-Type: application/json\r\nContent-Length: "
++                    + str(len(body)).encode()
++                    + b"\r\n\r\n"
++                    + body
++                )
++            except OSError:
++                pass
++            finally:
++                self.shutdown_request(request)
++            return
++        try:
++            super().process_request(request, client_address)
++        except BaseException:
++            self.release("connections")
++            raise
++
++    def process_request_thread(self, request, client_address):
++        try:
++            super().process_request_thread(request, client_address)
++        finally:
++            self.release("connections")
+--- a/robosys/web/server.py
++++ b/robosys/web/server.py
+@@ -19,6 +19,8 @@
+ from .access import PortalAccess
+ from .page import portal_assets, render_page
+ from .query import PortalData
++from .http_server import BoundedHTTPServer
++from ..task_adapters.result_index import IndexRecoveryPending
+ 
+ HTML = render_page()
+ 
+@@ -155,7 +157,37 @@
+         finally:
+             self.close_connection = True
+ 
++    def _admitted(self, handler):
++        path = urlparse(self.path).path
++        control = ((self.command == "GET" and path == "/api/health") or
++                   (self.command == "POST" and (path == "/api/system/shutdown" or
++                    (path.startswith("/api/experiments/") and path.endswith("/stop")))))
++        kind = "controls" if control else "queries"
++        if not self.server.acquire(kind):
++            return self._unavailable("Portal query capacity is occupied; retry shortly")
++        try:
++            return handler()
++        finally:
++            self.server.release(kind)
++
++    def _unavailable(self, message):
++        payload = json.dumps({"error": message, "retryable": True}).encode()
++        self.send_response(503)
++        self.send_header("Content-Type", "application/json")
++        self.send_header("Content-Length", str(len(payload)))
++        self.send_header("Retry-After", "1")
++        self.send_header("Connection", "close")
++        self.end_headers()
++        self.close_connection = True
++        self.wfile.write(payload)
++
+     def do_GET(self):
++        return self._admitted(self._do_GET)
++
++    def do_POST(self):
++        return self._admitted(self._do_POST)
++
++    def _do_GET(self):
+         if not self._check_access():
+             return
+         parsed = urlparse(self.path)
+@@ -194,7 +226,8 @@
+             if parsed.path == "/api/experiments":
+                 if self.experiments is None:
+                     return self._json({"experiments": [], "error": "experiment submission is disabled"}, status=503)
+-                return self._json(self.experiments.jobs_page(search=query.get("search", [""])[0][:200], **history_page()))
++                return self._json(self.experiments.jobs_page(search=query.get("search", [""])[0][:200],
++                                  cursor=query.get("cursor", [None])[0], **history_page()))
+             if parsed.path.startswith("/api/experiments/") and parsed.path.endswith("/traces"):
+                 if self.experiments is None:
+                     return self._json({"error": "experiment submission is disabled"}, status=503)
+@@ -375,13 +408,24 @@
+             if parsed.path == "/api/trace/schema":
+                 return self._json({"rows": self.data.traces.sql("SELECT type, name, tbl_name, sql FROM sqlite_master WHERE type IN ('table', 'index', 'view') ORDER BY type, name")})
+             if parsed.path == "/api/health":
+-                return self._json({"ok": True, "metrics_wal": str(self.data.metrics.wal_path), "trace_db": str(self.data.traces.db_path),
+-                                   "run_root": str(self.data.run_root)})
++                return self._json({"ok": True, "metrics_wal": str(getattr(getattr(self.data, "metrics", None), "wal_path", "")),
++                                   "trace_db": str(getattr(self.data.traces, "db_path", "")),
++                                   "run_root": str(getattr(self.data, "run_root", "")),
++                                   "admission": self.server.admission_snapshot(),
++                                   "retention": self.experiments.retention_report if self.experiments else None})
++        except IndexRecoveryPending as exc:
++            return self._unavailable(str(exc))
++        except QueryBudgetExceeded as exc:
++            return self._json({"error": str(exc)}, status=413)
++        except TimeoutError as exc:
++            return self._json({"error": str(exc)}, status=504)
++        except ValueError as exc:
++            return self._json({"error": str(exc)}, status=400)
+         except Exception as exc:
+             return self._json({"error": str(exc)}, status=500)
+         return self._json({"error": "not found"}, status=404)
+ 
+-    def do_POST(self):
++    def _do_POST(self):
+         path = urlparse(self.path).path
+         is_fork = path.startswith("/api/experiments/") and path.endswith("/fork")
+         is_stop = path.startswith("/api/experiments/") and path.endswith("/stop")
+@@ -496,6 +540,8 @@
+             self._json(job, status=202)
+         except KeyError as exc:
+             self._json({"error": f"not found: {exc}"}, status=404)
++        except IndexRecoveryPending as exc:
++            self._unavailable(str(exc))
+         except QueryBudgetExceeded as exc:
+             self._json({"error": str(exc)}, status=413)
+         except TimeoutError as exc:
+@@ -518,6 +564,9 @@
+     control_token: str | None = None,
+     allowed_hosts: tuple[str, ...] = (),
+     loopback_published: bool = False,
++    max_connections: int = 32,
++    max_queries: int = 8,
++    control_slots: int = 4,
+ ) -> ThreadingHTTPServer:
+     handler = type("RoboSysPortalHandler", (PortalHandler,), {})
+     handler.access = PortalAccess(host, control=experiment_manager is not None,
+@@ -530,7 +579,8 @@
+     # Keep the local development path zero-configuration.  Compose exposes
+     # Grafana on 127.0.0.1:3000; callers can override this for a remote host.
+     handler.grafana_url = grafana_url or os.getenv("ROBOSYS_GRAFANA_URL") or DEFAULT_GRAFANA_URL
+-    server = ThreadingHTTPServer((host, port), handler)
++    server = BoundedHTTPServer((host, port), handler, max_connections=max_connections,
++                               max_queries=max_queries, control_slots=control_slots)
+     server.control_token = handler.access.token
+     return server
+ 
+@@ -550,6 +600,9 @@
+     parser.add_argument("--grafana-url", default=os.getenv("ROBOSYS_GRAFANA_URL", DEFAULT_GRAFANA_URL), help="full Grafana dashboard URL to embed")
+     parser.add_argument("--no-auto-grafana", action="store_true", help="do not start the local Grafana Compose services automatically")
+     parser.add_argument("--retention-policy", help="opt in to hourly artifact cleanup using this policy JSON")
++    parser.add_argument("--max-connections", type=int, default=32)
++    parser.add_argument("--max-queries", type=int, default=8)
++    parser.add_argument("--control-slots", type=int, default=4)
+     parser.add_argument("--project-root", default=".", help="project root used for config discovery and experiment submission")
+     parser.add_argument("--config-root", default="configs", help="directory containing selectable JSON configs (including subdirectories)")
+     parser.add_argument("--experiment-output-root", default="data/experiments", help="root for submitted experiment logs and artifacts")
+@@ -608,6 +661,9 @@
+             allowed_hosts=tuple(args.allowed_host),
+             control_token=os.getenv("ROBOSYS_PORTAL_TOKEN"),
+             loopback_published=args.loopback_published,
++            max_connections=args.max_connections,
++            max_queries=args.max_queries,
++            control_slots=args.control_slots,
+         )
+     except OSError as exc:
+         data.traces.close()
+--- /dev/null
++++ b/scripts/benchmark_history.py
+@@ -0,0 +1,156 @@
++"""Synthetic history scale and batch-memory comparison; no models or hardware.
++
++Run this script with cwd set to the checkout being measured. Legacy import is
++prepared once; registry startup measures subsequent restarts, not migration.
++"""
++
++import argparse
++import asyncio
++import gc
++import json
++import statistics
++import sys
++import tempfile
++import time
++import tracemalloc
++from pathlib import Path
++from types import SimpleNamespace
++
++sys.path.insert(0, str(Path.cwd()))
++
++
++def registry(root, count):
++    from robosys.web.experiments import ExperimentManager
++
++    root.mkdir()
++    jobs = [
++        {
++            "job_id": f"job-{i:06}",
++            "status": "completed",
++            "resources_released": True,
++            "submitted_at": f"2026-09-20T00:00:{i % 60:02}+00:00",
++            "parameters": {"payload": "x" * 2048},
++            "output_root": str(root / str(i)),
++            "summary_path": str(root / str(i) / "summary.json"),
++            "status_path": str(root / str(i) / "status.json"),
++        }
++        for i in range(count)
++    ]
++    legacy = root / "jobs.json"
++    legacy.write_text(json.dumps(jobs))
++    del jobs
++    # Prepare the one-time migration before measuring a normal Portal restart.
++    first = ExperimentManager(project_root=root, output_root=root)
++    first.close()
++    del first
++    gc.collect()
++    tracemalloc.start()
++    start = time.perf_counter()
++    manager = ExperimentManager(project_root=root, output_root=root)
++    startup = (time.perf_counter() - start) * 1000
++    allocated = tracemalloc.get_traced_memory()[0]
++    manager._refresh_job = lambda key: manager._jobs[key]
++    samples = []
++    for _ in range(5):
++        start = time.perf_counter()
++        page = manager.jobs_page(limit=25)
++        samples.append((time.perf_counter() - start) * 1000)
++        assert page["total"] == count and len(page["experiments"]) == 25
++    original_size = legacy.stat().st_size
++    manager._jobs["job-000000"]["status"] = "cancelled"
++    start = time.perf_counter()
++    manager._persist_jobs()
++    update = (time.perf_counter() - start) * 1000
++    peak = tracemalloc.get_traced_memory()[1]
++    tracemalloc.stop()
++    manager.close()
++    return {
++        "records": count,
++        "startup_ms": startup,
++        "startup_allocated_bytes": allocated,
++        "peak_allocated_bytes": peak,
++        "list_25_median_ms": statistics.median(samples),
++        "list_25_samples_ms": samples,
++        "single_update_ms": update,
++        "legacy_json_bytes": original_size,
++        "sqlite_registry": (root / "jobs.sqlite3").exists(),
++    }
++
++
++async def memory(root, count):
++    from robosys.infra.params import Params
++    from robosys.task_adapters import evaluator
++    from robosys.task_adapters.base import (
++        BaseTaskAdapter,
++        ConfiguredTaskAdapter,
++        TaskCase,
++    )
++
++    class Adapter(BaseTaskAdapter):
++        def enumerate_cases(self, *, adapter_id, params):
++            for i in range(count):
++                yield TaskCase(
++                    adapter_id=adapter_id,
++                    task_id="memory",
++                    environment_id="fake",
++                    index=i,
++                    episode=i,
++                )
++
++    class Backend:
++        max_workers = 4
++
++        async def execute(self, configured, case, context):
++            await asyncio.sleep(0.001)
++            return {
++                "task_success": True,
++                "context": {"raw_output": str(case.index % 10) * (256 * 1024)},
++            }
++
++    gc.collect()
++    tracemalloc.start()
++    start = time.perf_counter()
++    result = await evaluator.evaluate_task_adapters(
++        config_path=root / "config.json",
++        params=Params({}),
++        adapters=[ConfiguredTaskAdapter("a", SimpleNamespace(name="fake"), Adapter())],
++        output_dir=root,
++        run_id="batch",
++        run_episode=None,
++        execution_backend=Backend(),
++        options={"memory_mode": "disabled"},
++    )
++    elapsed = time.perf_counter() - start
++    current, peak = tracemalloc.get_traced_memory()
++    tracemalloc.stop()
++    assert result["num_episodes"] == count
++    return {
++        "cases": count,
++        "payload_bytes_per_case": 256 * 1024,
++        "workers": 4,
++        "elapsed_s": elapsed,
++        "peak_allocated_bytes": peak,
++        "final_allocated_bytes": current,
++    }
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--output", required=True)
++    parser.add_argument("--history", type=int, default=20000)
++    parser.add_argument("--cases", type=int, default=100)
++    args = parser.parse_args()
++    with tempfile.TemporaryDirectory(prefix="rc-history-benchmark-") as tmp:
++        root = Path(tmp).resolve()
++        result = {
++            "checkout": str(Path.cwd()),
++            "workload": "synthetic registry and 256 KiB fake results; tracemalloc enabled",
++            "registry": registry(root / "registry", args.history),
++            "memory": asyncio.run(memory(root, args.cases)),
++        }
++    Path(args.output).write_text(json.dumps(result, indent=2) + "\n")
++    print(json.dumps(result))
++
++
++if __name__ == "__main__":
++    main()
+--- a/scripts/maintain_experiments.py
++++ b/scripts/maintain_experiments.py
+@@ -1,4 +1,4 @@
+-"""Preview/apply artifact retention or rebuild an episode index for a legacy run."""
++"""Preview/resume artifact retention or recover an index from individual case artifacts."""
+ 
+ import argparse
+ import json
+@@ -7,8 +7,7 @@
+ 
+ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ 
+-from robosys.runtime.retention import RetentionPolicy, _terminal_lease, prune_artifacts
+-from robosys.task_adapters.evaluator import _compact_episode
++from robosys.runtime.retention import RetentionPolicy, prune_artifacts
+ from robosys.task_adapters.result_index import ResultIndex
+ 
+ 
+@@ -16,7 +15,7 @@
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("--output-root", default="data/experiments")
+     parser.add_argument(
+-        "--policy", help="JSON with logs_days, traces_days, videos_days and failed_days"
++        "--policy", help="JSON with logs_days, traces_days, videos_days, failed_days and min_free_gb"
+     )
+     parser.add_argument(
+         "--apply",
+@@ -30,37 +29,11 @@
+     args = parser.parse_args()
+     if args.index_run:
+         root = Path(args.index_run).resolve()
+-        with _terminal_lease(root) as safe:
+-            if not safe:
+-                parser.error(
+-                    "run is active, queued for resume, or has no verifiable run lease"
+-                )
+-            summary = json.loads((root / "summary.json").read_text())
+-            from robosys.web.experiments import ExperimentManager
+-
+-            records = [
+-                dict(
+-                    item,
+-                    adapter_id=adapter,
+-                    global_index=ExperimentManager._episode_index(item, seq),
+-                )
+-                for seq, (adapter, item) in enumerate(
+-                    ExperimentManager._iter_summary_episodes(summary)
+-                )
+-            ]
+-            ResultIndex(root).initialize(_compact_episode(item) for item in records)
+-            status_path = root / "status.json"
+-            if status_path.exists():
+-                from robosys.task_adapters.evaluator import write_json
+-
+-                status = json.loads(status_path.read_text())
+-                status["summary"] = ExperimentManager._compact_summary(summary)
+-                write_json(status_path, status)
+-        print(
+-            json.dumps(
+-                {"indexed": len(records), "path": str(root / "episodes.sqlite3")}
+-            )
+-        )
++        try:
++            result = ResultIndex(root).recover()
++        except (RuntimeError, ValueError) as exc:
++            parser.error(str(exc))
++        print(json.dumps(result, ensure_ascii=False))
+     else:
+         policy = RetentionPolicy(
+             **(json.loads(Path(args.policy).read_text()) if args.policy else {})
+--- a/tests/test_experiment_manager.py
++++ b/tests/test_experiment_manager.py
+@@ -1185,8 +1185,8 @@
+     persisted = json.loads(status_path.read_text(encoding="utf-8"))
+     assert persisted["status"] == "cancelled"
+     assert persisted["cancel_reason"] == "user_stop"
+-    jobs = json.loads(manager.jobs_path.read_text(encoding="utf-8"))
+-    assert jobs[0]["status"] == "cancelled"
++    restored = ExperimentManager(project_root=tmp_path, output_root=output_root)
++    assert restored._jobs[job_id]["status"] == "cancelled"
+ 
+ 
+ def test_stop_job_does_not_hide_a_failed_release(tmp_path: Path, monkeypatch):
+--- /dev/null
++++ b/tests/test_history_reliability.py
+@@ -0,0 +1,615 @@
++"""Fault, scale, and admission checks for the previous audit's five repairs."""
++
++import asyncio
++import fcntl
++import gc
++import http.client
++import json
++import os
++import sqlite3
++import threading
++import time
++import weakref
++from contextlib import contextmanager
++from types import SimpleNamespace
++
++import pytest
++from test_performance_controls import Cases, manager_job
++
++from robosys.infra.params import Params
++from robosys.runtime.retention import RetentionPolicy, prune_artifacts
++from robosys.storage.jobs import JobStore
++from robosys.task_adapters.base import ConfiguredTaskAdapter
++from robosys.task_adapters.evaluator import evaluate_task_adapters, write_json
++from robosys.task_adapters.result_index import IndexRecoveryPending, ResultIndex
++from robosys.task_adapters.result_writer import ResultWriter
++from robosys.web.experiments import ExperimentManager
++from robosys.web.server import build_server
++
++
++def terminal_run(root, name):
++    directory = root / name
++    (directory / ".control").mkdir(parents=True)
++    (directory / ".control/run.lock").touch()
++    return {
++        "job_id": name,
++        "status": "completed",
++        "output_root": str(directory),
++        "status_path": str(directory / "status.json"),
++        "summary_path": str(directory / "summary.json"),
++        "submitted_at": "2026-09-20T00:00:00+00:00",
++    }
++
++
++def old_file(path):
++    path.write_text("fixture")
++    stale = time.time() - 120 * 86400
++    os.utime(path, (stale, stale))
++
++
++def test_retention_resumes_large_metadata_directories_and_rotates_runs(tmp_path):
++    store = JobStore(tmp_path)
++    a, b = terminal_run(tmp_path, "a"), terminal_run(tmp_path, "b")
++    store["a"], store["b"] = a, b
++    store.flush()
++    for number in range(45):
++        (tmp_path / "a" / f"case-{number}.json").write_text("{}")
++    old_file(tmp_path / "a" / "old.log")
++    old_file(tmp_path / "b" / "old.log")
++    reports = []
++    for _ in range(30):
++        reports.append(
++            prune_artifacts(tmp_path, RetentionPolicy(), apply=True, max_entries=8)
++        )
++        if (
++            not (tmp_path / "a/old.log").exists()
++            and not (tmp_path / "b/old.log").exists()
++        ):
++            break
++    assert not (tmp_path / "a/old.log").exists()
++    assert not (tmp_path / "b/old.log").exists()
++    assert any("b/old.log" in report["files"] for report in reports[:4])
++    assert len(list((tmp_path / "a").glob("*.json"))) == 45
++    assert len(reports) < 30
++
++
++def test_retention_preview_preserves_cursor_and_rechecks_run_lock(tmp_path):
++    store = JobStore(tmp_path)
++    store["a"] = terminal_run(tmp_path, "a")
++    store.flush()
++    for number in range(15):
++        (tmp_path / "a" / f"{number}.json").write_text("{}")
++    video = tmp_path / "a/old.mp4"
++    old_file(video)
++    prune_artifacts(tmp_path, RetentionPolicy(), apply=True, max_entries=4)
++    before = (tmp_path / ".retention.sqlite3").read_bytes()
++    preview = prune_artifacts(tmp_path, RetentionPolicy(min_free_gb=10**8))
++    assert preview["disk"]["low_space"] and video.exists()
++    assert (tmp_path / ".retention.sqlite3").read_bytes() == before
++    with (tmp_path / "a/.control/run.lock").open("a+") as lock:
++        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
++        result = prune_artifacts(tmp_path, RetentionPolicy(), apply=True)
++        assert result["skipped_runs"] == ["a"] and video.exists()
++    prune_artifacts(tmp_path, RetentionPolicy(), apply=True)
++    assert not video.exists()
++
++
++def test_retention_cursor_advances_when_prefix_replay_exceeds_budget(
++    tmp_path, monkeypatch
++):
++    from robosys.runtime import retention
++
++    store = JobStore(tmp_path)
++    store["a"] = terminal_run(tmp_path, "a")
++    store.flush()
++    for number in range(15):
++        (tmp_path / "a" / f"{number}.json").write_text("{}")
++    prune_artifacts(tmp_path, RetentionPolicy(), apply=True, max_entries=4)
++    with sqlite3.connect(tmp_path / ".retention.sqlite3") as conn:
++        before = conn.execute(
++            "SELECT position FROM directories WHERE path='.'"
++        ).fetchone()[0]
++    assert before > 0
++    clock = [0.0]
++    original_scandir = os.scandir
++
++    @contextmanager
++    def slow_scandir(directory):
++        with original_scandir(directory) as entries:
++
++            def delayed():
++                for number, entry in enumerate(entries):
++                    if number == 0:
++                        clock[0] += 1.0
++                    yield entry
++
++            yield delayed()
++
++    monkeypatch.setattr(
++        retention, "time", SimpleNamespace(time=time.time, monotonic=lambda: clock[0])
++    )
++    monkeypatch.setattr(retention.os, "scandir", slow_scandir)
++    report = prune_artifacts(tmp_path, RetentionPolicy(), apply=True, budget_s=0.2)
++    with sqlite3.connect(tmp_path / ".retention.sqlite3") as conn:
++        after = conn.execute(
++            "SELECT position FROM directories WHERE path='.'"
++        ).fetchone()[0]
++    assert report["truncated"] and after > before
++
++
++def test_job_registry_migration_is_once_and_writes_only_changed_rows(tmp_path):
++    legacy = tmp_path / "jobs.json"
++    legacy.write_text(
++        json.dumps([{"job_id": "old", "status": "completed", "progress": {"a": 1}}])
++    )
++    original = legacy.read_bytes()
++    store = JobStore(tmp_path, cache_size=8)
++    for number in range(1000):
++        key = f"job-{number:04}"
++        store[key] = {
++            "job_id": key,
++            "status": "completed",
++            "submitted_at": "2026-09-20T00:00:00+00:00",
++        }
++    store.flush()
++    assert len(store) == 1001 and len(store._cache) <= 8
++    with sqlite3.connect(store.path) as conn:
++        conn.executescript(
++            "CREATE TABLE edits(id TEXT); CREATE TRIGGER changed AFTER UPDATE ON jobs BEGIN INSERT INTO edits VALUES (new.job_id); END;"
++        )
++    store["old"]["progress"]["a"] = 2
++    store.flush()
++    with sqlite3.connect(store.path) as conn:
++        assert conn.execute("SELECT id FROM edits").fetchall() == [("old",)]
++    assert legacy.read_bytes() == original
++    assert JobStore(tmp_path)["old"]["progress"]["a"] == 2
++
++
++def test_job_cursor_does_not_repeat_records_after_new_submission(tmp_path):
++    store = JobStore(tmp_path)
++    for number in range(8):
++        key = f"j{number}"
++        store[key] = {
++            "job_id": key,
++            "status": "completed",
++            "submitted_at": "2026-09-20T00:00:00+00:00",
++        }
++    first = store.page(limit=3)
++    store["new"] = {
++        "job_id": "new",
++        "status": "waiting",
++        "submitted_at": "2026-09-21T00:00:00+00:00",
++    }
++    second = store.page(limit=3, cursor=first["next_cursor"])
++    assert first["job_ids"] == ["j7", "j6", "j5"]
++    assert second["job_ids"] == ["j4", "j3", "j2"]
++    with pytest.raises(ValueError, match="cursor"):
++        store.page(cursor=first["next_cursor"], search="different")
++
++
++def test_scheduler_does_not_refresh_terminal_history(tmp_path, monkeypatch):
++    manager, _ = manager_job(tmp_path, "completed")
++    for number in range(200):
++        key = str(number)
++        manager._jobs[key] = {
++            **manager._jobs["run"],
++            "job_id": key,
++            "resources_released": True,
++        }
++    manager._jobs["active"] = {
++        **manager._jobs["run"],
++        "job_id": "active",
++        "status": "running",
++    }
++    seen = []
++    monkeypatch.setattr(
++        manager, "_refresh_job", lambda key: seen.append(key) or manager._jobs[key]
++    )
++    manager._dispatch_waiting()
++    assert seen == ["active"]
++    assert len(manager._jobs._cache) <= 128
++
++
++def episode(root, index, **extra):
++    path = root / "task" / f"episode_{index:03}.json"
++    record = {
++        "adapter_id": "a",
++        "global_index": index,
++        "status": "completed",
++        "task_success": True,
++        "episode_json": str(path),
++        **extra,
++    }
++    write_json(path, record)
++    return record
++
++
++@pytest.mark.parametrize("damaged", [False, True])
++def test_recovery_uses_case_artifacts_without_final_summary(tmp_path, damaged):
++    root = tmp_path / "run"
++    terminal_run(tmp_path, "run")
++    records = [episode(root, 0), episode(root, 1, status="error", task_success=False)]
++    index = ResultIndex(root)
++    index.initialize([records[0]], clean=False)
++    write_json(root / "summary.json", {"num_episodes": 0, "task_adapters": {}})
++    write_json(root / "status.json", {"status": "running", "config_hash": "preserved"})
++    write_json(root / "task/attempts/stale/episode_099.json", records[0])
++    if damaged:
++        index.path.write_bytes(b"invalid sqlite database")
++    result = index.recover()
++    assert result["indexed"] == 2 and not index.needs_recovery()
++    assert [item["global_index"] for item in index.page()["episodes"]] == [0, 1]
++    status = json.loads((root / "status.json").read_text())
++    assert status["status"] == "failed" and status["config_hash"] == "preserved"
++    assert status["summary"]["num_errors"] == 1 and status["summary"]["successes"] == 1
++
++
++def test_recovery_invalid_artifact_preserves_existing_index(tmp_path):
++    root = tmp_path / "run"
++    terminal_run(tmp_path, "run")
++    record = episode(root, 0)
++    index = ResultIndex(root)
++    index.initialize([record], clean=False)
++    (root / "task/episode_001.json").write_text("{broken")
++    with pytest.raises(ValueError):
++        index.recover()
++    assert index.get("a", 0)["status"] == "completed"
++    assert index.needs_recovery()
++    assert not list(root.glob(".episodes-recovery-*"))
++
++
++def test_recovery_refuses_live_or_queued_run(tmp_path):
++    root = tmp_path / "run"
++    terminal_run(tmp_path, "run")
++    episode(root, 0)
++    index = ResultIndex(root)
++    with (root / ".control/run.lock").open("a+") as lock:
++        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
++        with pytest.raises(RuntimeError, match="active"):
++            index.recover()
++    (root / ".control/resume.json").write_text("{}")
++    with pytest.raises(RuntimeError, match="resume"):
++        index.recover()
++    assert not index.path.exists()
++
++
++def test_portal_recovers_dirty_index_after_restart(tmp_path):
++    manager, root = manager_job(tmp_path, "failed")
++    (root / ".control").mkdir()
++    (root / ".control/run.lock").touch()
++    records = [episode(root, 0), episode(root, 1)]
++    ResultIndex(root).initialize(records[:1], clean=False)
++    manager._jobs["run"]["index_recovery"] = {"status": "pending"}
++    manager._persist_jobs()
++    restored = ExperimentManager(project_root=tmp_path, output_root=tmp_path / "runs")
++    try:
++        restored.get_job("run")
++        deadline = time.monotonic() + 3
++        while True:
++            try:
++                result = restored.episodes_page("run")
++                break
++            except IndexRecoveryPending:
++                assert time.monotonic() < deadline
++                time.sleep(0.01)
++        assert len(result["episodes"]) == 2
++        assert restored.get_job("run")["summary"]["successes"] == 2
++    finally:
++        restored.close()
++
++
++def test_writer_cancellation_waits_for_accepted_writes_and_keeps_dirty_marker(tmp_path):
++    async def scenario():
++        entered, release = threading.Event(), threading.Event()
++
++        def slow_write(path, value):
++            entered.set()
++            assert release.wait(3)
++            write_json(path, value)
++
++        writer = ResultWriter(tmp_path, slow_write, capacity=1)
++        await writer.start()
++        task = asyncio.create_task(writer.write(tmp_path / "one.json", {"value": 1}))
++        assert await asyncio.to_thread(entered.wait, 1)
++        task.cancel()
++        with pytest.raises(asyncio.CancelledError):
++            await task
++        closing = asyncio.create_task(writer.close())
++        await asyncio.sleep(0.02)
++        assert not closing.done()
++        release.set()
++        await closing
++        assert json.loads((tmp_path / "one.json").read_text()) == {"value": 1}
++        assert writer.index.needs_recovery()
++
++    asyncio.run(scenario())
++
++
++def test_batch_releases_full_results_but_keeps_artifacts_and_memory(tmp_path):
++    class LargeContext(dict):
++        pass
++
++    refs, peaks = [], []
++
++    class Backend:
++        max_workers = 1
++
++        async def execute(self, configured, case, context):
++            gc.collect()
++            peaks.append(sum(ref() is not None for ref in refs))
++            payload = LargeContext(observations=["x" * 100000])
++            refs.append(weakref.ref(payload))
++            return {
++                "task_success": True,
++                "context": payload,
++                "ltm_summary": {"case": case.index},
++            }
++
++    result = asyncio.run(
++        evaluate_task_adapters(
++            config_path=tmp_path / "config.json",
++            params=Params({}),
++            adapters=[
++                ConfiguredTaskAdapter("a", SimpleNamespace(name="fake"), Cases(20))
++            ],
++            output_dir=tmp_path,
++            run_id="batch",
++            run_episode=None,
++            execution_backend=Backend(),
++            options={"memory_mode": "snapshot"},
++        )
++    )
++    assert max(peaks) <= 1 and result["num_episodes"] == 20
++    assert (
++        len(
++            json.loads((tmp_path / "batch/long_term_memory.json").read_text())[
++                "records"
++            ]
++        )
++        == 20
++    )
++    assert (
++        len(
++            [
++                path
++                for path in (tmp_path / "batch/test").glob("episode_*.json")
++                if not path.name.endswith(".memory.json")
++            ]
++        )
++        == 20
++    )
++    assert not ResultIndex(tmp_path / "batch").needs_recovery()
++
++
++def request(server, method, path):
++    conn = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=2)
++    try:
++        conn.request(
++            method,
++            path,
++            body="{}" if method == "POST" else None,
++            headers={"Content-Type": "application/json"},
++        )
++        response = conn.getresponse()
++        return response.status, dict(response.getheaders()), json.loads(response.read())
++    finally:
++        conn.close()
++
++
++def test_query_overload_preserves_health_and_stop_capacity(tmp_path, monkeypatch):
++    manager, _ = manager_job(tmp_path, "waiting")
++    entered, release = threading.Event(), threading.Event()
++
++    def blocked_page(**kwargs):
++        entered.set()
++        assert release.wait(3)
++        return {"experiments": []}
++
++    monkeypatch.setattr(manager, "jobs_page", blocked_page)
++    server = build_server(
++        "127.0.0.1",
++        0,
++        SimpleNamespace(traces=None),
++        experiment_manager=manager,
++        max_queries=1,
++        control_slots=1,
++        max_connections=4,
++    )
++    thread = threading.Thread(target=server.serve_forever, daemon=True)
++    thread.start()
++    active = threading.Thread(target=lambda: request(server, "GET", "/api/experiments"))
++    active.start()
++    try:
++        assert entered.wait(1)
++        status, headers, _ = request(server, "GET", "/api/experiments")
++        assert status == 503 and headers["Retry-After"] == "1"
++        assert request(server, "GET", "/api/health")[0] == 200
++        assert request(server, "POST", "/api/experiments/run/stop")[0] == 200
++        assert manager.get_job("run")["status"] == "cancelled"
++    finally:
++        release.set()
++        active.join()
++        server.shutdown()
++        server.server_close()
++        thread.join()
++
++
++def test_http_connection_count_is_bounded_and_permits_are_released():
++    import socket
++
++    server = build_server(
++        "127.0.0.1",
++        0,
++        SimpleNamespace(traces=None),
++        max_queries=1,
++        control_slots=1,
++        max_connections=2,
++    )
++    serving = threading.Thread(target=server.serve_forever, daemon=True)
++    serving.start()
++    sockets = []
++    try:
++        for _ in range(2):
++            connection = socket.create_connection(
++                ("127.0.0.1", server.server_port), timeout=1
++            )
++            connection.sendall(b"GET /api/health HTTP/1.1\r\n")
++            sockets.append(connection)
++        deadline = time.monotonic() + 1
++        while server.admission_snapshot()["active"]["connections"] < 2:
++            assert time.monotonic() < deadline
++            time.sleep(0.005)
++        status, headers, _ = request(server, "GET", "/api/health")
++        assert status == 503 and headers["Retry-After"] == "1"
++        for connection in sockets:
++            connection.close()
++        sockets.clear()
++        deadline = time.monotonic() + 1
++        while server.admission_snapshot()["active"]["connections"]:
++            assert time.monotonic() < deadline
++            time.sleep(0.005)
++        assert request(server, "GET", "/api/health")[0] == 200
++    finally:
++        for connection in sockets:
++            connection.close()
++        server.shutdown()
++        server.server_close()
++        serving.join()
++
++
++def test_recovery_status_write_failure_remains_retryable(tmp_path, monkeypatch):
++    from robosys.task_adapters import evaluator
++
++    root = tmp_path / "run"
++    terminal_run(tmp_path, "run")
++    episode(root, 0)
++    index = ResultIndex(root)
++    original = evaluator.write_json
++
++    def fail_status(path, value):
++        if path.name == "status.json":
++            raise OSError("simulated disk error")
++        original(path, value)
++
++    monkeypatch.setattr(evaluator, "write_json", fail_status)
++    with pytest.raises(OSError, match="disk error"):
++        index.recover()
++    assert index.needs_recovery()
++    monkeypatch.setattr(evaluator, "write_json", original)
++    assert index.recover()["indexed"] == 1
++    assert not index.needs_recovery()
++
++
++def test_stop_during_initial_case_write_still_records_cancelled_case(
++    tmp_path, monkeypatch
++):
++    from robosys.task_adapters import evaluator
++
++    entered, release = threading.Event(), threading.Event()
++    calls = []
++    original = evaluator.write_json
++
++    def slow_initial(path, value):
++        if path.name.startswith("episode_") and value.get("status") == "running":
++            entered.set()
++            assert release.wait(3)
++        original(path, value)
++
++    monkeypatch.setattr(evaluator, "write_json", slow_initial)
++
++    class Backend:
++        max_workers = 1
++
++        async def execute(self, *args):
++            calls.append("executed")
++            return {"task_success": True}
++
++    async def scenario():
++        task = asyncio.create_task(
++            evaluator.evaluate_task_adapters(
++                config_path=tmp_path / "config.json",
++                params=Params({}),
++                adapters=[
++                    ConfiguredTaskAdapter("a", SimpleNamespace(name="fake"), Cases(1))
++                ],
++                output_dir=tmp_path,
++                run_id="run",
++                run_episode=None,
++                execution_backend=Backend(),
++            )
++        )
++        try:
++            assert await asyncio.to_thread(entered.wait, 2)
++            original(
++                tmp_path / "run/.control/command-stop.json",
++                {"action": "stop", "tasks": None},
++            )
++            await asyncio.sleep(0.15)
++        finally:
++            release.set()
++        result = await asyncio.wait_for(task, 3)
++        assert result["num_cancelled"] == 1 and result["num_episodes"] == 1
++        assert calls == []
++        assert ResultIndex(tmp_path / "run").get("a", 0)["status"] == "cancelled"
++
++    asyncio.run(scenario())
++
++
++def test_queue_longer_than_cache_keeps_started_job_durable(tmp_path, monkeypatch):
++    manager, root = manager_job(tmp_path, "completed")
++    for number in range(160):
++        key = f"queued-{number:03}"
++        manager._jobs[key] = {
++            **manager._jobs["run"],
++            "job_id": key,
++            "status": "waiting",
++            "submitted_at": f"{number:06}",
++            "command": ["fake-runner"],
++            "log_path": str(root / f"{key}.log"),
++        }
++    process = SimpleNamespace(pid=987654, poll=lambda: None)
++    monkeypatch.setattr(
++        "robosys.web.experiments.subprocess.Popen", lambda *args, **kwargs: process
++    )
++    monkeypatch.setattr(
++        "robosys.runtime.processes.register_process",
++        lambda *args, **kwargs: {"pid": process.pid},
++    )
++    manager._dispatch_waiting()
++    restored = JobStore(manager.output_root)
++    assert restored["queued-000"]["status"] == "running"
++    assert restored["queued-000"]["pid"] == process.pid
++    assert restored["queued-001"]["status"] == "waiting"
++
++
++def test_portal_retries_recovery_after_bad_artifact_is_repaired(tmp_path):
++    manager, root = manager_job(tmp_path, "failed")
++    (root / ".control").mkdir()
++    (root / ".control/run.lock").touch()
++    record = episode(root, 0)
++    bad = root / "task/episode_001.json"
++    bad.write_text("{invalid")
++    ResultIndex(root).initialize([record], clean=False)
++    try:
++        manager.get_job("run")
++        manager._recovery_queue.join()
++        assert manager._jobs["run"]["index_recovery"]["status"] == "failed"
++        episode(root, 1)
++        manager._jobs["run"]["index_recovery"]["retry_after"] = 0
++        manager.get_job("run")
++        manager._recovery_queue.join()
++        assert len(manager.episodes_page("run")["episodes"]) == 2
++    finally:
++        manager.close()
++
++
++def test_registry_byte_budget_includes_unicode_and_unflushed_records(tmp_path):
++    store = JobStore(tmp_path, cache_size=128, cache_bytes=4000)
++    for number in range(6):
++        key = str(number)
++        store[key] = {"job_id": key, "status": "completed", "label": "汉" * 1000}
++        assert len(store._cache) == 1
++    store.flush()
++    assert len(store) == 6
++    assert store["0"]["label"] == "汉" * 1000
++    assert len(store._cache) == 1

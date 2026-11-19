@@ -1,0 +1,100 @@
+{
+  "controlled_reset": true,
+  "benchmark": "robocasa365",
+  "class": "robosys_robocasa365.native.benchmark:RoboCasa365Benchmark",
+  "upstream_class": "vla_eval.benchmarks.robocasa365.benchmark:RoboCasa365Benchmark",
+  "params": {
+    "split": "pretrain",
+    "seed": 0,
+    "camera_size": 64,
+    "success_check_interval": 16,
+    "max_steps": 8,
+    "tasks": [
+      "CloseBlenderLid"
+    ]
+  },
+  "actions": [
+    {
+      "actions": [
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        -0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actions": [
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "seed": 0,
+  "render": "gpu"
+}

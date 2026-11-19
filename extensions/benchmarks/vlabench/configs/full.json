@@ -1,0 +1,16 @@
+{
+  "episodes_per_task": 50,
+  "params": {
+    "evaluation_tracks": [
+      "track_1_in_distribution",
+      "track_2_cross_category",
+      "track_3_common_sense",
+      "track_4_semantic_instruction",
+      "track_6_unseen_texture"
+    ],
+    "robot": "franka"
+  },
+  "benchmark_id": "vlabench_benchmark",
+  "source_config": "VLABench/configs/evaluation/tracks/*.json",
+  "source_commit": "cf588fe60c0c7282174fe979f5913170cfe69017"
+}

@@ -1,0 +1,78 @@
+{
+  "date": "2026-09-21",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "python": "3.11.10 | packaged by conda-forge | (main, Oct 16 2024, 01:26:25) [Clang 17.0.6 ]",
+  "baseline": "/tmp/example-run",
+  "scope": "previous five audit issues only; latest four intentionally deferred",
+  "python_suite": {
+    "command": "/path/to/user/miniconda3/bin/python -m pytest -q",
+    "exit_code": 0,
+    "passed": 526,
+    "skipped": 1,
+    "failed": 0,
+    "errors": 0,
+    "warnings": 1,
+    "log": "pytest.log"
+  },
+  "targeted_tests": {
+    "command": "/path/to/user/miniconda3/bin/python -m pytest -q tests/test_history_reliability.py",
+    "exit_code": 0,
+    "passed": 20,
+    "log": "targeted-tests.log"
+  },
+  "frontend_suite": {
+    "command": "node --test tests/test_graph_routes.js tests/test_trajectory_media.js",
+    "exit_code": 0,
+    "passed": 20,
+    "log": "node-tests.log"
+  },
+  "lint": {
+    "exit_code": 0,
+    "log": "lint.log",
+    "new_and_reworked_modules": "default Ruff rules",
+    "existing_large_modules": "fatal rules E9,F63,F7,F82"
+  },
+  "cli_fixture_checks": "cli-checks.json",
+  "benchmarks": {
+    "runs_per_stage": 3,
+    "order": "history before/after pair, runtime before/after pair; repeat 3 times sequentially",
+    "registry_records": 20000,
+    "registry_startup_excludes_one_time_migration": true,
+    "registry_list_refresh_stubbed": true,
+    "memory_cases": 100,
+    "payload_bytes_per_case": 262144,
+    "memory_workers": 4,
+    "memory_measurement": "tracemalloc; Python allocations, not process RSS",
+    "synthetic_batch_cases": 300,
+    "synthetic_workers": 8,
+    "real_model_gpu_robot": false,
+    "long_running_soak_test": false,
+    "preliminary_samples": "preliminary/",
+    "summary": "comparison.json"
+  },
+  "changed_sources": [
+    "configs/operations/retention-policy.json",
+    "robosys/runtime/retention.py",
+    "robosys/storage/jobs.py",
+    "robosys/task_adapters/evaluator.py",
+    "robosys/task_adapters/result_index.py",
+    "robosys/task_adapters/result_writer.py",
+    "robosys/web/experiments.py",
+    "robosys/web/http_server.py",
+    "robosys/web/server.py",
+    "scripts/benchmark_history.py",
+    "scripts/maintain_experiments.py",
+    "tests/test_experiment_manager.py",
+    "tests/test_history_reliability.py"
+  ],
+  "deferred_sources_unchanged": true,
+  "operational_changes": {
+    "restarted_live_portal": false,
+    "ran_real_experiments": false,
+    "enabled_retention_on_user_history": false,
+    "committed_changes": false
+  },
+  "scope_patch": "changes.patch",
+  "source_hashes": "source-manifest.json",
+  "baseline_hashes": "baseline-manifest.json"
+}

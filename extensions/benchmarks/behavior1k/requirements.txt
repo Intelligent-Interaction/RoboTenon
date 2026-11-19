@@ -1,0 +1,37 @@
+# Python 3.10; requires NVIDIA Isaac Sim EULA acceptance and a compatible RTX GPU.
+--extra-index-url https://pypi.nvidia.com
+numpy<2
+setuptools<=79
+torch==2.6.0
+torchvision==0.21.0
+torchaudio==2.6.0
+omniverse-kit==106.5.0.162521
+isaacsim==4.5.0.0
+isaacsim-kernel==4.5.0.0
+isaacsim-app==4.5.0.0
+isaacsim-core==4.5.0.0
+isaacsim-benchmark==4.5.0.0
+isaacsim-code-editor==4.5.0.0
+isaacsim-ros1==4.5.0.0
+isaacsim-cortex==4.5.0.0
+isaacsim-example==4.5.0.0
+isaacsim-gui==4.5.0.0
+isaacsim-robot-setup==4.5.0.0
+isaacsim-ros2==4.5.0.0
+isaacsim-template==4.5.0.0
+isaacsim-test==4.5.0.0
+isaacsim-utils==4.5.0.0
+isaacsim-storage==4.5.0.0
+isaacsim-asset==4.5.0.0
+isaacsim-sensor==4.5.0.0
+isaacsim-robot-motion==4.5.0.0
+isaacsim-robot==4.5.0.0
+isaacsim-replicator==4.5.0.0
+isaacsim-rl==4.5.0.0
+isaacsim-extscache-physics==4.5.0.0
+isaacsim-extscache-kit==4.5.0.0
+isaacsim-extscache-kit-sdk==4.5.0.0
+cffi==1.17.1
+git+https://github.com/StanfordVL/BEHAVIOR-1K.git@v3.7.2#subdirectory=bddl3
+omnigibson[eval] @ git+https://github.com/StanfordVL/BEHAVIOR-1K.git@v3.7.2#subdirectory=OmniGibson
+git+https://github.com/StanfordVL/BEHAVIOR-1K.git@v3.7.2#subdirectory=joylo

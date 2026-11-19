@@ -1,0 +1,61 @@
+<title>RoboTenon modular architecture and parallel execution (2026-09-20)</title>
+<p><a href="robotenon-design-report.xml">English</a> · <a href="robotenon-design-report.zh-CN.xml">简体中文</a></p>
+<h1>1. Goals and responsibilities</h1>
+<p>RoboTenon uses common interfaces for tasks, workflow graphs, capability calls, environment feedback, and action execution in simulation and on physical robots. Plugins and resource settings describe deployment-specific behavior. Single tasks and batches share a lifecycle. Each deployment must verify training and inference consistency and the reliability of its hardware.</p>
+<table>
+<tr><th>Component</th><th>Responsibility</th><th>Lifetime</th></tr>
+<tr><td>TaskAdapter</td><td>Enumerate TaskCase instances and run an individual case</td><td>Experiment setup and task execution</td></tr>
+<tr><td>GraphRuntime and Module</td><td>Schedule nodes and produce decisions and ActionChunks</td><td>Task</td></tr>
+<tr><td>ToolRuntime</td><td>Provide models, memory, skills, and clients</td><td>Worker, with session caches cleared after a task</td></tr>
+<tr><td>Environment</td><td>Manage sessions, reset, observe, command, and feedback</td><td>Task. An external service can remain available independently.</td></tr>
+<tr><td>Body</td><td>Admit and execute actions, acknowledge completion, and stop the device</td><td>Task. An external service can remain available independently.</td></tr>
+<tr><td>Monitor</td><td>Observe periodically or on demand and publish safety findings</td><td>Task or external service</td></tr>
+</table>
+<whiteboard type="mermaid">
+flowchart LR
+    A[TaskAdapter enumerates tasks] --&gt; C[Parent schedules and aggregates]
+    C --&gt; W[WorkerRuntime]
+    W --&gt; T[Resident ToolRuntime]
+    W --&gt; G[Per-task GraphRuntime and Module]
+    G --&gt;|Capability call| T
+    G --&gt;|ActionChunk| B[Body]
+    B --&gt;|Execute and stop| D[Simulator or device driver]
+    G --&gt;|Reset and observe| E[Environment]
+    E --&gt;|Feedback| G
+    E --&gt; M[Monitor]
+    M --&gt; S[Shared safety state]
+    S --&gt; B
+    S --&gt; G
+</whiteboard>
+<h1>2. Single tasks and parallel processes</h1>
+<p>runtime.execution.backend selects a registered execution backend. Built-in options are in_process and process. plugin_backends and backend_params support external implementations with declared capabilities. The process backend spawns persistent Workers. Each Worker runs one task at a time with explicit GPU, EGL, and exclusive-resource assignments. Tools can reuse weights and connections. Each task receives fresh Environment, Body, Module, and context objects. Operators deploy external model services independently and assign their devices explicitly.</p>
+<p>The parent process schedules work and owns global state. Workers return results and write per-attempt artifacts. Concurrent tasks can finish out of order. Final aggregation follows case order. Batch memory defaults to snapshot mode: tasks read the same input snapshot and their results are merged. Use sequential mode with one Worker when later tasks need to see earlier writes.</p>
+<p>The physical-robot template uses one Worker, zero automatic retries, and an exclusive robot resource. Resource locks cover processes belonging to one user on one host. Deployments must implement and verify device drivers, hardware emergency stops, and device-level exclusion.</p>
+<h1>3. Observability and the web interface</h1>
+<whiteboard type="mermaid">
+flowchart LR
+    A[Task or Workers] --&gt;|Execution IDs and events| I[Configured writer]
+    I --&gt; Q[Trace SQLite and JSONL]
+    I --&gt; R[Metrics JSONL]
+    Q --&gt;|Read-only source| W[Web interface]
+    R --&gt; W
+    O[Frame index and media directory] --&gt; W
+</whiteboard>
+<p>Parallel runs can configure a shared writer, while individual tasks can use their own store. The web interface reads explicit data sources. It does not infer launch mode, discover databases, or replay logs. Trace SQL does not contain all metrics and media. Configure experiment metadata, trace identity filters, and the image index separately.</p>
+<p>Records carry experiment, run, episode, attempt, task, adapter, worker, and gpu identities. A run-managed web instance provides read-only observation and shuts down when the run ends. An independently launched web instance with ExperimentManager supports experiment browsing, submission, and configuration management.</p>
+<h1>4. Failure and recovery</h1>
+<table>
+<tr><th>Failure</th><th>Behavior</th></tr>
+<tr><td>Graph node or safety event</td><td>The Graph and safety configuration determine handling. An explicit ContextStore can retain state and the execution cursor.</td></tr>
+<tr><td>Worker loss or process task timeout</td><td>While the parent is alive, max_retries controls process recreation and new attempts.</td></tr>
+<tr><td>Ordinary task failure</td><td>Record the outcome. Worker-loss retries do not apply.</td></tr>
+<tr><td>Coordinator crash</td><td>Automatic recovery and batch scheduling takeover were unavailable at the report date.</td></tr>
+<tr><td>Observability write error</td><td>Bounded buffering and failure counters are available. Crashes can lose or duplicate records.</td></tr>
+</table>
+<p>After a physical action completes, a crash can occur before its acknowledgement is durable. Recovery requires device-side idempotency and state reconciliation. Body's software stop complements the hardware safety system.</p>
+<h1>5. Verification and future work</h1>
+<p>On 2026-09-18, the full suites under local Python 3.11 and server Python 3.12 each reported 179 passing tests. Coverage included process execution, injected faults, lifecycle isolation, and observability reads and writes. At that date, physical GPU/EGL load tests and real-device safety acceptance were still outstanding.</p>
+<p>Potential future work includes persistent coordinator takeover, reliable telemetry delivery, and media index aggregation.</p>
+<p>See docs/README.md and docs/quickstart.md for entry points, or docs/execution-and-observability.md for configuration, commands, artifacts, and recovery. Historical audits and verification records carry their own dates. This report is an XML fragment with multiple top-level elements intended for document import.</p>
+<h1>Extension interfaces</h1>
+<p>In addition to the six application plugin types, execution backends, four storage types, and streaming RPC transports have independent registration points. Environment RPC handles calls such as reset, observe, and health across processes. Body owns action execution. Custom observation modalities can pass through ObservationFrame, the cache, and ObservationRef. Plugin parameters merge recursively across configuration, TaskCase, and requests. Resource cleanup runs after failed startup as well as ordinary shutdown. See docs/infrastructure-plugins.md for configuration, compatibility aliases, and verification coverage.</p>

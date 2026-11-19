@@ -1,0 +1,24 @@
+{
+  "config_version": 1,
+  "plugin_task_adapters": ["robotenon_robodojo_office.tasks"],
+  "task_adapters": [
+    {
+      "id": "robodojo-office",
+      "name": "robodojo-office",
+      "kind": "benchmark",
+      "params": {
+        "task_names": ["stack_bowls"],
+        "num_trials": 1,
+        "seed": 0,
+        "robodojo_root": null,
+        "policy_name": "RoboTenon",
+        "policy_host": "127.0.0.1",
+        "policy_port": 19000,
+        "env_config": "arx_x5",
+        "action_type": "ee",
+        "env_gpu": "0",
+        "eval_num": "1"
+      }
+    }
+  ]
+}

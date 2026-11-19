@@ -1,0 +1,3181 @@
+--- /dev/null
++++ b/robosys/infra/history.py
+@@ -0,0 +1,24 @@
++"""Shared budgets and timestamp normalization for history endpoints."""
++
++from datetime import datetime, timezone
++
++
++def page_window(limit=100, offset=0, since=None, until=None):
++    limit, offset = int(limit), int(offset)
++    if not 1 <= limit <= 500 or not 0 <= offset <= 100000:
++        raise ValueError(
++            "limit must be 1..500 and offset 0..100000; narrow the time window for older history"
++        )
++
++    def timestamp(value):
++        if value in (None, ""):
++            return None
++        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
++        if parsed.tzinfo is None:
++            raise ValueError("timestamps must include a timezone")
++        return parsed.astimezone(timezone.utc).isoformat()
++
++    since, until = timestamp(since), timestamp(until)
++    if since and until and since > until:
++        raise ValueError("since must not be later than until")
++    return limit, offset, since, until
+--- a/robosys/infra/trace.py
++++ b/robosys/infra/trace.py
+@@ -160,6 +160,7 @@
+                attributes_json TEXT NOT NULL)"""
+         )
+         self._db.execute("CREATE INDEX IF NOT EXISTS idx_spans_trace ON spans(trace_id, start_time)")
++        self._db.execute("CREATE INDEX IF NOT EXISTS idx_spans_time ON spans(start_time)")
+         self._db.execute("CREATE INDEX IF NOT EXISTS idx_spans_episode ON spans(run_id, episode_id, start_time)")
+         self._db.commit()
+         self._recent: deque[TraceSpan] = deque(maxlen=max_recent)
+--- a/robosys/infra/trace_query.py
++++ b/robosys/infra/trace_query.py
+@@ -1,9 +1,10 @@
+-"""Read-only trace queries. Readers never replay JSONL or create databases."""
++"""Bounded read-only trace queries; readers never replay WAL or create DBs."""
+ 
+ from __future__ import annotations
+ 
+ import json
+ import sqlite3
++import time
+ from pathlib import Path
+ from typing import Any
+ 
+@@ -11,39 +12,180 @@
+ from .trace import validate_trace_query
+ 
+ 
++class QueryBudgetExceeded(ValueError):
++    pass
++
++
+ class TraceQuery:
+-    def __init__(self, db_path: str | Path):
++    def __init__(
++        self,
++        db_path: str | Path,
++        *,
++        timeout_s=0.5,
++        max_rows=10000,
++        max_bytes=3 * 1024 * 1024,
++    ):
++        if min(timeout_s, max_rows, max_bytes) <= 0:
++            raise ValueError("query budgets must be positive")
+         self.db_path = Path(db_path)
+-
+-    def sql(self, query: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
++        self.timeout_s, self.max_rows, self.max_bytes = timeout_s, max_rows, max_bytes
++
++    def sql_page(
++        self, query: str, params: tuple[Any, ...] = (), *, limit=None, offset=0
++    ):
+         statement = validate_trace_query(query)
++        limit = min(self.max_rows, self.max_rows if limit is None else int(limit))
++        if limit < 1 or offset < 0 or offset > 100000:
++            raise ValueError("invalid query page; offset must be between 0 and 100000")
++        result = {
++            "rows": [],
++            "truncated": False,
++            "next_offset": None,
++            "offset": offset,
++            "limit": limit,
++        }
+         if not self.db_path.is_file():
+-            return []
++            return result
++        deadline = time.monotonic() + self.timeout_s
+         connection = sqlite3.connect(
+-            self.db_path.resolve().as_uri() + "?mode=ro", uri=True
++            self.db_path.resolve().as_uri() + "?mode=ro",
++            uri=True,
++            timeout=self.timeout_s,
+         )
+         try:
+             connection.row_factory = sqlite3.Row
+             connection.execute("PRAGMA query_only=ON")
+-            return [
+-                dict(row) for row in connection.execute(statement, params).fetchall()
+-            ]
++            connection.set_progress_handler(
++                lambda: int(time.monotonic() >= deadline), 1000
++            )
++            if hasattr(connection, "setlimit"):
++                connection.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, self.max_bytes)
++                connection.setlimit(sqlite3.SQLITE_LIMIT_SQL_LENGTH, 1024 * 1024)
++            cursor = connection.execute(statement, params)
++            size = 0
++            for index, row in enumerate(cursor):
++                if time.monotonic() >= deadline:
++                    raise TimeoutError("trace query exceeded its time budget")
++                if index < offset:
++                    continue
++                value = dict(row)
++                row_size = len(
++                    json.dumps(value, ensure_ascii=False, default=str).encode("utf-8")
++                )
++                if row_size > self.max_bytes:
++                    raise QueryBudgetExceeded(
++                        "one trace row exceeds the response byte budget"
++                    )
++                if len(result["rows"]) >= limit or size + row_size > self.max_bytes:
++                    result.update(
++                        truncated=True, next_offset=offset + len(result["rows"])
++                    )
++                    break
++                result["rows"].append(value)
++                size += row_size
++            return result
++        except sqlite3.OperationalError as exc:
++            if time.monotonic() >= deadline or "interrupted" in str(exc):
++                raise TimeoutError("trace query exceeded its time budget") from exc
++            raise
++        except sqlite3.DataError as exc:
++            raise QueryBudgetExceeded(
++                "trace query exceeds the SQLite value size budget"
++            ) from exc
+         finally:
+             connection.close()
+ 
++    def sql(
++        self, query: str, params: tuple[Any, ...] = (), *, limit=None, offset=0
++    ) -> list[dict[str, Any]]:
++        page = self.sql_page(query, params, limit=limit, offset=offset)
++        if page["truncated"] and limit is None:
++            raise QueryBudgetExceeded(
++                "trace result exceeds budget; use sql_page or an explicit limit"
++            )
++        return page["rows"]
++
++    def episode_page(
++        self,
++        *,
++        run_id: str | None = None,
++        episode_id: str | None = None,
++        attempt_id: str | None = None,
++        limit=200,
++        offset=0,
++        since=None,
++        until=None,
++    ):
++        from .history import page_window
++
++        # Internal trajectory readers may use the larger trace row budget.
++        _, offset, since, until = page_window(1, offset, since, until)
++        if int(limit) < 1:
++            raise ValueError("limit must be positive")
++        filters, args = [], []
++        for column, value in [("run_id", run_id), ("episode_id", episode_id)]:
++            if value is not None:
++                filters.append(column + "=?")
++                args.append(str(value))
++        if attempt_id is not None:
++            filters.append("json_extract(attributes_json, '$.attempt_id')=?")
++            args.append(str(attempt_id))
++        for operator, value in [(">=", since), ("<=", until)]:
++            if value is not None:
++                filters.append("start_time" + operator + "?")
++                args.append(value)
++        query = "SELECT * FROM spans" + (
++            " WHERE " + " AND ".join(filters) if filters else ""
++        )
++        # SQL OFFSET avoids materialising skipped rows in Python; both execution
++        # and output remain subject to the same time/byte budgets.
++        order = (
++            " ORDER BY start_time, rowid"
++            if run_id
++            else " ORDER BY start_time DESC, rowid DESC"
++        )
++        page = self.sql_page(
++            query + order + " LIMIT ? OFFSET ?",
++            (*args, min(int(limit), self.max_rows) + 1, offset),
++            limit=limit,
++        )
++        page.update(
++            offset=offset,
++            next_offset=offset + len(page["rows"]) if page["truncated"] else None,
++        )
++        return page
++
+     def episode(
+-        self, *, run_id: str, episode_id: str, attempt_id: str | None = None
++        self,
++        *,
++        run_id: str,
++        episode_id: str,
++        attempt_id: str | None = None,
++        limit=10000,
++        offset=0,
++        since=None,
++        until=None,
+     ) -> list[dict[str, Any]]:
+-        query = "SELECT * FROM spans WHERE run_id=? AND episode_id=?"
+-        args = (str(run_id), str(episode_id))
+-        if attempt_id is not None:
+-            query += " AND json_extract(attributes_json, '$.attempt_id')=?"
+-            args += (str(attempt_id),)
+-        return self.sql(query + " ORDER BY start_time, rowid", args)
++        page = self.episode_page(
++            run_id=run_id,
++            episode_id=episode_id,
++            attempt_id=attempt_id,
++            limit=limit,
++            offset=offset,
++            since=since,
++            until=until,
++        )
++        if page["truncated"]:
++            raise QueryBudgetExceeded(
++                "episode trace exceeds budget; request a time window or page"
++            )
++        return page["rows"]
+ 
+     def snapshot(self, *, limit: int = 1000) -> list[TraceSpan]:
+         rows = self.sql(
+-            "SELECT * FROM spans ORDER BY start_time DESC LIMIT ?", (limit,)
++            "SELECT * FROM spans ORDER BY start_time DESC LIMIT ?",
++            (min(limit, self.max_rows),),
++            limit=limit,
+         )
+         result = []
+         for row in reversed(rows):
+@@ -63,5 +205,4 @@
+         return result
+ 
+     def close(self) -> None:
+-        # Each query owns its connection, allowing writer restarts/replacement.
+         pass
+--- a/robosys/runtime/parallel.py
++++ b/robosys/runtime/parallel.py
+@@ -13,6 +13,31 @@
+ from dataclasses import replace
+ from pathlib import Path
+ from uuid import uuid4
++
++
++async def _wait_readable(connection, timeout):
++    """Wait for an IPC notification without a fixed polling delay.
++
++    POSIX selector loops watch the Pipe descriptor. Alternate event loops use
++    one bounded blocking poll in a thread; no thread outlives its timeout.
++    """
++    loop = asyncio.get_running_loop()
++    ready = loop.create_future()
++    descriptor = connection.fileno()
++    def readable():
++        if not ready.done():
++            ready.set_result(True)
++    try:
++        loop.add_reader(descriptor, readable)
++    except (AttributeError, NotImplementedError):
++        return await asyncio.to_thread(connection.poll, timeout)
++    try:
++        try:
++            return await asyncio.wait_for(ready, timeout)
++        except TimeoutError:
++            return False
++    finally:
++        loop.remove_reader(descriptor)
+ 
+ 
+ class WorkerLost(RuntimeError):
+@@ -146,9 +171,15 @@
+             await worker.start()
+             connection.send(("ready", None, None))
+             heartbeat = time.monotonic()
++            next_health = heartbeat
+             while True:
+-                worker.check_health()
+-                if connection.poll():
++                now = time.monotonic()
++                if now >= next_health:
++                    worker.check_health()
++                    next_health = now + .25
++                # Commands wake immediately. Health checks and heartbeats have
++                # their own deadlines and no longer run on every 20 ms tick.
++                if await _wait_readable(connection, max(.001, min(next_health-now, heartbeat+1-now))):
+                     command, payload = connection.recv()
+                     if command == "shutdown":
+                         if task is not None:
+@@ -165,7 +196,6 @@
+                 if time.monotonic() - heartbeat >= 1:
+                     connection.send(("heartbeat", None, None))
+                     heartbeat = time.monotonic()
+-                await asyncio.sleep(0.02)
+         finally:
+             if task is not None and not task.done():
+                 task.cancel()
+@@ -267,7 +297,7 @@
+         deadline = time.monotonic() + timeout
+         while time.monotonic() < deadline:
+             try:
+-                if self.connection.poll():
++                if await _wait_readable(self.connection, min(.25, max(.001, deadline-time.monotonic()))):
+                     message = self.connection.recv()
+                     if message[0] != "heartbeat":
+                         return message
+@@ -277,7 +307,6 @@
+                 raise self._lost_error("worker connection closed") from exc
+             if not self.process.is_alive():
+                 raise self._lost_error("worker exited")
+-            await asyncio.sleep(0.02)
+         raise WorkerLost("worker exceeded execution deadline")
+ 
+     def _signal_group(self, sig):
+--- /dev/null
++++ b/robosys/runtime/preflight.py
+@@ -0,0 +1,178 @@
++"""Shared bounded, read-only startup diagnostics for the CLI and Portal."""
++
++import ipaddress
++import os
++import shutil
++import socket
++import subprocess
++from datetime import datetime, timezone
++from pathlib import Path
++
++from .execution import ExecutionOptions
++
++
++def check_preflight(loaded, *, output_root, probe_gpu=True):
++    checks = []
++
++    def add(name, status, detail):
++        checks.append({"name": name, "status": status, "detail": str(detail)})
++
++    try:
++        execution = ExecutionOptions.from_params(loaded.params)
++        execution.validate_tools(loaded.tools)
++        from .result_projection import require_episode_outputs
++        from .runner import EpisodeRequest, _graph_selector
++
++        graph = _graph_selector(
++            loaded, loaded.params, EpisodeRequest(config=loaded.bundle.config)
++        )
++        require_episode_outputs(loaded.graphs.graph_map()[graph])
++        add(
++            "config",
++            "ok",
++            "configuration, graph outputs and Worker allocation are valid",
++        )
++    except Exception as exc:  # noqa: BLE001 - diagnostic boundary reports plugin validation failures
++        add("config", "error", exc)
++        return {
++            "ok": False,
++            "checks": checks,
++            "checked_at": datetime.now(timezone.utc).isoformat(),
++        }
++    root = Path(output_root).resolve()
++    while not root.exists() and root != root.parent:
++        root = root.parent
++    free = shutil.disk_usage(root).free
++    add(
++        "disk",
++        "ok" if free >= 1024**3 else "warning",
++        f"{free} bytes free at {root}; recommended minimum 1 GiB",
++    )
++    add(
++        "output",
++        "ok" if os.access(root, os.W_OK) else "error",
++        f"output ancestor: {root}",
++    )
++    for tool in loaded.tools.tools:
++        if not tool.enabled or tool.deployment is None:
++            continue
++        deployment, name = tool.deployment, tool.id or tool.name
++        model = deployment.model_path
++        if model:
++            path = Path(model).expanduser()
++            local = path.is_absolute() or str(model).startswith(("./", "../", "~"))
++            add(
++                f"{name}.model",
++                "error"
++                if local and not path.exists()
++                else ("ok" if local else "deferred"),
++                f"local model: {path}"
++                if local
++                else f"model identifier {model}; availability checked by model service",
++            )
++        executable = deployment.executable or (
++            deployment.command[0]
++            if deployment.backend == "command" and deployment.command
++            else None
++        )
++        if executable:
++            add(
++                f"{name}.executable",
++                "ok" if shutil.which(executable) else "error",
++                executable,
++            )
++        add(
++            f"{name}.readiness",
++            "deferred",
++            f"Worker waits for {deployment.health_path or 'TCP connection'}; timeout {deployment.startup_timeout_s}s",
++        )
++    model = loaded.params.resolve("model.path")
++    if model:
++        path = Path(str(model)).expanduser()
++        local = path.is_absolute() or str(model).startswith(("./", "../", "~"))
++        add(
++            "model.path",
++            "error" if local and not path.exists() else ("ok" if local else "deferred"),
++            model,
++        )
++    host, port = (
++        loaded.params.resolve("model.host"),
++        loaded.params.resolve("model.port"),
++    )
++    if (
++        host
++        and port
++        and not any(tool.enabled and tool.deployment for tool in loaded.tools.tools)
++    ):
++        try:
++            address = (
++                "127.0.0.1"
++                if host == "localhost"
++                else str(ipaddress.ip_address(str(host)))
++            )
++            if not 1 <= int(port) <= 65535:
++                raise ValueError("model.port must be 1..65535")
++            with socket.create_connection((address, int(port)), timeout=0.25):
++                pass
++            add(
++                "model.endpoint",
++                "ok",
++                f"TCP endpoint {host}:{port} accepts connections; model readiness is checked at execution",
++            )
++        except ValueError as exc:
++            add(
++                "model.endpoint",
++                "deferred",
++                f"{host}:{port}: {exc}; DNS endpoints are checked by the Worker",
++            )
++        except OSError as exc:
++            add("model.endpoint", "warning", f"{host}:{port} is not ready: {exc}")
++    try:
++        with socket.socket() as probe:
++            probe.bind(("127.0.0.1", 0))
++        add(
++            "ports",
++            "ok",
++            "local dynamic port allocation available; exclusive reservation occurs at service startup",
++        )
++    except OSError as exc:
++        add("ports", "error", exc)
++    if execution.gpu_ids:
++        if probe_gpu and shutil.which("nvidia-smi"):
++            try:
++                proc = subprocess.run(
++                    [
++                        "nvidia-smi",
++                        "--query-gpu=index,uuid,memory.free",
++                        "--format=csv,noheader,nounits",
++                    ],
++                    capture_output=True,
++                    text=True,
++                    timeout=2,
++                    check=True,
++                )
++                devices = [line.split(",") for line in proc.stdout.splitlines()]
++                known = {part.strip() for row in devices for part in row[:2]}
++                missing = set(execution.gpu_ids) - known
++                # MIG identifiers need a device-specific runtime check.
++                missing = {value for value in missing if not value.startswith("MIG-")}
++                add(
++                    "gpu",
++                    "error" if missing else "ok",
++                    f"missing: {sorted(missing)}; devices (index, UUID, free MiB): {proc.stdout[:4000]}",
++                )
++            except (OSError, subprocess.SubprocessError) as exc:
++                add("gpu", "warning", f"GPU probe failed: {exc}")
++        else:
++            add(
++                "gpu",
++                "deferred",
++                f"GPU probe unavailable; Worker must validate {execution.gpu_ids}",
++            )
++    else:
++        add("gpu", "ok", "no GPU allocation requested")
++    return {
++        "ok": not any(item["status"] == "error" for item in checks),
++        "checks": checks,
++        "checked_at": datetime.now(timezone.utc).isoformat(),
++    }
+--- a/robosys/runtime/processes.py
++++ b/robosys/runtime/processes.py
+@@ -77,9 +77,12 @@
+ 
+ 
+ def owned_processes(directory, *, table=None):
++    paths = list(Path(directory).glob("*.json"))
++    if not paths:
++        return {}
+     table = process_table() if table is None else table
+     owned = {}
+-    for path in Path(directory).glob("*.json"):
++    for path in paths:
+         record = json.loads(path.read_text())
+         row = table.get(record["pid"])
+         if row is not None and row["start"] == record["start"] and row["pgid"] == record["pgid"]:
+--- /dev/null
++++ b/robosys/runtime/retention.py
+@@ -0,0 +1,130 @@
++"""One opt-in retention policy for terminal-run logs, traces and videos.
++
++Never follows symlinks, removes run metadata, or prunes a run with a held lease,
++queued resume, or a surviving owned process. Dry-run is the default.
++"""
++
++import fcntl
++import json
++import time
++from contextlib import contextmanager
++from dataclasses import dataclass
++from pathlib import Path
++
++from .processes import owned_processes
++
++
++@dataclass(frozen=True)
++class RetentionPolicy:
++    logs_days: int = 30
++    traces_days: int = 30
++    videos_days: int = 7
++    failed_days: int = 90
++
++    def __post_init__(self):
++        if any(type(value) is not int or value < 1 for value in vars(self).values()):
++            raise ValueError("retention days must be positive integers")
++
++
++@contextmanager
++def _terminal_lease(root):
++    lock = root / ".control" / "run.lock"
++    if not lock.is_file() or lock.is_symlink():
++        yield False
++        return
++    with lock.open("r+") as handle:
++        try:
++            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
++        except BlockingIOError:
++            yield False
++            return
++        try:
++            yield not (
++                root / ".control" / "resume.json"
++            ).exists() and not owned_processes(root / ".processes")
++        finally:
++            fcntl.flock(handle, fcntl.LOCK_UN)
++
++
++def prune_artifacts(
++    output_root, policy, *, apply=False, now=None, budget_s=5, max_entries=20000
++):
++    output_root = Path(output_root).resolve()
++    report = {
++        "applied": apply,
++        "files": [],
++        "bytes": 0,
++        "skipped_runs": [],
++        "truncated": False,
++    }
++    jobs_file = output_root / "jobs.json"
++    if not jobs_file.is_file():
++        return report
++    jobs = json.loads(jobs_file.read_text())
++    jobs = jobs.values() if isinstance(jobs, dict) else jobs
++    deadline, now = time.monotonic() + budget_s, time.time() if now is None else now
++    inspected = 0
++    for job in jobs:
++        if inspected >= max_entries or time.monotonic() >= deadline:
++            report["truncated"] = True
++            break
++        if job.get("status") not in {"completed", "failed", "cancelled"}:
++            continue
++        root = Path(job["output_root"])
++        if (
++            root.is_symlink()
++            or root.resolve().parent != output_root
++            or not root.is_dir()
++        ):
++            continue
++        with _terminal_lease(root) as safe:
++            if not safe:
++                report["skipped_runs"].append(job["job_id"])
++                continue
++            stack = [root]
++            external_log = output_root / (job["job_id"] + ".log")
++            candidates = [external_log] if external_log.is_file() else []
++            while stack:
++                directory = stack.pop()
++                for path in directory.iterdir():
++                    inspected += 1
++                    if inspected >= max_entries or time.monotonic() >= deadline:
++                        report["truncated"] = True
++                        stack.clear()
++                        break
++                    if path.is_symlink() or any(
++                        part in {".control", ".processes"}
++                        for part in path.relative_to(root).parts
++                    ):
++                        continue
++                    if path.is_dir():
++                        stack.append(path)
++                    elif path.is_file():
++                        candidates.append(path)
++            for path in candidates:
++                if time.monotonic() >= deadline:
++                    report["truncated"] = True
++                    break
++                if path.is_symlink():
++                    continue
++                relative = path.relative_to(output_root)
++                if path.suffix.lower() in {".mp4", ".webm", ".avi"}:
++                    days = policy.videos_days
++                elif path.suffix == ".log" or path.name in {"stdout.txt", "stderr.txt"}:
++                    days = policy.logs_days
++                elif any(
++                    part.endswith(".trace") for part in relative.parts
++                ) or path.name.startswith(("trace.", "traces.")):
++                    days = policy.traces_days
++                else:
++                    continue
++                if job.get("status") == "failed":
++                    days = max(days, policy.failed_days)
++                stat = path.stat()
++                if now - stat.st_mtime < days * 86400:
++                    continue
++                if apply:
++                    path.unlink()
++                report["files"].append(str(relative))
++                report["bytes"] += stat.st_size
++    return report
+--- a/robosys/runtime/runner_cli.py
++++ b/robosys/runtime/runner_cli.py
+@@ -28,6 +28,7 @@
+     parser = argparse.ArgumentParser(
+         description="Run a single episode or an ordered Task Adapter experiment from one RoboSys config."
+     )
++    parser.add_argument("--preflight", action="store_true", help="print read-only startup diagnostics without starting services")
+     parser.add_argument("--batch", action="store_true", help="run all enabled Task Adapters in config order")
+     parser.add_argument("--config", default="configs/config.json")
+     parser.add_argument("--config-snapshot", default=None, help="frozen merged configuration for this run")
+@@ -193,6 +194,17 @@
+ 
+ def main(argv: list[str] | None = None) -> int:
+     args = parse_args(argv)
++    if args.preflight:
++        from .config import load_request_config
++        from .preflight import check_preflight
++        from .runner import _apply_request_overrides
++        from dataclasses import replace
++        request = request_from_args(args)
++        loaded = load_request_config(request)
++        loaded = replace(loaded, params=_apply_request_overrides(loaded.params, request))
++        result = check_preflight(loaded, output_root=args.output_dir or "data/experiments")
++        print(json.dumps(result, ensure_ascii=False, indent=2))
++        return 0 if result["ok"] else 1
+     terminal = terminal_from_args(args)
+     try:
+         result = asyncio.run(_run_with_signals(args, terminal))
+--- a/robosys/task_adapters/evaluator.py
++++ b/robosys/task_adapters/evaluator.py
+@@ -8,6 +8,9 @@
+ import re
+ import shutil
+ import time
++from collections import Counter
++from .result_index import ResultIndex
++
+ from collections.abc import Callable, Mapping, Sequence
+ from datetime import datetime, timezone
+ from pathlib import Path
+@@ -321,7 +324,56 @@
+                 path = _case_path(output_root, case, adapter_count=len(adapter_cases))
+                 if path.exists():
+                     adapter_stats[configured.instance_id]["episodes"].append(json.loads(path.read_text()))
+-    completed_count = sum(len(stats["episodes"]) for stats in adapter_stats.values())
++    records = {key: {item["global_index"]: item for item in stats["episodes"]}
++               for key, stats in adapter_stats.items()}
++    counts = {key: Counter() for key in records}
++    result_index = ResultIndex(output_root)
++    index_ready = False
++    completed_count = 0
++
++    def contribution(record):
++        status = record.get("status")
++        terminal = status not in {"pending", "running", None}
++        return {"num_episodes": int(terminal), "num_completed": int(status == "completed"),
++                "num_errors": int(status == "error"), "num_cancelled": int(status == "cancelled"),
++                "successes": int(status == "completed" and bool(record.get("task_success")))}
++
++    for key, values in records.items():
++        for record in values.values():
++            counts[key].update(contribution(record))
++    completed_count = sum(value["num_episodes"] for value in counts.values())
++
++    def remember(record):
++        nonlocal completed_count
++        key, index = record["adapter_id"], record["global_index"]
++        previous = records[key].get(index)
++        if previous:
++            counts[key].subtract(contribution(previous))
++            completed_count -= contribution(previous)["num_episodes"]
++        record.setdefault("updated_at", _now())
++        records[key][index] = record
++        counts[key].update(contribution(record))
++        completed_count += contribution(record)["num_episodes"]
++        if index_ready:
++            result_index.put(_compact_episode(record))
++
++    def progress_summary():
++        aggregate = Counter()
++        compact_stats = {}
++        for key, stats in adapter_stats.items():
++            aggregate.update(counts[key])
++            compact_stats[key] = {**{k: v for k, v in stats.items() if k != "episodes"},
++                                  **dict(counts[key]), "success_rate": counts[key]["successes"] / counts[key]["num_episodes"] if counts[key]["num_episodes"] else None}
++        return {"run_id": run_id, "adapters": list(records), "adapter_order": list(records),
++                "num_adapters": len(adapters), **dict(aggregate), "options": effective_options,
++                "episode_success_rate": aggregate["successes"] / completed_count if completed_count else None,
++                "task_adapters": compact_stats, "episode_index": "episodes.sqlite3"}
++
++    def full_summary():
++        for key, stats in adapter_stats.items():
++            stats["episodes"] = sorted(records[key].values(), key=lambda item: item["global_index"])
++        return _summary(run_id=run_id, adapters=adapters, adapter_stats=adapter_stats, options=effective_options)
++
+     stopped = set()
+     write_json(
+         status_path,
+@@ -340,7 +392,6 @@
+ 
+     async def execute_case(configured, case):
+         nonlocal completed_count
+-        stats = adapter_stats[configured.instance_id]
+         episode_path = _case_path(
+             output_root,
+             case,
+@@ -368,6 +419,7 @@
+             "identity": live_identity,
+             "status": "running",
+             "generation_started_at_ns": generation,
++            "updated_at": _now(),
+         }
+         trace_dir = (
+             episode_path.with_suffix(".trace")
+@@ -377,8 +429,7 @@
+         live_case["trace_dir"] = str(trace_dir) if trace_dir is not None else None
+         if case.key not in stopped:
+             write_json(episode_path, live_case)
+-            stats["episodes"] = [item for item in stats["episodes"] if item["global_index"] != case.index]
+-            stats["episodes"].append(live_case)
++            remember(live_case)
+         write_json(
+             status_path,
+             {
+@@ -389,6 +440,7 @@
+                 "total_episodes": total,
+                 "completed_episodes": completed_count,
+                 "adapter_order": [item.instance_id for item, _ in adapter_cases],
++                "summary": progress_summary(),
+                 "active": [*active.values(), live_case],
+                 "current": live_case,
+             },
+@@ -442,6 +494,7 @@
+             if graph_failed:
+                 record["error"] = result.get("error") or "Graph execution failed"
+             record["generation_started_at_ns"] = generation
++            record["updated_at"] = _now()
+             write_json(episode_path, record)
+         except asyncio.CancelledError:
+             if case.key not in stopped:
+@@ -452,6 +505,7 @@
+                       "elapsed_s": round(time.perf_counter() - case_started, 3)}
+             record.update(_last_known_progress(episode_path, run_id))
+             record["generation_started_at_ns"] = generation
++            record["updated_at"] = _now()
+             write_json(episode_path, record)
+         except Exception as exc:  # preserve the batch and expose the case error
+             record = {
+@@ -470,22 +524,12 @@
+             }
+             record.update(_last_known_progress(episode_path, run_id))
+             record["generation_started_at_ns"] = generation
++            record["updated_at"] = _now()
+             write_json(episode_path, record)
+ 
+         active.pop(case.key, None)
+-        stats["episodes"] = [item for item in stats["episodes"]
+-                             if item["global_index"] != case.index]
+-        stats["episodes"].append(record)
+-        completed_count = sum(item.get("status") not in {"pending", "running"} for value in adapter_stats.values() for item in value["episodes"])
+-        stats["episodes"].sort(key=lambda item: (item["global_index"], item["episode"]))
+-        current_summary = _summary(
+-            run_id=run_id,
+-            adapters=adapters,
+-            adapter_stats=adapter_stats,
+-            options=effective_options,
+-        )
+-        write_json(episode_path.parent / "stats.json", _compact_stats(stats))
+-        write_json(output_root / "summary.json", current_summary)
++        remember(record)
++        current_summary = progress_summary()
+         write_json(
+             status_path,
+             {
+@@ -497,6 +541,7 @@
+                 "completed_episodes": completed_count,
+                 "adapter_order": [item.instance_id for item, _ in adapter_cases],
+                 "last": _compact_episode(record),
++                "summary": current_summary,
+                 "current": next(iter(active.values()), None),
+                 "active": list(active.values()),
+             },
+@@ -523,21 +568,20 @@
+         clear_case_artifacts(path)
+         record = {**case.to_dict(), "global_index": case.index, "status": "pending",
+                   "task_success": False, "episode_json": str(path),
+-                  "generation_started_at_ns": time.time_ns()}
++                  "generation_started_at_ns": time.time_ns(), "updated_at": _now()}
+         write_json(path, record)
+         live = path.parent / ".live" / path.name
+         live.unlink(missing_ok=True)
+-        stats = adapter_stats[configured.instance_id]
+-        stats["episodes"] = [item for item in stats["episodes"] if item["global_index"] != case.index]
+-        stats["episodes"].append(record)
++        remember(record)
+ 
+     for configured, case in pending:
+         reset_case(configured, case)
++    result_index.initialize(_compact_episode(item) for values in records.values() for item in values.values())
++    index_ready = True
+     def publish_summary():
+-        nonlocal completed_count
+-        completed_count = sum(item.get("status") not in {"pending", "running"} for stats in adapter_stats.values() for item in stats["episodes"])
+-        write_json(output_root / "summary.json", _summary(run_id=run_id, adapters=adapters,
+-                   adapter_stats=adapter_stats, options=effective_options))
++        # Constant-size counts are sufficient during execution. Full history
++        # is written once at termination and remains available in the index.
++        write_json(output_root / "summary.json", progress_summary())
+     publish_summary()
+     ready = control / "ready.json"
+     with control_lock(control):
+@@ -586,11 +630,12 @@
+                 configured, case = pending.pop(0)
+                 running[case.key] = asyncio.create_task(execute_case(configured, case))
+             if pending or running:
+-                await asyncio.sleep(0.1)
++                await asyncio.wait(running.values(), timeout=0.1, return_when=asyncio.FIRST_COMPLETED)
+     except BaseException:
+         for task in running.values():
+             task.cancel()
+         await asyncio.gather(*running.values(), return_exceptions=True)
++        write_json(output_root / "summary.json", full_summary())
+         write_json(status_path, {"run_id": run_id, "status": "cancelled",
+                                "total_episodes": total, "completed_episodes": completed_count,
+                                "active": [], "current": None})
+@@ -598,24 +643,33 @@
+     finally:
+         with control_lock(control):
+             ready.unlink(missing_ok=True)
++    final_summary = full_summary()
+     if memory_mode == "snapshot":
+-        records = list(initial_memory.get("records", []))
++        memory_records = list(initial_memory.get("records", []))
+         for configured, _ in adapter_cases:
+             for record in adapter_stats[configured.instance_id]["episodes"]:
+                 lesson = record.get("result", {}).get("ltm_summary")
+                 if lesson:
+-                    records.append(lesson)
+-        write_json(resolved_memory, {"records": records})
++                    memory_records.append(lesson)
++        write_json(resolved_memory, {"records": memory_records})
+ 
+     if completed_count != total:
+         raise RuntimeError(f"experiment cannot complete: {completed_count}/{total} cases are terminal")
+-    final_summary = _summary(
+-        run_id=run_id,
+-        adapters=adapters,
+-        adapter_stats=adapter_stats,
+-        options=effective_options,
+-    )
+     write_json(output_root / "summary.json", final_summary)
++    # Preserve per-task stats without copying the entire adapter into every task directory.
++    grouped = {}
++    for values in records.values():
++        for record in values.values():
++            grouped.setdefault(Path(record["episode_json"]).parent, []).append(record)
++    for directory, values in grouped.items():
++        totals = Counter()
++        for item in values:
++            totals.update(contribution(item))
++        stats = adapter_stats[values[0]["adapter_id"]]
++        write_json(directory / "stats.json", _compact_stats({
++            **stats, **dict(totals), "num_cases": len(values), "episodes": values,
++            "success_rate": totals["successes"] / totals["num_episodes"] if totals["num_episodes"] else None,
++        }))
+     write_json(
+         status_path,
+         {
+@@ -626,7 +680,7 @@
+             "total_episodes": total,
+             "completed_episodes": completed_count,
+             "adapter_order": [item.instance_id for item, _ in adapter_cases],
+-            "summary": final_summary,
++            "summary": progress_summary(),
+             "current": None,
+             "ended_at": _now(),
+         },
+--- /dev/null
++++ b/robosys/task_adapters/result_index.py
+@@ -0,0 +1,100 @@
++"""Incremental, disposable episode index; individual JSON artifacts remain authoritative."""
++
++import json
++import sqlite3
++from contextlib import closing
++from datetime import datetime, timezone
++from pathlib import Path
++
++from ..infra.history import page_window
++from ..infra.trace_query import TraceQuery
++
++
++class ResultIndex:
++    def __init__(self, root):
++        self.path = Path(root) / "episodes.sqlite3"
++
++    def initialize(self, records):
++        with closing(sqlite3.connect(self.path, timeout=1)) as conn, conn:
++            conn.execute("PRAGMA journal_mode=WAL")
++            conn.execute(
++                "CREATE TABLE IF NOT EXISTS episodes (adapter_id TEXT, global_index INTEGER, "
++                "updated_at TEXT NOT NULL, record_json TEXT NOT NULL, PRIMARY KEY(adapter_id, global_index))"
++            )
++            conn.execute(
++                "CREATE INDEX IF NOT EXISTS episodes_time ON episodes(updated_at, global_index, adapter_id)"
++            )
++            conn.execute(
++                "CREATE INDEX IF NOT EXISTS episodes_order ON episodes(global_index, adapter_id)"
++            )
++            conn.execute("DELETE FROM episodes")
++            conn.executemany(
++                "INSERT INTO episodes VALUES (?,?,?,?)",
++                [self._row(item) for item in records],
++            )
++
++    @staticmethod
++    def _row(record):
++        return (
++            record["adapter_id"],
++            record["global_index"],
++            record.get("updated_at") or datetime.now(timezone.utc).isoformat(),
++            json.dumps(record, ensure_ascii=False, separators=(",", ":"), default=str),
++        )
++
++    def put(self, record):
++        with closing(sqlite3.connect(self.path, timeout=1)) as conn, conn:
++            conn.execute(
++                "INSERT OR REPLACE INTO episodes VALUES (?,?,?,?)", self._row(record)
++            )
++
++    def page(self, *, limit=100, offset=0, since=None, until=None):
++        limit, offset, since, until = page_window(limit, offset, since, until)
++        where, args = [], []
++        if since:
++            where.append("updated_at>=?")
++            args.append(since)
++        if until:
++            where.append("updated_at<=?")
++            args.append(until)
++        query = "SELECT record_json, updated_at FROM episodes"
++        if where:
++            query += " WHERE " + " AND ".join(where)
++        result = TraceQuery(self.path).sql_page(
++            query + " ORDER BY global_index, adapter_id LIMIT ? OFFSET ?",
++            (*args, limit + 1, offset),
++            limit=limit,
++        )
++        records = [
++            {**json.loads(row["record_json"]), "updated_at": row["updated_at"]}
++            for row in result.pop("rows")
++        ]
++        return {
++            **result,
++            "episodes": records,
++            "offset": offset,
++            "next_offset": offset + len(records) if result["truncated"] else None,
++        }
++
++    def get(self, adapter_id, global_index):
++        rows = TraceQuery(self.path).sql(
++            "SELECT record_json FROM episodes WHERE adapter_id=? AND global_index=?",
++            (adapter_id, global_index),
++        )
++        return json.loads(rows[0]["record_json"]) if rows else None
++
++    def contains_all(self, targets):
++        identities = {(item["adapter_id"], item["global_index"]) for item in targets}
++        found = set()
++        values = list(identities)
++        for start in range(0, len(values), 200):
++            batch = values[start : start + 200]
++            placeholders = ",".join("(?,?)" for _ in batch)
++            rows = TraceQuery(self.path).sql(
++                "SELECT adapter_id, global_index FROM episodes WHERE (adapter_id, global_index) IN ("
++                + placeholders
++                + ")",
++                tuple(part for item in batch for part in item),
++            )
++            found.update((row["adapter_id"], row["global_index"]) for row in rows)
++        return found == identities
+--- /dev/null
++++ b/robosys/web/cache.py
+@@ -0,0 +1,54 @@
++"""Thread-safe LRU caches with explicit entry and estimated-byte budgets."""
++
++import threading
++from collections import OrderedDict
++
++
++class BoundedCache:
++    def __init__(self, max_entries=256, max_bytes=32 * 1024 * 1024):
++        if max_entries < 1 or max_bytes < 1:
++            raise ValueError("cache budgets must be positive")
++        self.max_entries, self.max_bytes = max_entries, max_bytes
++        self._items = OrderedDict()
++        self._lock = threading.RLock()
++        self.bytes = 0
++
++    def get(self, key, default=None):
++        with self._lock:
++            if key not in self._items:
++                return default
++            self._items.move_to_end(key)
++            return self._items[key][0]
++
++    def put(self, key, value, *, size=1):
++        with self._lock:
++            old = self._items.pop(key, None)
++            if old is not None:
++                self.bytes -= old[1]
++            if size > self.max_bytes:
++                return
++            self._items[key] = value, size
++            self.bytes += size
++            while len(self._items) > self.max_entries or self.bytes > self.max_bytes:
++                _, (_, removed) = self._items.popitem(last=False)
++                self.bytes -= removed
++
++    def __setitem__(self, key, value):
++        self.put(key, value)
++
++    def __len__(self):
++        with self._lock:
++            return len(self._items)
++
++    def pop(self, key, default=None):
++        with self._lock:
++            item = self._items.pop(key, None)
++            if item is None:
++                return default
++            self.bytes -= item[1]
++            return item[0]
++
++    def clear(self):
++        with self._lock:
++            self._items.clear()
++            self.bytes = 0
+--- a/robosys/web/experiments.py
++++ b/robosys/web/experiments.py
+@@ -14,6 +14,7 @@
+ import threading
+ import time
+ import uuid
++import weakref
+ from collections.abc import Iterator, Mapping
+ from datetime import datetime, timezone
+ from pathlib import Path
+@@ -21,7 +22,10 @@
+ from urllib.parse import quote, unquote, urlsplit
+ 
+ from ..runtime.config import load_application_config, freeze_config, load_config_snapshot
+-from ..infra.trace_query import TraceQuery
++from ..infra.trace_query import TraceQuery, QueryBudgetExceeded
++from ..infra.history import page_window
++from ..task_adapters.result_index import ResultIndex
++from .cache import BoundedCache
+ 
+ 
+ def _now() -> str:
+@@ -44,8 +48,13 @@
+         entrypoint: str | Path = "scripts/run_experiment.py",
+         python_executable: str | Path | None = None,
+         trace_query: TraceQuery | None = None,
++        retention_policy=None,
+     ) -> None:
+         self.trace_query = trace_query
++        self.retention_policy = retention_policy
++        self._retention_thread = None
++        self.retention_report = None
++        self._retention_checked_at = 0
+         self.project_root = Path(project_root).resolve()
+         self.config_root = self._resolve_under_project(config_root)
+         self.output_root = self._resolve_under_project(output_root)
+@@ -57,14 +66,15 @@
+         # Status and summary files are read on every Portal refresh. Cache
+         # unchanged files so large episode histories are not reparsed each
+         # time the UI polls for progress.
+-        self._json_cache: dict[Path, tuple[tuple[int, int], Any]] = {}
+-        self._config_cache: dict[tuple[str, str], Any] = {}
++        self._json_cache = BoundedCache()
++        self._config_cache = BoundedCache(max_entries=64)
++        self._stop_threads: dict[str, threading.Thread] = {}
+         self._jobs: dict[str, dict[str, Any]] = self._load_jobs()
+         self._processes: dict[str, subprocess.Popen[Any]] = {}
+         # Detail responses use short opaque artifact ids instead of repeating
+         # absolute storage paths in every historical observation frame.
+-        self._observation_artifacts: dict[str, tuple[str, Path]] = {}
+-        self._video_faststart_locks: dict[Path, threading.Lock] = {}
++        self._observation_artifacts = BoundedCache(max_entries=4096)
++        self._video_faststart_locks = weakref.WeakValueDictionary()
+         self._scheduler_stop = threading.Event()
+         self._scheduler_thread: threading.Thread | None = None
+ 
+@@ -73,6 +83,10 @@
+         with self._lock:
+             if self._scheduler_thread and self._scheduler_thread.is_alive():
+                 return
++            # Resume an already authorised cleanup after a Portal restart.
++            for job_id, job in list(self._jobs.items()):
++                if job.get("status") == "stopping":
++                    self.stop_job(job_id, reason=job.get("stop_progress", {}).get("reason", "user_stop"), wait=False)
+             self._scheduler_stop.clear()
+             self._scheduler_thread = threading.Thread(
+                 target=self._scheduler_loop, name="experiment-queue", daemon=True,
+@@ -90,8 +104,20 @@
+             try:
+                 with self._lock:
+                     self._dispatch_waiting()
++                if self.retention_policy and time.monotonic() - self._retention_checked_at > 3600:
++                    if self._retention_thread is None or not self._retention_thread.is_alive():
++                        self._retention_checked_at = time.monotonic()
++                        self._retention_thread = threading.Thread(target=self._prune_history, name="artifact-retention", daemon=True)
++                        self._retention_thread.start()
+             except Exception:
+                 logging.getLogger(__name__).exception("experiment queue refresh failed")
++
++    def _prune_history(self):
++        from ..runtime.retention import prune_artifacts
++        try:
++            self.retention_report = prune_artifacts(self.output_root, self.retention_policy, apply=True)
++        except Exception:
++            logging.getLogger(__name__).exception("artifact retention failed")
+ 
+     def _dispatch_waiting(self) -> None:
+         # Caller holds _lock: concurrent submissions cannot both claim the slot.
+@@ -244,7 +270,9 @@
+                     (t.deployment.shutdown_timeout_s for t in loaded.tools.tools if t.deployment), default=0) + 2
+             except (ValueError, OSError, AttributeError):
+                 pass
++        self._set_stop_progress(job_id, "waiting_for_runner", grace_timeout_s=term_timeout_s)
+         result = self._terminate_coordinator(job_id, job, term_timeout_s=term_timeout_s)
++        self._set_stop_progress(job_id, "releasing_descendants")
+         descendants = terminate_owned(registry)
+         result["terminated"] = result["terminated"] and descendants["terminated"]
+         result["forced"] = result["forced"] or descendants["forced"]
+@@ -314,6 +342,7 @@
+         elif process is None and self._pid_exists(pid):
+             forced = True
+         if forced:
++            self._set_stop_progress(job_id, "forced_cleanup")
+             try:
+                 os.killpg(pgid, signal.SIGKILL)
+             except ProcessLookupError:
+@@ -378,6 +407,7 @@
+         job["cancel_reason"] = reason
+         job["ended_at"] = ended_at
+         job["termination"] = dict(termination)
++        job["resources_released"] = bool(termination.get("terminated"))
+         if termination.get("pid") is not None and termination.get("forced"):
+             job["returncode"] = -int(signal.SIGKILL)
+         elif termination.get("pid") is not None:
+@@ -479,12 +509,15 @@
+ 
+     def _read_json_cached(self, path: Path) -> Any:
+         stat = path.stat()
++        if stat.st_size > 16 * 1024 * 1024:
++            raise QueryBudgetExceeded("legacy JSON exceeds 16 MiB; build its episode index before querying")
+         signature = (stat.st_mtime_ns, stat.st_size)
+         cached = self._json_cache.get(path)
+         if cached is not None and cached[0] == signature:
+             return cached[1]
+         value = json.loads(path.read_text(encoding="utf-8"))
+-        self._json_cache[path] = (signature, value)
++        # Parsed JSON has greater overhead than its on-disk representation.
++        self._json_cache.put(path, (signature, value), size=max(256, stat.st_size * 4))
+         return value
+ 
+     def _relative_config(self, path: Path) -> str:
+@@ -610,7 +643,8 @@
+             except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+                 pass
+         summary_path = self._job_path(job, "summary_path")
+-        if summary_path.exists():
++        indexed = ResultIndex(status_path.parent).path.is_file()
++        if summary_path.exists() and not indexed:
+             try:
+                 summary = self._read_json_cached(summary_path)
+                 if isinstance(summary, dict):
+@@ -670,7 +704,7 @@
+                 # Keep historical jobs visible even if their original config
+                 # was moved or a child manifest is no longer available.
+                 job["parameters_error"] = f"{type(exc).__name__}: {exc}"
+-        if job.get("status") in {"completed", "failed", "cancelled"}:
++        if job.get("status") in {"completed", "failed", "cancelled"} and not job.get("resources_released"):
+             from ..runtime.processes import owned_processes
+             remaining = owned_processes(self._job_path(job, "output_root") / ".processes")
+             if remaining:
+@@ -679,7 +713,30 @@
+                 else:
+                     job.update(status="stop_failed", error="experiment exited with owned processes still alive",
+                                termination={"terminated": False, "remaining_pids": sorted(remaining)})
+-        return dict(job)
++            elif ((process is not None and process.poll() is not None)
++                  or not job.get("pid") or not self._pid_exists(int(job["pid"]))):
++                job["resources_released"] = True
++        if job.get("status") == "running":
++            progress = job.get("progress") or {}
++            job["runtime_phase"] = "loading"
++            if progress.get("status") in {"completed", "failed", "cancelled"}:
++                job["runtime_phase"] = "cleanup"
++            else:
++                active = progress.get("active") or ([progress["current"]] if progress.get("current") else [])
++                for item in active[:128]:
++                    live_path = self._safe_job_artifact(job, item.get("live_status_path"))
++                    if live_path and live_path.is_file():
++                        try:
++                            live = self._read_json_cached(live_path)
++                            if live.get("status") == "running":
++                                job["runtime_phase"] = "executing"
++                                break
++                        except (OSError, ValueError):
++                            pass
++        result = dict(job)
++        if isinstance(job.get("summary"), dict):
++            job["summary"] = self._compact_summary(job["summary"])
++        return result
+ 
+     def _job_path(self, job: Mapping[str, Any], key: str) -> Path:
+         """Resolve a persisted job file path against the project root."""
+@@ -717,6 +774,15 @@
+             job = self._refresh_job(job_id) if job_id in self._jobs else None
+         if job is None:
+             return []
++        index = ResultIndex(self._job_path(job, "status_path").parent)
++        if index.path.is_file():
++            episodes, offset = [], 0
++            while True:
++                page = self.episodes_page(job_id, limit=500, offset=offset, include_runtime=include_runtime)
++                episodes.extend(page["episodes"])
++                if page["next_offset"] is None:
++                    return episodes
++                offset = page["next_offset"]
+         summary = job.get("summary")
+         episodes: list[dict[str, Any]] = []
+         if isinstance(summary, dict):
+@@ -951,8 +1017,9 @@
+                 return None
+             job = self._refresh_job(job_id)
+         summary = job.get("summary")
+-        candidate: dict[str, Any] | None = None
+-        for sequence, (item_adapter_id, item) in enumerate(self._iter_summary_episodes(summary)):
++        index = ResultIndex(self._job_path(job, "status_path").parent)
++        candidate: dict[str, Any] | None = index.get(adapter_id, global_index) if index.path.is_file() else None
++        for sequence, (item_adapter_id, item) in enumerate(self._iter_summary_episodes(summary) if candidate is None else []):
+             if item_adapter_id != adapter_id:
+                 continue
+             if self._episode_index(item, sequence) == int(global_index):
+@@ -988,7 +1055,7 @@
+         safe_episode_path = self._safe_job_artifact(job, episode_path)
+         if safe_episode_path is not None and safe_episode_path.is_file():
+             try:
+-                value = json.loads(safe_episode_path.read_text(encoding="utf-8"))
++                value = self._read_json_cached(safe_episode_path)
+                 if isinstance(value, dict):
+                     full = value
+             except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+@@ -1110,9 +1177,6 @@
+         token = hashlib.sha256(f"{job_id}\x00{path}".encode("utf-8")).hexdigest()[:24]
+         with self._lock:
+             self._observation_artifacts[token] = (str(job_id), path)
+-            if len(self._observation_artifacts) > 8192:
+-                for expired in list(self._observation_artifacts)[:1024]:
+-                    self._observation_artifacts.pop(expired, None)
+         return token
+ 
+     def _resolve_observation_artifact(self, job_id: str, token: str) -> Path | None:
+@@ -1723,6 +1787,8 @@
+                 episode_id=episode_id,
+                 attempt_id=identity.get("attempt_id"),
+             )
++        except (TimeoutError, QueryBudgetExceeded):
++            raise
+         except Exception:
+             # A partially written/rotated trace must not make a completed
+             # episode disappear from the Portal.
+@@ -3016,6 +3082,10 @@
+     @classmethod
+     def _public_job(cls, job: dict[str, Any], *, include_parameters: bool) -> dict[str, Any]:
+         record = dict(job)
++        status = record.get("status")
++        record["phase"] = {"waiting": "queued", "stopping": "cleanup", "stop_failed": "needs_attention"}.get(status, status)
++        if status == "running":
++            record["phase"] = job.get("runtime_phase", "loading")
+         if "progress" in record:
+             record["progress"] = cls._compact_progress(record.get("progress"))
+             if job.get("status") in {"stopping", "stop_failed"} and isinstance(record["progress"], dict):
+@@ -3024,6 +3094,7 @@
+             record["summary"] = cls._compact_summary(record.get("summary"))
+         if not include_parameters:
+             record.pop("parameters", None)
++            record.pop("preflight", None)
+         return record
+ 
+     def graph_snapshot(self, job_id: str) -> dict[str, Any]:
+@@ -3073,6 +3144,62 @@
+             "primary_node_states": display_node_states,
+         }
+ 
++    def job_trace_query(self, job_id):
++        with self._lock:
++            if job_id not in self._jobs:
++                raise KeyError(job_id)
++            job = dict(self._jobs[job_id])
++        return self._job_trace_query(job)
++
++    def jobs_page(self, *, limit=100, offset=0, since=None, until=None, search=""):
++        limit, offset, since, until = page_window(limit, offset, since, until)
++        deadline = time.monotonic() + 1
++        with self._lock:
++            # Refresh active runs in the scheduler, history only on its requested page.
++            jobs = [job for job in self._jobs.values()
++                    if (not since or job.get("submitted_at", "") >= since)
++                    and (not until or job.get("submitted_at", "") <= until)
++                    and (not search or str(search).lower() in " ".join(str(job.get(key, "")) for key in ("job_id", "config", "status", "submitted_at")).lower())]
++            jobs.sort(key=lambda job: (job.get("submitted_at", ""), job["job_id"]), reverse=True)
++            records = []
++            for job in jobs[offset:offset+limit]:
++                if time.monotonic() > deadline:
++                    raise TimeoutError("experiment query exceeded its time budget; use a smaller page")
++                records.append(self._public_job(self._refresh_job(job["job_id"]), include_parameters=False))
++        overview = {status: sum(job.get("status") == status for job in jobs) for status in ("running", "waiting", "completed", "failed", "stop_failed", "stopping")}
++        return {"experiments": records, "overview": overview, "total": len(jobs), "offset": offset, "limit": limit,
++                "next_offset": offset+len(records) if offset+len(records) < len(jobs) else None}
++
++    def episodes_page(self, job_id, *, limit=100, offset=0, since=None, until=None, include_runtime=False):
++        limit, offset, since, until = page_window(limit, offset, since, until)
++        deadline = time.monotonic() + 1
++        with self._lock:
++            job = self._refresh_job(job_id) if job_id in self._jobs else None
++        if job is None:
++            return {"job_id": job_id, "episodes": [], "next_offset": None}
++        index = ResultIndex(self._job_path(job, "status_path").parent)
++        if index.path.is_file():
++            page = index.page(limit=limit, offset=offset, since=since, until=until)
++        else:
++            # Compatibility path for old small summaries. JSON size is capped
++            # at the loader; new runs never scan a cumulative summary here.
++            records = self.list_episodes(job_id, include_runtime=False)
++            records = [item for item in records if
++                       (not since or item.get("updated_at", job.get("submitted_at", "")) >= since) and
++                       (not until or item.get("updated_at", job.get("submitted_at", "")) <= until)]
++            page = {"episodes": records[offset:offset+limit], "offset": offset, "limit": limit,
++                    "next_offset": offset+limit if offset+limit < len(records) else None}
++        for record in page["episodes"]:
++            if time.monotonic() > deadline:
++                raise TimeoutError("episode query exceeded its time budget; use a smaller page")
++            if job.get("status") in {"cancelled", "failed"} and record.get("status") in {"pending", "running"}:
++                record["status"] = "cancelled" if job["status"] == "cancelled" else "error"
++            if include_runtime:
++                record.setdefault("graph_runtime", self._episode_graph_runtime(record))
++            else:
++                record.pop("graph_runtime", None)
++        return {"job_id": job_id, **page}
++
+     def list_jobs(self) -> list[dict[str, Any]]:
+         with self._lock:
+             self._dispatch_waiting()
+@@ -3091,71 +3218,79 @@
+             return self._public_job(record, include_parameters=True)
+ 
+     def stop_job(
+-        self,
+-        job_id: str,
+-        *,
+-        adapter_id: str | None = None,
+-        global_index: int | None = None,
+-        reason: str = "user_stop",
+-        tasks: list[dict[str, Any]] | None = None,
++        self, job_id: str, *, adapter_id: str | None = None,
++        global_index: int | None = None, reason: str = "user_stop",
++        tasks: list[dict[str, Any]] | None = None, wait: bool = True,
+     ) -> dict[str, Any]:
+-        """Stop selected cases, or release the entire experiment when unscoped."""
++        """Request cleanup. Python callers may wait, always outside the manager lock."""
+         if tasks is not None or adapter_id is not None or global_index is not None:
+             return self._control_tasks(job_id, "stop", tasks, adapter_id, global_index)
+-
+         with self._lock:
+             if job_id not in self._jobs:
+                 raise KeyError(job_id)
+             job = self._refresh_job(job_id)
+-            running = self._job_is_running(job)
+             if job.get("status") == "waiting":
+-                updated = self._mark_cancelled(job, reason=reason, termination={"pid": None, "terminated": True})
+-                self._jobs[job_id] = updated
++                self._jobs[job_id] = self._mark_cancelled(
++                    job, reason=reason, termination={"pid": None, "terminated": True})
+                 self._persist_jobs()
+-                return {"action": "stop", "scope": "experiment_queue", "released": True,
+-                        "job": self._public_job(updated, include_parameters=False)}
+-            if not running:
+-                return {
+-                    "action": "stop",
+-                    "scope": "experiment_process",
+-                    "already_finished": True,
+-                    "target": {"adapter_id": adapter_id, "global_index": global_index},
+-                    "job": self._public_job(job, include_parameters=False),
+-                }
+-            job["status"] = "stopping"
++                return self._stop_result(job_id, scope="experiment_queue")
++            if not self._job_is_running(job):
++                return {**self._stop_result(job_id), "already_finished": True}
++            thread = self._stop_threads.get(job_id)
++            if thread is None or not thread.is_alive():
++                job.update(status="stopping", stop_progress={"phase": "cleanup",
++                           "requested_at": _now(), "reason": reason})
++                self._jobs[job_id] = job
++                self._persist_jobs()
++                thread = threading.Thread(target=self._finish_stop, args=(job_id, dict(job), reason),
++                                          name=f"stop-{job_id}", daemon=True)
++                self._stop_threads[job_id] = thread
++                thread.start()
++        if wait:
++            thread.join()
++        with self._lock:
++            result = self._stop_result(job_id)
++        if wait and result["job"].get("status") == "stop_failed":
++            if result["job"].get("termination", {}).get("reason") == "pid_identity_mismatch":
++                raise ValueError("refusing to signal a persisted PID that is not the experiment runner")
++            raise RuntimeError(result["job"].get("error", "experiment process was not fully released"))
++        return result
++
++    def _stop_result(self, job_id, *, scope="experiment_process"):
++        job = self._jobs[job_id]
++        return {"action": "stop", "scope": scope, "target": {"adapter_id": None, "global_index": None}, "pending": job.get("status") == "stopping",
++                "released": bool(job.get("termination", {}).get("terminated")),
++                "job": self._public_job(job, include_parameters=False)}
++
++    def _set_stop_progress(self, job_id, phase, **details):
++        with self._lock:
++            job = self._jobs.get(job_id)
++            if job and job.get("status") == "stopping":
++                job["stop_progress"] = {**job.get("stop_progress", {}), "phase": phase,
++                                        "updated_at": _now(), **details}
++
++    def _finish_stop(self, job_id, snapshot, reason):
++        # Signals, waits and process-domain verification can take seconds. They
++        # must never hold the lock used by Portal reads and queue submission.
++        try:
++            termination = self._terminate_process_group(job_id, snapshot)
++            error = None if termination.get("terminated") else (
++                "experiment process was not fully released: " + termination.get("reason", "unknown error"))
++        except Exception as exc:
++            termination, error = {"terminated": False}, f"{type(exc).__name__}: {exc}"
++        with self._lock:
++            job = self._jobs[job_id]
++            job["termination"] = termination
++            if error:
++                job.update(status="stop_failed", error=error,
++                           stop_progress={**job.get("stop_progress", {}), "phase": "needs_attention", "error": error})
++            else:
++                job = self._mark_cancelled(job, reason=reason, termination=termination)
++                job["stop_progress"] = {**job.get("stop_progress", {}), "phase": "released", "ended_at": _now()}
++                self._processes.pop(job_id, None)
+             self._jobs[job_id] = job
+             self._persist_jobs()
+-            try:
+-                termination = self._terminate_process_group(job_id, job)
+-            except Exception as exc:
+-                job.update(status="stop_failed", error=str(exc))
+-                self._persist_jobs()
+-                raise
+-            job["termination"] = termination
+-            if not termination.get("terminated"):
+-                job["status"] = "stop_failed"
+-                self._persist_jobs()
+-            if termination.get("reason") == "pid_identity_mismatch":
+-                raise ValueError("refusing to signal a persisted PID that is not the experiment runner")
+-            if not termination.get("terminated"):
+-                raise RuntimeError(
+-                    "experiment process was not fully released: "
+-                    f"{termination.get('reason', 'unknown error')}"
+-                )
+-            updated = self._mark_cancelled(job, reason=reason, termination=termination)
+-            # ``_refresh_job`` returns a defensive copy. Replace the manager's
+-            # canonical record before persisting, otherwise a subsequent
+-            # Portal refresh can resurrect the old ``running`` state.
+-            self._jobs[job_id] = updated
+-            self._processes.pop(job_id, None)
+-            self._persist_jobs()
+-            return {
+-                "action": "stop",
+-                "scope": "experiment_process",
+-                "released": bool(termination.get("terminated")),
+-                "target": {"adapter_id": adapter_id, "global_index": global_index},
+-                "job": self._public_job(updated, include_parameters=False),
+-            }
++            self._stop_threads.pop(job_id, None)
+ 
+     def _source_submit_values(self, source: Mapping[str, Any]) -> tuple[str | Path, dict[str, Any], bool | None, bool | None]:
+         """Build the reproducible submission inputs shared by fork/rerun."""
+@@ -3185,8 +3320,8 @@
+         if tasks is None and (adapter_id is not None or global_index is not None):
+             tasks = [{"adapter_id": adapter_id, "global_index": global_index}]
+         if tasks is not None:
+-            if not isinstance(tasks, list) or not tasks:
+-                raise ValueError("tasks must be a non-empty list")
++            if not isinstance(tasks, list) or not tasks or len(tasks) > 500:
++                raise ValueError("tasks must contain 1..500 targets; use the experiment operation for all tasks")
+             normalized = []
+             for task in tasks:
+                 if (not isinstance(task, dict) or not isinstance(task.get("adapter_id"), str)
+@@ -3204,9 +3339,14 @@
+             if tasks is not None:
+                 if job.get("status") in {"stopping", "stop_failed"}:
+                     raise ValueError("实验资源尚未释放，请先完成整个实验的停止操作")
+-                available = {(item.get("adapter_id"), self._value_at(item, "global_index", "index"))
+-                             for item in self.list_episodes(job_id)}
+-                if any((item["adapter_id"], item["global_index"]) not in available for item in tasks):
++                index = ResultIndex(self._job_path(job, "status_path").parent)
++                if index.path.is_file():
++                    valid = index.contains_all(tasks)
++                else:
++                    available = {(item.get("adapter_id"), self._value_at(item, "global_index", "index"))
++                                 for item in self.list_episodes(job_id)}
++                    valid = all((item["adapter_id"], item["global_index"]) in available for item in tasks)
++                if not valid:
+                     raise ValueError("selected task is not in this experiment")
+             root = self._job_path(job, "status_path").parent
+             control = root / ".control"
+@@ -3247,7 +3387,7 @@
+                     write_json(root / "status.json", {"run_id": job_id, "status": "waiting",
+                                                       "config_hash": job.get("parameter_hash")})
+                     job.update(status="waiting", pid=None, returncode=None)
+-                    for key in ("ended_at", "error", "cancelled_at", "termination"):
++                    for key in ("ended_at", "error", "cancelled_at", "termination", "resources_released", "stop_progress"):
+                         job.pop(key, None)
+                     self._jobs[job_id] = job
+                     self._processes.pop(job_id, None)
+@@ -3263,32 +3403,26 @@
+         """Replace results inside this run, retaining original case identities."""
+         return self._control_tasks(job_id, "rerun", tasks, adapter_id, global_index)
+ 
+-    def shutdown_all(self, *, reason: str = "global_shutdown") -> dict[str, Any]:
+-        """Apply the highest-priority Portal interrupt to every run."""
+-
++    def shutdown_all(self, *, reason: str = "global_shutdown", wait: bool = True) -> dict[str, Any]:
++        """Stop queued jobs first, then request cleanup for every active run."""
+         with self._lock:
+             job_ids = []
+-            for job_id in self._jobs:
+-                job = self._refresh_job(job_id)
++            for key in self._jobs:
++                job = self._refresh_job(key)
+                 if self._job_is_running(job) or job.get("status") == "waiting":
+-                    job_ids.append(job_id)
+-            stopped: list[dict[str, Any]] = []
+-            errors: list[dict[str, Any]] = []
+-            for job_id in job_ids:
+-                try:
+-                    result = self.stop_job(job_id, reason=reason)
+-                    stopped.append({"job_id": job_id, "released": result.get("released", False)})
+-                except Exception as exc:
+-                    errors.append({"job_id": job_id, "error": f"{type(exc).__name__}: {exc}"})
+-            return {
+-                "action": "shutdown",
+-                "scope": "all_experiment_processes",
+-                "reason": reason,
+-                "interrupted": stopped,
+-                "errors": errors,
+-                "count": len(stopped),
+-                "ended_at": _now(),
+-            }
++                    job_ids.append(key)
++            job_ids.sort(key=lambda key: self._jobs[key].get("status") != "waiting")
++        stopped, errors = [], []
++        for job_id in job_ids:
++            try:
++                result = self.stop_job(job_id, reason=reason, wait=wait)
++                stopped.append({"job_id": job_id, "released": result.get("released", False),
++                                "pending": result.get("pending", False)})
++            except Exception as exc:
++                errors.append({"job_id": job_id, "error": f"{type(exc).__name__}: {exc}"})
++        return {"action": "shutdown", "scope": "all_experiment_processes", "reason": reason,
++                "interrupted": stopped, "errors": errors, "count": len(stopped),
++                "pending": any(item["pending"] for item in stopped), "requested_at": _now()}
+ 
+     def fork_draft(self, job_id: str) -> dict[str, Any]:
+         """Return an editable, side-effect-free draft for a source experiment."""
+@@ -3383,6 +3517,11 @@
+             child["forked_from"] = job_id
+         return child
+ 
++    def preflight(self, config, overrides=None):
++        from ..runtime.preflight import check_preflight
++        loaded = load_application_config(self._config_path(config), overrides or None)
++        return check_preflight(loaded, output_root=self.output_root)
++
+     def submit(
+         self,
+         config: str | Path,
+@@ -3425,6 +3564,8 @@
+             require_episode_outputs(loaded.graphs.graph_map()[selected])
+         except Exception as exc:
+             raise ValueError(f"invalid experiment override: {exc}") from exc
++        from ..runtime.preflight import check_preflight
++        diagnostics = check_preflight(loaded, output_root=self.output_root)
+         if override_values:
+             override_path.parent.mkdir(parents=True, exist_ok=True)
+             override_path.write_text(
+@@ -3476,6 +3617,7 @@
+             "config": effective_descriptor["id"],
+             "config_path": effective_descriptor["path"],
+             "config_snapshot_path": str(snapshot_path),
++            "preflight": diagnostics,
+             "task_adapters": effective_descriptor["task_adapters"],
+             "experiment_config_path": str(override_path) if override_values else None,
+             "status": "waiting",
+--- a/robosys/web/server.py
++++ b/robosys/web/server.py
+@@ -14,6 +14,8 @@
+ 
+ from .grafana import DEFAULT_GRAFANA_URL, ensure_grafana
+ from .experiments import ExperimentManager
++from ..infra.trace_query import QueryBudgetExceeded
++from ..infra.history import page_window
+ from .access import PortalAccess
+ from .page import portal_assets, render_page
+ from .query import PortalData
+@@ -87,7 +89,14 @@
+             self.close_connection = True
+ 
+     def _json(self, value: object, *, status: int = 200) -> None:
+-        self._send(json.dumps(value, ensure_ascii=False, default=str).encode("utf-8"), status=status)
++        chunks, size = [], 0
++        for chunk in json.JSONEncoder(ensure_ascii=False, default=str).iterencode(value):
++            data = chunk.encode("utf-8")
++            size += len(data)
++            if size > 4 * 1024 * 1024:
++                return self._send(b'{"error":"response exceeds 4 MiB; reduce limit or narrow the time window"}', status=413)
++            chunks.append(data)
++        self._send(b"".join(chunks), status=status)
+ 
+     def _send_file(self, path: Path) -> None:
+         """Serve a validated local artifact with basic HTTP range support."""
+@@ -166,6 +175,10 @@
+             return self._send(HTML.replace('<div id="grafana"></div>', '<div id="grafana">' + grafana + '</div>').encode("utf-8"), content_type="text/html; charset=utf-8")
+         try:
+             limit = min(max(int(query.get("limit", ["200"])[0]), 1), 10000)
++            def history_page():
++                page_limit, offset, since, until = page_window(query.get("limit", ["100"])[0],
++                    query.get("offset", ["0"])[0], query.get("since", [None])[0], query.get("until", [None])[0])
++                return {"limit": page_limit, "offset": offset, "since": since, "until": until}
+             if parsed.path == "/api/runs":
+                 runs = self.data.runs(limit=limit)
+                 return self._json({"runs": runs, "task_item_count": len(self.data.task_items(limit=10000))})
+@@ -181,7 +194,20 @@
+             if parsed.path == "/api/experiments":
+                 if self.experiments is None:
+                     return self._json({"experiments": [], "error": "experiment submission is disabled"}, status=503)
+-                return self._json({"experiments": self.experiments.list_jobs()})
++                return self._json(self.experiments.jobs_page(search=query.get("search", [""])[0][:200], **history_page()))
++            if parsed.path.startswith("/api/experiments/") and parsed.path.endswith("/traces"):
++                if self.experiments is None:
++                    return self._json({"error": "experiment submission is disabled"}, status=503)
++                job_id = parsed.path[len("/api/experiments/"):-len("/traces")].strip("/")
++                reader = self.experiments.job_trace_query(job_id)
++                if reader is None:
++                    return self._json({"traces": [], "next_offset": None})
++                page = reader.episode_page(run_id=job_id, episode_id=query.get("episode_id", [None])[0],
++                                          attempt_id=query.get("attempt_id", [None])[0], **history_page())
++                rows = page.pop("rows")
++                for row in rows:
++                    row["attributes"] = json.loads(row.pop("attributes_json"))
++                return self._json({"traces": rows, **page})
+             if parsed.path.startswith("/api/experiments/") and parsed.path.endswith("/fork"):
+                 if self.experiments is None:
+                     return self._json({"error": "experiment submission is disabled"}, status=503)
+@@ -196,7 +222,7 @@
+                 if not job_id or self.experiments.get_job(job_id) is None:
+                     return self._json({"error": "experiment not found"}, status=404)
+                 include_runtime = query.get("include_runtime", ["0"])[0].lower() in {"1", "true", "yes", "on"}
+-                return self._json({"job_id": job_id, "episodes": self.experiments.list_episodes(job_id, include_runtime=include_runtime)})
++                return self._json(self.experiments.episodes_page(job_id, include_runtime=include_runtime, **history_page()))
+             if parsed.path.startswith("/api/experiments/") and parsed.path.endswith("/node-detail"):
+                 if self.experiments is None:
+                     return self._json({"error": "experiment submission is disabled"}, status=503)
+@@ -301,15 +327,17 @@
+                 samples = self.data.metrics.snapshot(limit=limit)
+                 return self._json({"names": self.data.metrics.names(), "samples": [x.model_dump(mode="json") for x in samples], "prometheus_text": self.data.metrics.prometheus_text()})
+             if parsed.path == "/api/traces":
+-                run_id = query.get("run_id", [None])[0]
+-                episode_id = query.get("episode_id", [None])[0]
+-                if run_id or episode_id:
+-                    if not run_id or not episode_id:
+-                        return self._json({"error": "run_id and episode_id are required together"}, status=400)
+-                    rows = self.data.traces.episode(run_id=run_id, episode_id=episode_id,
+-                                                   attempt_id=query.get("attempt_id", [None])[0])
+-                    return self._json({"traces": rows})
+-                return self._json({"traces": [x.model_dump(mode="json") for x in self.data.traces.snapshot(limit=limit)]})
++                run_id, episode_id = query.get("run_id", [None])[0], query.get("episode_id", [None])[0]
++                if bool(run_id) != bool(episode_id):
++                    return self._json({"error": "run_id and episode_id are required together"}, status=400)
++                page = self.data.traces.episode_page(run_id=run_id, episode_id=episode_id,
++                    attempt_id=query.get("attempt_id", [None])[0], **history_page())
++                rows = page.pop("rows")
++                if not run_id:
++                    rows.reverse()
++                    for row in rows:
++                        row["attributes"] = json.loads(row.pop("attributes_json"))
++                return self._json({"traces": rows, **page})
+             if parsed.path == "/api/observations/latest":
+                 session_id = query.get("session_id", [None])[0]
+                 if not session_id:
+@@ -359,7 +387,7 @@
+         is_stop = path.startswith("/api/experiments/") and path.endswith("/stop")
+         is_rerun = path.startswith("/api/experiments/") and path.endswith("/rerun")
+         is_shutdown = path == "/api/system/shutdown"
+-        if path not in {"/api/trace/sql", "/api/experiments"} and not (
++        if path not in {"/api/trace/sql", "/api/experiments", "/api/preflight"} and not (
+             is_fork or is_stop or is_rerun or is_shutdown
+         ):
+             return self._json({"error": "not found"}, status=404)
+@@ -375,8 +403,14 @@
+             if not isinstance(body, dict):
+                 return self._json({"error": "request body must be a JSON object"}, status=400)
+             if path == "/api/trace/sql":
+-                rows = self.data.traces.sql(str(body.get("query", "")), tuple(body.get("params", [])))
+-                self._json({"rows": rows})
++                reader = self.data.traces
++                if body.get("job_id") and self.experiments is not None:
++                    reader = self.experiments.job_trace_query(str(body["job_id"]))
++                if reader is None:
++                    return self._json({"rows": [], "next_offset": None, "truncated": False})
++                page = reader.sql_page(str(body.get("query", "")), tuple(body.get("params", [])),
++                                                limit=body.get("limit", 1000), offset=int(body.get("offset", 0)))
++                self._json(page)
+                 return
+             if is_fork:
+                 if self.experiments is None:
+@@ -412,10 +446,10 @@
+                         job_id,
+                         adapter_id=adapter_id,
+                         global_index=global_index,
+-                        reason="user_stop",
++                        reason="user_stop", wait=False,
+                         **({"tasks": body["tasks"]} if "tasks" in body else {}),
+                     )
+-                    return self._json(result)
++                    return self._json(result, status=202 if result.get("pending") else 200)
+                 result = self.experiments.rerun_job(
+                     job_id,
+                     adapter_id=adapter_id,
+@@ -429,7 +463,8 @@
+                 reason = body.get("reason", "global_shutdown")
+                 if not isinstance(reason, str) or not reason.strip():
+                     return self._json({"error": "reason must be a non-empty string"}, status=400)
+-                return self._json(self.experiments.shutdown_all(reason=reason.strip()))
++                result = self.experiments.shutdown_all(reason=reason.strip(), wait=False)
++                return self._json(result, status=202 if result.get("pending") else 200)
+             if self.experiments is None:
+                 return self._json({"error": "experiment submission is disabled"}, status=503)
+             config = body.get("config")
+@@ -449,6 +484,8 @@
+                 return self._json({"error": "save_traces must be boolean"}, status=400)
+             if forked_from is not None and (not isinstance(forked_from, str) or not forked_from.strip()):
+                 return self._json({"error": "forked_from must be a non-empty string"}, status=400)
++            if path == "/api/preflight":
++                return self._json(self.experiments.preflight(config, overrides))
+             job = self.experiments.submit(
+                 config,
+                 overrides=overrides,
+@@ -457,6 +494,12 @@
+                 forked_from=forked_from,
+             )
+             self._json(job, status=202)
++        except KeyError as exc:
++            self._json({"error": f"not found: {exc}"}, status=404)
++        except QueryBudgetExceeded as exc:
++            self._json({"error": str(exc)}, status=413)
++        except TimeoutError as exc:
++            self._json({"error": str(exc)}, status=504)
+         except ValueError as exc:
+             self._json({"error": str(exc)}, status=400)
+         except FileNotFoundError as exc:
+@@ -506,6 +549,7 @@
+     parser.add_argument("--observation-index", default=os.getenv("ROBOSYS_OBSERVATION_INDEX"), help="observation cache SQLite index")
+     parser.add_argument("--grafana-url", default=os.getenv("ROBOSYS_GRAFANA_URL", DEFAULT_GRAFANA_URL), help="full Grafana dashboard URL to embed")
+     parser.add_argument("--no-auto-grafana", action="store_true", help="do not start the local Grafana Compose services automatically")
++    parser.add_argument("--retention-policy", help="opt in to hourly artifact cleanup using this policy JSON")
+     parser.add_argument("--project-root", default=".", help="project root used for config discovery and experiment submission")
+     parser.add_argument("--config-root", default="configs", help="directory containing selectable JSON configs (including subdirectories)")
+     parser.add_argument("--experiment-output-root", default="data/experiments", help="root for submitted experiment logs and artifacts")
+@@ -542,6 +586,8 @@
+         observation_root=args.observation_root,
+         observation_index=args.observation_index,
+     )
++    from ..runtime.retention import RetentionPolicy
++    retention_policy = RetentionPolicy(**json.loads(Path(args.retention_policy).read_text())) if args.retention_policy else None
+     experiment_manager = None
+     if not args.no_experiment_submit:
+         experiment_manager = ExperimentManager(
+@@ -550,6 +596,7 @@
+             output_root=args.experiment_output_root,
+             entrypoint=args.experiment_entrypoint,
+             python_executable=args.experiment_python,
++            retention_policy=retention_policy,
+         )
+     try:
+         server = build_server(
+--- a/robosys/web/static/portal.html
++++ b/robosys/web/static/portal.html
+@@ -20,7 +20,7 @@
+ </div>
+ <div class="list-toolbar"><input id="experiment-list-search" type="search" aria-label="搜索实验" placeholder="搜索实验编号、配置、状态或创建时间"><strong data-i18n="experimentHistory">实验记录</strong><div id="experiment-list-status" class="muted" data-i18n="loading">加载中…</div></div>
+ <div class="card experiment-table-card"><table><thead><tr><th data-i18n="experimentId">实验</th><th data-i18n="configuration">配置</th><th data-i18n="statusLabel">状态</th><th data-i18n="progressLabel">进度</th><th data-i18n="successCount">已成功</th><th data-i18n="submittedLabel">创建时间</th><th data-i18n="actions">操作</th></tr></thead><tbody id="experiments-body"><tr><td class="muted" colspan="7" data-i18n="loading">加载中…</td></tr></tbody></table></div>
+-<div class="list-toolbar"><label>每页 <select id="experiment-page-size"><option>10</option><option selected>20</option><option>50</option><option>100</option></select> 条</label><button id="experiment-page-prev" class="secondary">上一页</button><span id="experiment-page-status" aria-live="polite">1 / 1</span><button id="experiment-page-next" class="secondary">下一页</button></div>
++<div class="list-toolbar"><label>起始 <input type="datetime-local" id="experiment-since"></label><label>截止 <input type="datetime-local" id="experiment-until"></label><label>每页 <select id="experiment-page-size"><option>10</option><option selected>20</option><option>50</option><option>100</option></select> 条</label><button id="experiment-page-prev" class="secondary">上一页</button><span id="experiment-page-status" aria-live="polite">1 / 1</span><button id="experiment-page-next" class="secondary">下一页</button></div>
+ </section>
+ 
+ <div id="graph-json-modal" class="graph-json-modal hidden" role="dialog" aria-modal="true" aria-labelledby="graph-json-title">
+@@ -36,6 +36,7 @@
+ <label for="experiment-config" data-i18n="configuration">配置</label><select id="experiment-config" aria-label="选择实验配置" data-i18n-aria="configuration"><option value="" data-i18n="loading">加载中…</option></select>
+ <label><input id="experiment-save-videos" type="checkbox"> <span data-i18n="saveVideos">保存视频</span></label>
+ <label><input id="experiment-save-traces" type="checkbox"> <span data-i18n="saveTraces">保存 Trace</span></label>
++<button id="experiment-preflight" class="secondary" type="button">启动检查</button>
+ <button id="experiment-submit" type="button" data-i18n="submitExperiment">提交实验</button>
+ </div>
+ <div id="experiment-config-status" class="muted" data-i18n="configLoading">加载配置中…</div>
+@@ -60,7 +61,7 @@
+ </section>
+ 
+ <section id="detail-trajectory" class="detail-tab">
+-<div class="card trajectory-card"><div class="trajectory-heading"><div><h2 data-i18n="trajectory">轨迹浏览</h2><p class="muted" data-i18n="trajectoryHelp">先选择 Task Adapter，再选择具体任务；中间查看视频或实时观测，右侧查看节点和 subtask。</p></div><span id="trajectory-status" class="muted" data-i18n="loading">加载中…</span></div>
++<div class="list-toolbar"><label>起始 <input type="datetime-local" id="episode-since"></label><label>截止 <input type="datetime-local" id="episode-until"></label><button id="episode-page-prev" class="secondary" disabled>上一页</button><span id="episode-page-status" aria-live="polite"></span><button id="episode-page-next" class="secondary" disabled>下一页</button></div><div class="card trajectory-card"><div class="trajectory-heading"><div><h2 data-i18n="trajectory">轨迹浏览</h2><p class="muted" data-i18n="trajectoryHelp">先选择 Task Adapter，再选择具体任务；中间查看视频或实时观测，右侧查看节点和 subtask。</p></div><span id="trajectory-status" class="muted" data-i18n="loading">加载中…</span></div>
+ <div id="trajectory-adapters" class="trajectory-adapters"><div class="muted" data-i18n="loading">加载中…</div></div>
+ <div id="trajectory-browser" class="trajectory-browser hidden">
+ <div class="trajectory-columns">
+@@ -96,8 +97,8 @@
+ </section>
+ 
+ <section id="detail-traces" class="detail-tab">
+-<div class="card"><h2 data-i18n="traceSql">Trace SQL（只读）</h2><p class="muted" data-i18n="traceDescription">只允许 SELECT / WITH / PRAGMA / EXPLAIN；结果来自 Trace SQLite 索引。</p><textarea id="sql">SELECT span_id, trace_id, name, start_time, end_time, status FROM spans ORDER BY start_time DESC LIMIT 100</textarea><p><button id="run-sql" data-i18n="runQuery">执行 SQL</button> <span id="sql-status" class="muted"></span></p><div id="sql-result" class="sql-result-wrap"><div class="muted" style="padding:10px" data-i18n="queryHint">执行查询后显示结果表格；支持横向和纵向滚动。</div></div></div>
+-<div class="card"><h2 data-i18n="recentTrace">最近 Trace</h2><table><thead><tr><th>name</th><th>trace_id</th><th>start</th><th>end</th><th>status</th><th>attributes</th></tr></thead><tbody id="traces-body"></tbody></table></div>
++<div class="card"><h2 data-i18n="traceSql">Trace SQL（只读）</h2><p class="muted" data-i18n="traceDescription">只允许 SELECT / WITH / PRAGMA / EXPLAIN；结果来自 Trace SQLite 索引。</p><textarea id="sql">SELECT span_id, trace_id, name, start_time, end_time, status FROM spans ORDER BY start_time DESC LIMIT 100</textarea><p><button id="run-sql" data-i18n="runQuery">执行 SQL</button> <span id="sql-status" class="muted"></span> <button id="sql-page-prev" class="secondary" disabled>上一页</button> <button id="sql-page-next" class="secondary" disabled>下一页</button></p><div id="sql-result" class="sql-result-wrap"><div class="muted" style="padding:10px" data-i18n="queryHint">执行查询后显示结果表格；支持横向和纵向滚动。</div></div></div>
++<div class="list-toolbar"><label>起始 <input type="datetime-local" id="trace-since"></label><label>截止 <input type="datetime-local" id="trace-until"></label><button id="trace-page-prev" class="secondary" disabled>上一页</button><span id="trace-page-status" aria-live="polite"></span><button id="trace-page-next" class="secondary" disabled>下一页</button></div><div class="card"><h2 data-i18n="recentTrace">最近 Trace</h2><table><thead><tr><th>name</th><th>trace_id</th><th>start</th><th>end</th><th>status</th><th>attributes</th></tr></thead><tbody id="traces-body"></tbody></table></div>
+ </section>
+ </section>
+ </main>
+--- a/robosys/web/static/portal.js
++++ b/robosys/web/static/portal.js
+@@ -369,7 +369,14 @@
+ async function refreshConfigs(){try{renderExperimentConfigs((await getJson('/api/configs')).configs||[]);await loadSelectedConfig()}catch(e){document.getElementById('experiment-config-status').textContent='配置加载失败：'+String(e);document.getElementById('experiment-config-status').className='error'}}
+ function jobProgress(job){var progress=job&&job.progress||{};return {status:(['stopping','stop_failed'].indexOf(job&&job.status)>=0?job.status:progress.status||job.status)||'—',completed:progress.completed_episodes,total:progress.total_episodes}}
+ function jobSummaryText(job){var summary=job&&job.summary||{},progress=jobProgress(job),total=summary.num_episodes;if(total===undefined||(Number(total)===0&&Number(summary.num_errors||0)>0&&progress.total!==undefined))total=progress.total;return total===undefined?'—':String(summary.successes||0)+' / '+String(total)}
+-var experimentListRecords=[],experimentListPage=1,experimentListPageSize=20;
++var experimentListRecords=[],experimentListPage=1,experimentListPageSize=20,experimentPageMeta=null,experimentFetchToken=0;
++var episodePageOffset=0,episodePageNext=null,episodePageStack=[],tracePageOffset=0,tracePageNext=null,tracePageStack=[],sqlPageOffset=0,sqlPageNext=null,sqlPageStack=[];
++function historyWindow(prefix){var q='';['since','until'].forEach(function(key){var el=document.getElementById(prefix+'-'+key);if(el&&el.value)q+='&'+key+'='+encodeURIComponent(new Date(el.value).toISOString())});return q}
++async function fetchExperiments(){var token=++experimentFetchToken;try{var payload=await getJson('/api/experiments?limit='+experimentListPageSize+'&offset='+((experimentListPage-1)*experimentListPageSize)+'&search='+encodeURIComponent(document.getElementById('experiment-list-search').value)+historyWindow('experiment'));if(token!==experimentFetchToken)return;experimentPageMeta=payload;renderExperiments(payload.experiments||[])}catch(error){if(token===experimentFetchToken)document.getElementById('experiment-list-status').textContent=String(error)}}
++function phaseText(job){var names={queued:'排队中',loading:'加载中',executing:'执行中',cleanup:'清理中',needs_attention:'需要人工处理'};return names[job.phase]||jobProgress(job).status}
++function episodePager(page){episodePageNext=page.next_offset;document.getElementById('episode-page-prev').disabled=episodePageOffset===0;document.getElementById('episode-page-next').disabled=episodePageNext==null;document.getElementById('episode-page-status').textContent='第 '+(episodePageStack.length+1)+' 页';}
++async function changeEpisodePage(offset){if(offset>episodePageOffset)episodePageStack.push(episodePageOffset);if(offset===0)episodePageStack=[];episodePageOffset=offset;trajectoryCheckedKeys.clear();trajectorySelectedKey=null;trajectorySelectedDetail=null;trajectoryEpisodesFetchedAt=0;await loadDetail()}
++
+ function experimentListSlice(records,query,page,size){
+  var terms=String(query||'').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  var filtered=(records||[]).filter(function(job){var value=[job.job_id,job.config,job.status,job.submitted_at].join(' ').toLowerCase();return terms.every(function(term){return value.indexOf(term)>=0})});
+@@ -378,14 +385,14 @@
+ }
+ function renderExperiments(records){
+  experimentListRecords=records||[];renderExperimentOverview(experimentListRecords);
+- var slice=experimentListSlice(experimentListRecords,document.getElementById('experiment-list-search').value,experimentListPage,experimentListPageSize);experimentListPage=slice.page;
++ var slice=experimentPageMeta?{page:experimentListPage,pages:Math.max(1,Math.ceil(experimentPageMeta.total/experimentListPageSize)),items:experimentListRecords,total:experimentPageMeta.total}:experimentListSlice(experimentListRecords,'',experimentListPage,experimentListPageSize);experimentListPage=slice.page;
+  document.getElementById('experiment-page-status').textContent=slice.page+' / '+slice.pages;
+  document.getElementById('experiment-page-prev').disabled=slice.page<=1;document.getElementById('experiment-page-next').disabled=slice.page>=slice.pages;
+- var body=document.getElementById('experiments-body'),items=slice.items,signature=items.map(function(job){var progress=jobProgress(job);return [job.job_id,job.config,progress.status,progress.completed,progress.total,jobSummaryText(job),job.submitted_at||''].join('\u0001')}).join('\u0002');document.getElementById('experiment-list-status').textContent='匹配 '+slice.total+' / '+experimentListRecords.length+' 个实验';
++ var body=document.getElementById('experiments-body'),items=slice.items,signature=items.map(function(job){var progress=jobProgress(job);return [job.job_id,job.config,progress.status,progress.completed,progress.total,jobSummaryText(job),job.submitted_at||''].join('\u0001')}).join('\u0002');document.getElementById('experiment-list-status').textContent='共 '+slice.total+' 个实验 · 本页 '+experimentListRecords.length+' 条';
+  if(body.dataset.signature===signature)return;body.dataset.signature=signature;
+  if(!items.length){body.innerHTML='<tr><td class="muted" colspan="7">暂无匹配的实验。</td></tr>';return}
+  body.innerHTML=items.map(function(job){var progress=jobProgress(job);return '<tr><td><code>'+esc(job.job_id)+'</code></td><td>'+esc(job.config)+'</td><td><span class="status-pill status-'+esc(String(progress.status).toLowerCase())+'">'+esc(progress.status)+'</span></td><td>'+experimentProgressMarkup(progress)+'</td><td>'+esc(jobSummaryText(job))+'</td><td>'+esc(job.submitted_at||'')+'</td><td class="experiment-actions"><button class="secondary open-experiment" data-job-id="'+esc(job.job_id)+'" type="button">查看详情</button><button class="secondary fork-experiment" data-job-id="'+esc(job.job_id)+'" type="button">Fork 实验</button>'+(progress.status==='waiting'?'<button class="secondary cancel-waiting" data-job-id="'+esc(job.job_id)+'" type="button">'+esc(t('cancelWaiting'))+'</button>':'')+'</td></tr>'}).join('');
+- body.querySelectorAll('.cancel-waiting').forEach(function(button){button.onclick=async function(){button.disabled=true;try{await postJson('/api/experiments/'+encodeURIComponent(button.dataset.jobId)+'/stop',{});renderExperiments((await getJson('/api/experiments')).experiments||[])}catch(e){document.getElementById('experiment-list-status').textContent=String(e);button.disabled=false}}});
++ body.querySelectorAll('.cancel-waiting').forEach(function(button){button.onclick=async function(){button.disabled=true;try{await postJson('/api/experiments/'+encodeURIComponent(button.dataset.jobId)+'/stop',{});await fetchExperiments()}catch(e){document.getElementById('experiment-list-status').textContent=String(e);button.disabled=false}}});
+  body.querySelectorAll('.open-experiment').forEach(function(button){button.onclick=function(){openDetail(button.dataset.jobId)}});
+  body.querySelectorAll('.fork-experiment').forEach(function(button){button.onclick=function(){forkExperiment(button.dataset.jobId,button)}});
+ }
+@@ -394,9 +401,9 @@
+ function renderDetail(job){
+  var progress=jobProgress(job), summary=job.summary||{}, taskAdapters=summary.task_adapters||{};
+  document.getElementById('detail-title').textContent=job.job_id||'实验详情';document.getElementById('detail-subtitle').textContent=(job.config||'')+' · '+(job.submitted_at||'');
+- var status=document.getElementById('detail-status');status.textContent=progress.status;status.className='status-pill status-'+String(progress.status).toLowerCase();
++ var status=document.getElementById('detail-status');status.textContent=phaseText(job);status.className='status-pill status-'+String(progress.status).toLowerCase();
+  document.getElementById('detail-run-summary').textContent='完成 '+(progress.completed===undefined?'—':progress.completed)+' / '+(progress.total===undefined?'?':progress.total)+' · success '+jobSummaryText(job);
+- var info=[['配置',job.config],['提交时间',job.submitted_at],['进程 PID',job.pid],['输出目录',job.output_root],['日志',job.log_path],['参数 hash',job.parameter_hash],['实验覆盖配置',job.experiment_config_path],['Adapter 顺序',(progress.adapter_order||job.task_adapters||[]).map(function(x){return typeof x==='string'?x:(x.id||x.name)}).join(' → ')]];
++ var info=[['启动检查',(job.preflight&&job.preflight.checks||[]).map(function(item){return item.name+' ['+item.status+']: '+item.detail}).join('；')],['停止进度',job.stop_progress?JSON.stringify(job.stop_progress):'—'],['配置',job.config],['提交时间',job.submitted_at],['进程 PID',job.pid],['输出目录',job.output_root],['日志',job.log_path],['参数 hash',job.parameter_hash],['实验覆盖配置',job.experiment_config_path],['Adapter 顺序',(progress.adapter_order||job.task_adapters||[]).map(function(x){return typeof x==='string'?x:(x.id||x.name)}).join(' → ')]];
+  var infoBody=document.getElementById('detail-info-body'),infoSignature=JSON.stringify(info);if(infoBody.dataset.signature!==infoSignature){infoBody.dataset.signature=infoSignature;infoBody.innerHTML=info.map(function(item){return '<tr><th>'+esc(item[0])+'</th><td><code>'+esc(item[1]||'—')+'</code></td></tr>'}).join('')}
+  var parameterStatus=document.getElementById('detail-params-status'),parameterOutput=document.getElementById('detail-parameters');
+  if(job.parameters!==undefined){parameterStatus.textContent='本次提交实际加载的有效参数';parameterStatus.className='muted';var parameterText=JSON.stringify(job.parameters,null,2);if(parameterOutput.textContent!==parameterText)parameterOutput.textContent=parameterText}
+@@ -617,11 +624,11 @@
+ function renderTrajectory(episodes,job){
+  if(trajectoryCheckedJobId!==selectedJobId){trajectoryCheckedJobId=selectedJobId;trajectoryCheckedKeys.clear()}
+  trajectoryEpisodes=episodes||[];var groups=trajectoryGroups(trajectoryEpisodes),ids=Object.keys(groups),adapterBox=document.getElementById('trajectory-adapters'),empty=document.getElementById('trajectory-empty'),browser=document.getElementById('trajectory-browser');
+- document.getElementById('trajectory-status').textContent=trajectoryEpisodes.length+' 条轨迹 · '+ids.length+' 个 Adapter';
++ document.getElementById('trajectory-status').textContent='本页 '+trajectoryEpisodes.length+' 条轨迹 · '+ids.length+' 个 Adapter';
+  var adapterSignature=ids.map(function(id){var stats=trajectoryAdapterStats(job,id);return [id,groups[id].length,stats.successes===undefined?'':stats.successes,stats.num_errors===undefined?'':stats.num_errors].join('\u0001')}).join('\u0002');
+  if(!ids.length){if(adapterBox.dataset.signature!=='empty'){adapterBox.dataset.signature='empty';adapterBox.innerHTML='<div class="muted">暂无轨迹数据。</div>'}browser.classList.add('hidden');empty.classList.remove('hidden');trajectoryAdapterId=null;trajectorySelectedKey=null;trajectorySelectedDetail=null;trajectorySelectedNodeId='';trajectorySelectedSequenceOrder=0;resetTrajectoryGantt();updateTrajectoryControls();return}
+  empty.classList.add('hidden');
+- if(adapterBox.dataset.signature!==adapterSignature){adapterBox.dataset.signature=adapterSignature;adapterBox.innerHTML=ids.map(function(id){var stats=trajectoryAdapterStats(job,id),successes=stats.successes===undefined?'—':stats.successes;return '<button type="button" class="trajectory-adapter-card" data-trajectory-adapter="'+esc(id)+'"><span class="trajectory-adapter-name">'+esc(id)+'</span><span class="trajectory-adapter-meta"><span class="status-pill">'+groups[id].length+' 条任务</span><span class="muted">成功 '+esc(successes)+'</span></span></button>'}).join('');adapterBox.querySelectorAll('[data-trajectory-adapter]').forEach(function(button){button.onclick=function(){openTrajectoryAdapter(button.dataset.trajectoryAdapter)}})}
++ if(adapterBox.dataset.signature!==adapterSignature){adapterBox.dataset.signature=adapterSignature;adapterBox.innerHTML=ids.map(function(id){var stats=trajectoryAdapterStats(job,id),successes=stats.successes===undefined?'—':stats.successes;return '<button type="button" class="trajectory-adapter-card" data-trajectory-adapter="'+esc(id)+'"><span class="trajectory-adapter-name">'+esc(id)+'</span><span class="trajectory-adapter-meta"><span class="status-pill">本页 '+groups[id].length+' 条任务</span><span class="muted">总成功 '+esc(successes)+'</span></span></button>'}).join('');adapterBox.querySelectorAll('[data-trajectory-adapter]').forEach(function(button){button.onclick=function(){openTrajectoryAdapter(button.dataset.trajectoryAdapter)}})}
+  var runningAdapters=ids.filter(function(id){return groups[id].some(trajectoryEpisodeIsRunning)});if(!trajectoryAdapterId&&runningAdapters.length===1)trajectoryAdapterId=runningAdapters[0];
+  if(trajectoryAdapterId&&groups[trajectoryAdapterId]){adapterBox.classList.add('hidden');browser.classList.remove('hidden');if(!trajectoryGanttVisible)setTrajectoryGanttVisible(true);renderTrajectoryAdapter(trajectoryAdapterId)}else{adapterBox.classList.remove('hidden');browser.classList.add('hidden');trajectoryAdapterId=null;trajectorySelectedKey=null;trajectorySelectedDetail=null;trajectorySelectedNodeId='';trajectorySelectedSequenceOrder=0;resetTrajectoryGantt()}updateTrajectoryControls()
+ }
+@@ -647,14 +654,14 @@
+  trajectoryControlBusy=true;setTrajectoryControlsBusy(true);
+  try{var result=await postJson('/api/experiments/'+encodeURIComponent(selectedJobId)+'/'+action,whole?{}:{tasks:targets});
+  if(result.job_id&&result.job_id!==selectedJobId)throw new Error('实验编号发生变化');
+- setTrajectoryControlStatus(result.already_finished?'所选任务已结束。':action==='rerun'?'已提交原地重跑。':'已提交停止操作。','ok');
++ setTrajectoryControlStatus(result.already_finished?'所选任务已结束。':action==='rerun'?'已提交原地重跑。':(result.pending?'停止请求已受理，正在清理资源。':'已提交停止操作。'),'ok');
+  cancelTrajectoryPlayback();trajectoryPlaybackImageCache=Object.create(null);trajectoryPlaybackImageCacheKeys=[];trajectorySelectedDetail=null;trajectoryDetailToken++;trajectoryEpisodesFetchedAt=0;detailLastFetchedAt=0;await loadDetail();
+  }catch(e){setTrajectoryControlStatus(t('controlFailed')+String(e),'error');window.alert(String(e))}
+  finally{trajectoryControlBusy=false;setTrajectoryControlsBusy(false);updateTrajectoryControls()}
+ }
+ async function stopTrajectory(){return applyExperimentControl('stop',false)}
+ async function rerunTrajectory(){return applyExperimentControl('rerun',false)}
+-async function shutdownAllExperiments(){if(!window.confirm(t('shutdownConfirm')))return;setTrajectoryControlsBusy(true);setTrajectoryControlStatus(t('controlSubmitting'),'muted');try{var result=await postJson('/api/system/shutdown',{reason:'portal_shutdown'});setTrajectoryControlStatus(t('shutdownDone')+String(result.count||0),'ok');await refresh();if(selectedJobId)await loadDetail()}catch(e){setTrajectoryControlStatus(t('controlFailed')+String(e),'error')}finally{updateTrajectoryControls()}}
++async function shutdownAllExperiments(){if(!window.confirm(t('shutdownConfirm')))return;setTrajectoryControlsBusy(true);setTrajectoryControlStatus(t('controlSubmitting'),'muted');try{var result=await postJson('/api/system/shutdown',{reason:'portal_shutdown'});setTrajectoryControlStatus((result.pending?'停止请求已受理，正在清理资源：':t('shutdownDone'))+String(result.count||0)+(result.errors&&result.errors.length?' · 部分停止失败，请查看状态':''),'ok');await refresh();if(selectedJobId)await loadDetail()}catch(e){setTrajectoryControlStatus(t('controlFailed')+String(e),'error')}finally{updateTrajectoryControls()}}
+ function renderTrajectoryAdapter(adapterId){
+  var groups=trajectoryGroups(trajectoryEpisodes),items=groups[adapterId]||[],browser=document.getElementById('trajectory-browser');if(!items.length){browser.classList.add('hidden');updateTrajectoryControls();return}
+  var adapterTitle=document.getElementById('trajectory-adapter-title'),adapterSummary=document.getElementById('trajectory-adapter-summary');if(adapterTitle)adapterTitle.textContent=adapterId;if(adapterSummary)adapterSummary.textContent=items.length+' 条任务轨迹';document.getElementById('trajectory-task-count').textContent=String(items.length);
+@@ -929,14 +936,14 @@
+ async function loadDetail(){
+  if(!selectedJobId)return;var token=++detailRefreshToken,jobId=selectedJobId;detailLastFetchedAt=Date.now();
+  try{
+-  var requests=[getJson('/api/experiments/'+encodeURIComponent(jobId))],episodeRequest=currentDetailTab==='detail-trajectory'&&(trajectoryEpisodesJobId!==jobId||Date.now()-trajectoryEpisodesFetchedAt>=detailRefreshInterval)?getJson('/api/experiments/'+encodeURIComponent(jobId)+'/episodes?include_runtime=0'):null;
++  var requests=[getJson('/api/experiments/'+encodeURIComponent(jobId))],episodeRequest=currentDetailTab==='detail-trajectory'&&(trajectoryEpisodesJobId!==jobId||Date.now()-trajectoryEpisodesFetchedAt>=detailRefreshInterval)?getJson('/api/experiments/'+encodeURIComponent(jobId)+'/episodes?include_runtime=0&limit=100&offset='+episodePageOffset+historyWindow('episode')):null;
+   if(episodeRequest)requests.push(episodeRequest);
+   var graphRequest=graphLoadedJobId===jobId?null:getJson('/api/experiments/'+encodeURIComponent(jobId)+'/graph');
+   if(graphRequest)requests.push(graphRequest);
+   var values=await Promise.all(requests.map(function(request){return request.then(function(value){return {value:value}}).catch(function(error){return {error:error}})}));
+   if(token!==detailRefreshToken||jobId!==selectedJobId)return;
+   if(values[0].error)throw values[0].error;
+-  var jobValue=values[0].value;renderDetail(jobValue);var valueIndex=1,episodeError=null;if(episodeRequest){trajectoryEpisodesJobId=jobId;trajectoryEpisodesFetchedAt=Date.now();if(values[valueIndex].error){episodeError=values[valueIndex].error;if(!trajectoryEpisodes.length)trajectoryEpisodes=[]}else{trajectoryEpisodes=values[valueIndex].value.episodes||[]}valueIndex++}if(currentDetailTab==='detail-trajectory'&&trajectoryEpisodesJobId===jobId){trajectoryEpisodes=mergeTrajectoryProgressEpisodes(trajectoryEpisodes,jobValue);renderTrajectory(trajectoryEpisodes,jobValue);if(episodeError&&trajectoryEpisodes.length){document.getElementById('trajectory-status').textContent+=' · 详情接口重试中'}}
++  var jobValue=values[0].value;renderDetail(jobValue);var valueIndex=1,episodeError=null;if(episodeRequest){trajectoryEpisodesJobId=jobId;trajectoryEpisodesFetchedAt=Date.now();if(values[valueIndex].error){episodeError=values[valueIndex].error;if(!trajectoryEpisodes.length)trajectoryEpisodes=[]}else{trajectoryEpisodes=values[valueIndex].value.episodes||[];episodePager(values[valueIndex].value)}valueIndex++}if(currentDetailTab==='detail-trajectory'&&trajectoryEpisodesJobId===jobId){var pageKeys=new Set(trajectoryEpisodes.map(trajectoryKey));trajectoryEpisodes=mergeTrajectoryProgressEpisodes(trajectoryEpisodes,jobValue).filter(function(item){return pageKeys.has(trajectoryKey(item))});renderTrajectory(trajectoryEpisodes,jobValue);if(episodeError&&trajectoryEpisodes.length){document.getElementById('trajectory-status').textContent+=' · 详情接口重试中'}}
+   if(graphRequest&&!values[valueIndex].error){renderGraph(values[valueIndex].value);graphLoadedJobId=jobId}
+  }catch(e){document.getElementById('detail-run-summary').innerHTML='<span class="error">'+esc(e)+'</span>'}
+ }
+@@ -947,7 +954,7 @@
+   try{var m=await getJson('/api/metrics?limit=300');renderMetricsLog(m.samples||[]);document.getElementById('metrics-log-status').textContent='按需刷新 · 最新在前';document.getElementById('metrics-log-status').className='muted'}catch(e){document.getElementById('metrics-log-status').textContent='加载失败';document.getElementById('metrics-log-status').className='error'}
+  }
+  if(currentDetailTab==='detail-traces'){
+-  try{var t=await getJson('/api/traces?limit=100'),traces=(t.traces||[]).slice().reverse(),tracesBody=document.getElementById('traces-body'),traceSignature=traces.map(function(x){return [x.name,x.trace_id,x.start_time,x.end_time,x.status,JSON.stringify(x.attributes||{})].join('\u0001')}).join('\u0002');if(tracesBody.dataset.signature!==traceSignature){tracesBody.dataset.signature=traceSignature;tracesBody.innerHTML=traces.map(function(x){return '<tr><td>'+esc(x.name)+'</td><td><code>'+esc(x.trace_id)+'</code></td><td>'+esc(x.start_time)+'</td><td>'+esc(x.end_time)+'</td><td>'+esc(x.status)+'</td><td>'+pretty(x.attributes)+'</td></tr>'}).join('')}}catch(e){var tracesBody=document.getElementById('traces-body');tracesBody.dataset.signature='';tracesBody.innerHTML='<tr><td class="error" colspan="6">'+esc(e)+'</td></tr>'}
++  try{var t=await getJson((selectedJobId?'/api/experiments/'+encodeURIComponent(selectedJobId)+'/traces':'/api/traces')+'?limit=100&offset='+tracePageOffset+historyWindow('trace')),traces=(t.traces||[]).slice().reverse(),tracesBody=document.getElementById('traces-body'),traceSignature=traces.map(function(x){return [x.name,x.trace_id,x.start_time,x.end_time,x.status,JSON.stringify(x.attributes||{})].join('\u0001')}).join('\u0002');tracePageNext=t.next_offset;document.getElementById('trace-page-prev').disabled=tracePageOffset===0;document.getElementById('trace-page-next').disabled=tracePageNext==null;if(tracesBody.dataset.signature!==traceSignature){tracesBody.dataset.signature=traceSignature;tracesBody.innerHTML=traces.map(function(x){return '<tr><td>'+esc(x.name)+'</td><td><code>'+esc(x.trace_id)+'</code></td><td>'+esc(x.start_time)+'</td><td>'+esc(x.end_time)+'</td><td>'+esc(x.status)+'</td><td>'+pretty(x.attributes)+'</td></tr>'}).join('')}}catch(e){var tracesBody=document.getElementById('traces-body');tracesBody.dataset.signature='';tracesBody.innerHTML='<tr><td class="error" colspan="6">'+esc(e)+'</td></tr>'}
+  }
+ }
+ async function refresh(){
+@@ -957,7 +964,7 @@
+  refreshInFlight=true;if(refreshTimer!==null){clearTimeout(refreshTimer);refreshTimer=null}
+  try{
+   if(currentView==='detail'&&selectedJobId&&(!detailLastFetchedAt||Date.now()-detailLastFetchedAt>=detailRefreshInterval))await loadDetail();
+-  else if(currentView==='experiments'){var payload=await getJson('/api/experiments');renderExperiments(payload.experiments||[])}
++  else if(currentView==='experiments'){await fetchExperiments()}
+   if(currentView==='detail'&&currentDetailTab==='detail-trajectory'){await refreshTrajectoryCase();await refreshTrajectoryLive()}
+   var now=Date.now();if(now-lastSupportingRefresh>=5000){lastSupportingRefresh=now;await refreshSupportingData()}
+   document.getElementById('updated').classList.remove('is-error','is-paused');document.getElementById('updated').textContent=t('updated')+' '+new Date().toLocaleTimeString();if(portalLanguage==='en'){applyDynamicPortalLanguage();applyLatestPortalLanguage()}
+@@ -970,16 +977,17 @@
+ }
+ 
+ function openCreate(){createDraftLoading=false;forkSourceJobId=null;pendingForkOverride=null;document.getElementById('create-title').textContent='创建实验';document.getElementById('experiment-submit').textContent='提交实验';document.getElementById('experiment-submit-status').textContent='';document.getElementById('experiment-submit-status').className='muted';showView('create',true);refreshConfigs()}
+-function openDetail(jobId){cancelTrajectoryPlayback();if(selectedJobId!==jobId){trajectoryAdapterId=null;trajectorySelectedKey=null;trajectorySelectedDetail=null;trajectorySelectedFrame='';trajectorySelectedNodeId='';trajectorySelectedSequenceOrder=0;trajectoryFollowLatest=true;trajectoryMediaMode='image';trajectoryEpisodes=[];trajectoryEpisodesJobId=null;trajectoryEpisodesFetchedAt=0;detailLastFetchedAt=0;resetTrajectoryGantt()}selectedJobId=jobId;currentDetailTab='detail-run';graphLoadedJobId=null;showView('detail',true);setDetailTab(currentDetailTab,false);loadDetail()}
++function openDetail(jobId){cancelTrajectoryPlayback();if(selectedJobId!==jobId){episodePageOffset=0;episodePageStack=[];tracePageOffset=0;tracePageStack=[];trajectoryAdapterId=null;trajectorySelectedKey=null;trajectorySelectedDetail=null;trajectorySelectedFrame='';trajectorySelectedNodeId='';trajectorySelectedSequenceOrder=0;trajectoryFollowLatest=true;trajectoryMediaMode='image';trajectoryEpisodes=[];trajectoryEpisodesJobId=null;trajectoryEpisodesFetchedAt=0;detailLastFetchedAt=0;resetTrajectoryGantt()}selectedJobId=jobId;currentDetailTab='detail-run';graphLoadedJobId=null;showView('detail',true);setDetailTab(currentDetailTab,false);loadDetail()}
+ function backToExperiments(){cancelTrajectoryPlayback();selectedJobId=null;showView('experiments',true);refresh()}
+ async function submitExperiment(){
+  var select=document.getElementById('experiment-config'),status=document.getElementById('experiment-submit-status'),button=document.getElementById('experiment-submit'),overrides=parseCustomOverride();if(!select.value){status.textContent='请选择一个可提交的主配置。';status.className='error';return}if(overrides===null){status.textContent='请先修正右侧自定义 JSON。';status.className='error';return}
+  button.disabled=true;status.textContent='提交中…';status.className='muted';
+  try{var request={config:select.value,overrides:overrides,save_videos:document.getElementById('experiment-save-videos').checked,save_traces:document.getElementById('experiment-save-traces').checked};if(forkSourceJobId)request.forked_from=forkSourceJobId;var value=await getJson('/api/experiments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});status.textContent='已提交 '+(value.job_id||'实验');status.className='ok';forkSourceJobId=null;await refresh();openDetail(value.job_id)}catch(e){status.textContent='提交失败：'+String(e);status.className='error'}finally{button.disabled=false}
+ }
+-async function runSql(){
++async function runSql(reset){
++ if(reset!==false){sqlPageOffset=0;sqlPageStack=[];}
+  var out=document.getElementById('sql-result'),status=document.getElementById('sql-status');status.textContent='查询中…';status.className='muted';out.innerHTML='<div class="muted" style="padding:10px">正在执行…</div>';
+- try{var value=await getJson('/api/trace/sql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:document.getElementById('sql').value})}),rows=value.rows||[];if(!rows.length){out.innerHTML='<div class="muted" style="padding:10px">查询成功，但没有返回行。</div>';status.textContent='0 rows';status.className='ok';return}var columns=[];rows.forEach(function(row){Object.keys(row||{}).forEach(function(key){if(columns.indexOf(key)<0)columns.push(key)})});var head='<tr><th>#</th>'+columns.map(function(key){return '<th>'+esc(key)+'</th>'}).join('')+'</tr>';var body=rows.map(function(row,index){return '<tr><td>'+String(index+1)+'</td>'+columns.map(function(key){var value=row?row[key]:'';return '<td title="'+esc(typeof value==='string'?value:JSON.stringify(value))+'">'+pretty(value)+'</td>'}).join('')+'</tr>'}).join('');out.innerHTML='<table class="sql-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';status.textContent=rows.length+' rows · '+columns.length+' columns';status.className='ok'}catch(e){out.innerHTML='<div class="error" style="padding:10px">'+esc(e)+'</div>';status.textContent=String(e);status.className='error'}
++ try{var value=await getJson('/api/trace/sql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:document.getElementById('sql').value,job_id:selectedJobId,limit:1000,offset:sqlPageOffset})}),rows=value.rows||[];sqlPageNext=value.next_offset;document.getElementById('sql-page-prev').disabled=sqlPageOffset===0;document.getElementById('sql-page-next').disabled=sqlPageNext==null;if(!rows.length){out.innerHTML='<div class="muted" style="padding:10px">查询成功，但没有返回行。</div>';status.textContent='0 rows';status.className='ok';return}var columns=[];rows.forEach(function(row){Object.keys(row||{}).forEach(function(key){if(columns.indexOf(key)<0)columns.push(key)})});var head='<tr><th>#</th>'+columns.map(function(key){return '<th>'+esc(key)+'</th>'}).join('')+'</tr>';var body=rows.map(function(row,index){return '<tr><td>'+String(index+1)+'</td>'+columns.map(function(key){var value=row?row[key]:'';return '<td title="'+esc(typeof value==='string'?value:JSON.stringify(value))+'">'+pretty(value)+'</td>'}).join('')+'</tr>'}).join('');out.innerHTML='<table class="sql-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';status.textContent=rows.length+' rows · '+columns.length+' columns'+(value.truncated?' · 后面还有结果，请翻页':'');status.className='ok'}catch(e){out.innerHTML='<div class="error" style="padding:10px">'+esc(e)+'</div>';status.textContent=String(e);status.className='error'}
+ }
+ 
+ /* Keep Graph drill-down independent from the rest of the portal UI. */
+@@ -1065,7 +1073,7 @@
+ Object.assign(portalText.en,{refreshNow:'Refresh',totalExperiments:'All experiments',runningExperiments:'Running',completedExperiments:'Completed',failedExperiments:'Errors',overviewAllHelp:'Recorded experiments',overviewRunningHelp:'Evaluations in progress',overviewCompletedHelp:'Results ready to review',overviewFailedHelp:'Inspect logs for details',experimentHistory:'Experiment history',experimentId:'Experiment',statusLabel:'Status',progressLabel:'Progress',submittedLabel:'Created',searchTasks:'Search task name or index',taskStatus:'Task status',completedSuccessTasks:'Completed · Success',allTasks:'All statuses',noMatchingTasks:'No matching tasks',followLatest:'Follow latest',nodeDetails:'Node details',connectionRetry:'Connection lost · retrying',refreshPaused:'Background refresh paused'});
+ function filterTrajectoryTasks(items,query,status){var needle=String(query||'').trim().toLowerCase();return (items||[]).filter(function(item){var value=String(item.status||'unknown').toLowerCase(),matchesStatus=status==='all'||!status||(status==='running'?trajectoryEpisodeIsRunning(item):status==='error'?['error','failed','failure'].indexOf(value)>=0:status==='completed_success'?value==='completed'&&item.task_success===true:status==='completed'?value==='completed'&&item.task_success!==true:value===status);return matchesStatus&&(!needle||(String(item.task_id||'')+' '+trajectoryItemLabel(item)+' '+trajectoryIndex(item)).toLowerCase().indexOf(needle)>=0)})}
+ function experimentProgressMarkup(progress){var completed=Number(progress.completed),total=Number(progress.total),valid=Number.isFinite(total)&&total>0&&Number.isFinite(completed);return '<span class="experiment-progress"><span>'+esc(progress.completed===undefined?'—':String(progress.completed)+' / '+String(progress.total===undefined?'?':progress.total))+'</span>'+(valid?'<progress value="'+Math.max(0,Math.min(total,completed))+'" max="'+total+'" aria-label="'+esc(t('progressLabel'))+'"></progress>':'')+'</span>'}
+-function renderExperimentOverview(items){var counts={total:items.length,running:0,waiting:0,completed:0,failed:0};items.forEach(function(item){var status=String(jobProgress(item).status).toLowerCase();if(['waiting','queued'].indexOf(status)>=0)counts.waiting++;else if(['running','starting','stopping'].indexOf(status)>=0)counts.running++;else if(['completed','success','succeeded'].indexOf(status)>=0)counts.completed++;else if(['failed','failure','error','stop_failed'].indexOf(status)>=0)counts.failed++});Object.keys(counts).forEach(function(key){var el=document.getElementById('overview-'+key);if(el&&el.textContent!==String(counts[key]))el.textContent=String(counts[key])})}
++function renderExperimentOverview(items){var counts={total:items.length,running:0,waiting:0,completed:0,failed:0};items.forEach(function(item){var status=String(jobProgress(item).status).toLowerCase();if(['waiting','queued'].indexOf(status)>=0)counts.waiting++;else if(['running','starting','stopping'].indexOf(status)>=0)counts.running++;else if(['completed','success','succeeded'].indexOf(status)>=0)counts.completed++;else if(['failed','failure','error','stop_failed'].indexOf(status)>=0)counts.failed++});if(experimentPageMeta&&experimentPageMeta.overview){var overview=experimentPageMeta.overview;counts={total:experimentPageMeta.total,running:(overview.running||0)+(overview.stopping||0),waiting:overview.waiting||0,completed:overview.completed||0,failed:(overview.failed||0)+(overview.stop_failed||0)}}Object.keys(counts).forEach(function(key){var el=document.getElementById('overview-'+key);if(el&&el.textContent!==String(counts[key]))el.textContent=String(counts[key])})}
+ function updateTrajectoryFollowButton(){var button=document.getElementById('trajectory-follow-latest');if(!button)return;button.classList.toggle('hidden',!trajectorySelectedDetail||!trajectoryEpisodeIsRunning(trajectorySelectedDetail));button.setAttribute('aria-pressed',String(trajectoryFollowLatest&&!trajectoryPlaybackActive&&!trajectoryPlaybackPaused))}
+ var taskFilterTimer=null;
+ document.getElementById('trajectory-task-search').addEventListener('input',function(){clearTimeout(taskFilterTimer);taskFilterTimer=setTimeout(function(){if(trajectoryAdapterId)renderTrajectoryAdapter(trajectoryAdapterId)},120)});
+@@ -1082,11 +1090,21 @@
+ document.querySelector('.trajectory-node-details').addEventListener('toggle',function(){if(this.open&&trajectorySelectedDetail)renderTrajectoryRuntime(trajectorySelectedDetail)});
+ document.addEventListener('keydown',function(event){if(event.key==='Escape')setTrajectoryRuntimeFullscreen(false)});
+ 
+-document.getElementById('experiment-list-search').oninput=function(){experimentListPage=1;renderExperiments(experimentListRecords)};
+-document.getElementById('experiment-page-size').onchange=function(){experimentListPageSize=Number(this.value);experimentListPage=1;renderExperiments(experimentListRecords)};
+-document.getElementById('experiment-page-prev').onclick=function(){experimentListPage--;renderExperiments(experimentListRecords)};
+-document.getElementById('experiment-page-next').onclick=function(){experimentListPage++;renderExperiments(experimentListRecords)};
++document.getElementById('experiment-list-search').oninput=function(){experimentListPage=1;fetchExperiments()};
++document.getElementById('experiment-page-size').onchange=function(){experimentListPageSize=Number(this.value);experimentListPage=1;fetchExperiments()};
++document.getElementById('experiment-page-prev').onclick=function(){experimentListPage=Math.max(1,experimentListPage-1);fetchExperiments()};
++document.getElementById('experiment-page-next').onclick=function(){experimentListPage++;fetchExperiments()};
+ document.getElementById('trajectory-select-visible').onclick=function(){var items=filterTrajectoryTasks(trajectoryGroups(trajectoryEpisodes)[trajectoryAdapterId]||[],document.getElementById('trajectory-task-search').value,document.getElementById('trajectory-task-filter').value);items.forEach(function(item){trajectoryCheckedKeys.add(trajectoryKey(item))});renderTrajectoryAdapter(trajectoryAdapterId)};
+ document.getElementById('trajectory-clear-selection').onclick=function(){trajectoryCheckedKeys.clear();renderTrajectoryAdapter(trajectoryAdapterId)};
+ document.getElementById('experiment-stop').onclick=function(){applyExperimentControl('stop',true)};
+ document.getElementById('experiment-rerun').onclick=function(){applyExperimentControl('rerun',true)};
++
++['experiment','episode','trace'].forEach(function(prefix){['since','until'].forEach(function(key){document.getElementById(prefix+'-'+key).onchange=function(){if(prefix==='experiment'){experimentListPage=1;fetchExperiments()}else if(prefix==='episode'){changeEpisodePage(0)}else{tracePageOffset=0;tracePageStack=[];refreshSupportingData()}}})});
++document.getElementById('episode-page-prev').onclick=function(){changeEpisodePage(episodePageStack.pop()||0)};
++document.getElementById('episode-page-next').onclick=function(){if(episodePageNext!=null)changeEpisodePage(episodePageNext)};
++document.getElementById('trace-page-prev').onclick=function(){tracePageOffset=tracePageStack.pop()||0;refreshSupportingData()};
++document.getElementById('trace-page-next').onclick=function(){if(tracePageNext!=null){tracePageStack.push(tracePageOffset);tracePageOffset=tracePageNext;refreshSupportingData()}};
++document.getElementById('sql-page-prev').onclick=function(){sqlPageOffset=sqlPageStack.pop()||0;runSql(false)};
++document.getElementById('sql-page-next').onclick=function(){if(sqlPageNext!=null){sqlPageStack.push(sqlPageOffset);sqlPageOffset=sqlPageNext;runSql(false)}};
++
++document.getElementById('experiment-preflight').onclick=async function(){var button=this,status=document.getElementById('experiment-submit-status'),overrides=parseCustomOverride();if(overrides===null)return;button.disabled=true;status.textContent='正在检查配置和资源…';try{var report=await postJson('/api/preflight',{config:document.getElementById('experiment-config').value,overrides:overrides});status.textContent=report.checks.map(function(item){return item.name+' ['+item.status+']: '+item.detail}).join('；');status.className=report.ok?'ok':'error'}catch(e){status.textContent=String(e);status.className='error'}finally{button.disabled=false}};
+--- a/tests/test_experiment_manager.py
++++ b/tests/test_experiment_manager.py
+@@ -1247,7 +1247,7 @@
+     monkeypatch.setattr(manager, "_refresh_job", lambda job_id: statuses[job_id])
+     stopped: list[tuple[str, str]] = []
+ 
+-    def fake_stop(job_id: str, *, reason: str):
++    def fake_stop(job_id: str, *, reason: str, wait: bool = True):
+         stopped.append((job_id, reason))
+         return {"released": True}
+ 
+@@ -1257,7 +1257,7 @@
+ 
+     assert stopped == [("exp-running", "portal_shutdown")]
+     assert result["count"] == 1
+-    assert result["interrupted"] == [{"job_id": "exp-running", "released": True}]
++    assert result["interrupted"] == [{"job_id": "exp-running", "released": True, "pending": False}]
+ 
+ 
+ def test_rerun_selected_robocasa_case_narrows_the_adapter_override(tmp_path: Path, monkeypatch):
+--- a/tests/test_p1_integration.py
++++ b/tests/test_p1_integration.py
+@@ -136,7 +136,7 @@
+     calls = []
+ 
+     class Manager:
+-        def shutdown_all(self, *, reason):
++        def shutdown_all(self, *, reason, wait=True):
+             calls.append(reason)
+             return {"stopped": True}
+ 
+--- /dev/null
++++ b/tests/test_performance_controls.py
+@@ -0,0 +1,486 @@
++"""Availability and bounded-resource regressions with no robot or GPU dependency."""
++
++import asyncio
++import fcntl
++import http.client
++import json
++import os
++import sqlite3
++import threading
++import time
++from pathlib import Path
++from types import SimpleNamespace
++
++import pytest
++
++from robosys.infra.params import Params
++from robosys.infra.trace_query import QueryBudgetExceeded, TraceQuery
++from robosys.runtime.retention import RetentionPolicy, prune_artifacts
++from robosys.task_adapters import evaluator
++from robosys.task_adapters.base import BaseTaskAdapter, ConfiguredTaskAdapter, TaskCase
++from robosys.task_adapters.result_index import ResultIndex
++from robosys.web.cache import BoundedCache
++from robosys.web.experiments import ExperimentManager
++from robosys.web.server import build_server
++
++
++def manager_job(tmp_path, status="running"):
++    manager = ExperimentManager(project_root=tmp_path, output_root=tmp_path / "runs")
++    root = tmp_path / "runs" / "run"
++    root.mkdir()
++    job = {
++        "job_id": "run",
++        "status": status,
++        "submitted_at": "2026-09-20T00:00:00+00:00",
++        "output_root": str(root),
++        "status_path": str(root / "status.json"),
++        "summary_path": str(root / "summary.json"),
++    }
++    manager._jobs["run"] = job
++    return manager, root
++
++
++def test_http_stop_returns_accepted_and_reads_remain_available_until_release(
++    tmp_path, monkeypatch
++):
++    manager, _ = manager_job(tmp_path)
++    entered, release = threading.Event(), threading.Event()
++    calls = []
++
++    def terminate(*args):
++        calls.append(1)
++        entered.set()
++        assert release.wait(5)
++        return {"terminated": True, "pid": None}
++
++    monkeypatch.setattr(manager, "_terminate_process_group", terminate)
++    server = build_server(
++        "127.0.0.1", 0, SimpleNamespace(traces=None), experiment_manager=manager
++    )
++    thread = threading.Thread(target=server.serve_forever, daemon=True)
++    thread.start()
++
++    def request(method, path):
++        conn = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=1)
++        try:
++            conn.request(
++                method,
++                path,
++                body="{}" if method == "POST" else None,
++                headers={"Content-Type": "application/json"},
++            )
++            response = conn.getresponse()
++            return response.status, json.loads(response.read())
++        finally:
++            conn.close()
++
++    try:
++        status, value = request("POST", "/api/experiments/run/stop")
++        assert entered.wait(1)
++        assert status == 202 and value["pending"] and not value["released"]
++        assert (
++            request("GET", "/api/experiments?limit=1")[1]["experiments"][0]["phase"]
++            == "cleanup"
++        )
++        assert request("POST", "/api/experiments/run/stop")[0] == 202
++        assert len(calls) == 1
++        assert manager._job_is_running(manager._jobs["run"])
++        release.set()
++        value = manager.stop_job("run")
++        assert value["released"] and not value["pending"]
++        assert manager.get_job("run")["status"] == "cancelled"
++    finally:
++        release.set()
++        server.shutdown()
++        server.server_close()
++        thread.join()
++
++
++def test_stop_failure_stays_busy_and_can_retry(tmp_path, monkeypatch):
++    manager, _ = manager_job(tmp_path)
++    monkeypatch.setattr(
++        manager,
++        "_terminate_process_group",
++        lambda *args: {"terminated": False, "reason": "still_alive"},
++    )
++    with pytest.raises(RuntimeError, match="fully released"):
++        manager.stop_job("run")
++    job = manager.get_job("run")
++    assert job["phase"] == "needs_attention" and manager._job_is_running(job)
++    monkeypatch.setattr(
++        manager, "_terminate_process_group", lambda *args: {"terminated": True}
++    )
++    assert manager.stop_job("run")["released"]
++
++
++def test_restart_resumes_authorized_cleanup(tmp_path, monkeypatch):
++    manager, _ = manager_job(tmp_path, "stopping")
++    manager._persist_jobs()
++    resumed = ExperimentManager(project_root=tmp_path, output_root=tmp_path / "runs")
++    done = threading.Event()
++
++    def terminate(*args):
++        done.set()
++        return {"terminated": True}
++
++    monkeypatch.setattr(resumed, "_terminate_process_group", terminate)
++    resumed.start()
++    try:
++        assert done.wait(1)
++        assert resumed.stop_job("run")["released"]
++    finally:
++        resumed.close()
++
++
++class Cases(BaseTaskAdapter):
++    def __init__(self, count):
++        self.count = count
++
++    def enumerate_cases(self, *, adapter_id, params):
++        for index in range(self.count):
++            yield TaskCase(
++                adapter_id=adapter_id,
++                task_id="test",
++                environment_id="fake",
++                index=index,
++                episode=index,
++            )
++
++
++def test_incremental_results_queryable_before_summary_and_resume_replaces_one_case(
++    tmp_path, monkeypatch
++):
++    summaries, original = [], evaluator.write_json
++
++    def write(path, value):
++        if path.name == "summary.json":
++            summaries.append(json.dumps(value))
++        original(path, value)
++
++    monkeypatch.setattr(evaluator, "write_json", write)
++
++    async def run():
++        release = asyncio.Event()
++        calls = []
++
++        class Backend:
++            max_workers = 1
++
++            async def execute(self, configured, case, context):
++                calls.append(case.index)
++                if case.index == 1:
++                    await release.wait()
++                return {"task_success": case.index != 2}
++
++        options = {
++            "config_path": tmp_path / "config.json",
++            "params": Params({}),
++            "adapters": [
++                ConfiguredTaskAdapter("a", SimpleNamespace(name="fake"), Cases(3))
++            ],
++            "run_episode": None,
++            "output_dir": tmp_path,
++            "run_id": "batch",
++            "execution_backend": Backend(),
++        }
++        task = asyncio.create_task(evaluator.evaluate_task_adapters(**options))
++        async with asyncio.timeout(3):
++            while len(calls) < 2:
++                await asyncio.sleep(0.001)
++        root = tmp_path / "batch"
++        index = ResultIndex(root)
++        assert [item["status"] for item in index.page()["episodes"]] == [
++            "completed",
++            "running",
++            "pending",
++        ]
++        running = json.loads((root / "status.json").read_text())
++        assert running["completed_episodes"] == 1
++        assert running["summary"]["successes"] == 1
++        assert "episodes" not in json.loads(summaries[0])["task_adapters"]["a"]
++        release.set()
++        final = await task
++        assert (
++            len(summaries) == 2
++            and final["num_episodes"] == 3
++            and final["successes"] == 2
++        )
++        evaluator.write_json(
++            root / ".control/resume.json",
++            {"action": "rerun", "tasks": [{"adapter_id": "a", "global_index": 2}]},
++        )
++        untouched = index.get("a", 0)
++        await evaluator.evaluate_task_adapters(**options)
++        assert index.get("a", 0) == untouched
++        assert calls == [0, 1, 2, 2]
++        assert len(index.page()["episodes"]) == 3
++
++    asyncio.run(run())
++
++
++def test_portal_index_reads_never_open_full_summary(tmp_path, monkeypatch):
++    manager, root = manager_job(tmp_path, "completed")
++    index = ResultIndex(root)
++    index.initialize(
++        [
++            {"adapter_id": "a", "global_index": i, "status": "completed"}
++            for i in range(30)
++        ]
++    )
++    (root / "summary.json").write_text("invalid JSON must not be opened")
++    page = manager.episodes_page("run", limit=10, offset=10)
++    assert [x["global_index"] for x in page["episodes"]] == list(range(10, 20))
++    assert page["next_offset"] == 20
++    assert manager.get_job("run")["status"] == "completed"
++
++
++def test_job_page_only_refreshes_requested_subset(tmp_path, monkeypatch):
++    manager, _ = manager_job(tmp_path, "completed")
++    for i in range(100):
++        manager._jobs[str(i)] = {**manager._jobs["run"], "job_id": str(i)}
++    seen = []
++
++    def refresh(key):
++        seen.append(key)
++        return manager._jobs[key]
++
++    monkeypatch.setattr(manager, "_refresh_job", refresh)
++    page = manager.jobs_page(limit=5, offset=10)
++    assert len(seen) == 5 and page["total"] == 101 and page["next_offset"] == 15
++    assert manager.jobs_page(search="run")["total"] == 1
++
++
++@pytest.mark.parametrize(
++    "kwargs",
++    [
++        {"limit": 0},
++        {"limit": 501},
++        {"offset": -1},
++        {"offset": 100001},
++        {"since": "2026-09-20"},
++        {"since": "2026-09-21T00:00:00Z", "until": "2026-09-20T00:00:00Z"},
++    ],
++)
++def test_history_invalid_windows_rejected(tmp_path, kwargs):
++    manager, _ = manager_job(tmp_path)
++    with pytest.raises(ValueError):
++        manager.jobs_page(**kwargs)
++
++
++def trace_database(tmp_path):
++    db = tmp_path / "trace.sqlite3"
++    with sqlite3.connect(db) as conn:
++        conn.execute("CREATE TABLE samples(id INTEGER, value TEXT)")
++        conn.executemany(
++            "INSERT INTO samples VALUES (?,?)", [(i, "x" * 100) for i in range(30)]
++        )
++    return db
++
++
++def test_trace_pages_are_complete_without_unbounded_default(tmp_path):
++    db = trace_database(tmp_path)
++    reader = TraceQuery(db, max_rows=10)
++    page = reader.sql_page("SELECT * FROM samples ORDER BY id", limit=6, offset=6)
++    assert [row["id"] for row in page["rows"]] == list(range(6, 12))
++    assert page["next_offset"] == 12
++    with pytest.raises(QueryBudgetExceeded):
++        reader.sql("SELECT * FROM samples")
++    rows, offset = [], 0
++    while True:
++        page = reader.sql_page(
++            "SELECT * FROM samples ORDER BY id", limit=6, offset=offset
++        )
++        rows.extend(page["rows"])
++        if page["next_offset"] is None:
++            break
++        offset = page["next_offset"]
++    assert len(rows) == 30 and len({row["id"] for row in rows}) == 30
++
++
++def test_trace_query_deadline_aborts_expensive_select(tmp_path):
++    reader = TraceQuery(trace_database(tmp_path), timeout_s=0.01)
++    with pytest.raises(TimeoutError):
++        reader.sql(
++            "WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<1000000000) SELECT SUM(x) FROM n"
++        )
++    assert len(reader.sql("SELECT * FROM samples LIMIT 1")) == 1
++
++
++def test_trace_byte_budget_signals_more_pages_and_rejects_oversized_row(tmp_path):
++    reader = TraceQuery(trace_database(tmp_path), max_bytes=500)
++    page = reader.sql_page("SELECT * FROM samples")
++    assert page["truncated"] and 1 <= len(page["rows"]) < 10
++    with pytest.raises(QueryBudgetExceeded):
++        reader.sql("SELECT printf('%01000d', 1) AS value")
++
++
++def test_cache_lru_bytes_and_invalidation(tmp_path):
++    cache = BoundedCache(max_entries=2, max_bytes=10)
++    cache.put("a", 1, size=4)
++    cache.put("b", 2, size=4)
++    assert cache.get("a") == 1
++    cache.put("c", 3, size=4)
++    assert cache.get("b") is None and cache.bytes == 8
++    cache.put("large", 1, size=11)
++    assert len(cache) == 2
++    cache.pop("a")
++    assert cache.bytes == 4
++    manager, root = manager_job(tmp_path)
++    path = root / "sample.json"
++    path.write_text('{"a":1}')
++    assert manager._read_json_cached(path) == {"a": 1}
++    path.write_text('{"a":123}')
++    assert manager._read_json_cached(path) == {"a": 123}
++
++
++@pytest.mark.parametrize(
++    "held,status,age,expected",
++    [
++        (False, "completed", 40, True),
++        (True, "completed", 40, False),
++        (False, "failed", 40, False),
++        (False, "failed", 100, True),
++        (False, "running", 100, False),
++    ],
++)
++def test_retention_respects_leases_failed_run_retention_and_dry_run(
++    tmp_path, held, status, age, expected
++):
++    manager, root = manager_job(tmp_path, status)
++    control = root / ".control"
++    control.mkdir()
++    lock = (control / "run.lock").open("a+")
++    if held:
++        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
++    video = root / "episode.mp4"
++    video.write_bytes(b"video")
++    outside = tmp_path / "outside.log"
++    outside.write_text("preserve")
++    (root / "link.log").symlink_to(outside)
++    summary = root / "summary.json"
++    summary.write_text("{}")
++    old = time.time() - age * 86400
++    os.utime(video, (old, old))
++    os.utime(outside, (old, old))
++    manager._persist_jobs()
++    try:
++        preview = prune_artifacts(manager.output_root, RetentionPolicy())
++        assert bool(preview["files"]) is expected and video.exists()
++        result = prune_artifacts(manager.output_root, RetentionPolicy(), apply=True)
++        assert bool(result["files"]) is expected
++        assert video.exists() is not expected
++        assert outside.read_text() == "preserve" and summary.exists()
++    finally:
++        lock.close()
++
++
++def test_preflight_reports_missing_local_model_without_starting_services(tmp_path):
++    from robosys.runtime.config import ToolDeploymentConfig, load_application_config
++    from robosys.runtime.preflight import check_preflight
++
++    loaded = load_application_config(
++        Path(__file__).resolve().parents[1] / "configs/config.json"
++    )
++    loaded.tools.tools[0].deployment = ToolDeploymentConfig(
++        backend="command",
++        gpu_ids=[0],
++        command=["definitely-missing-runtime"],
++        model_path=str(tmp_path / "missing-model"),
++    )
++    # Config validation may reject allocation first; either outcome is an actionable diagnostic.
++    result = check_preflight(loaded, output_root=tmp_path, probe_gpu=False)
++    assert not result["ok"] and any(
++        item["status"] == "error" for item in result["checks"]
++    )
++
++
++def test_pipe_notifications_handle_ready_timeout_eof_and_cancelled_wait():
++    import multiprocessing
++
++    from robosys.runtime.parallel import _wait_readable
++
++    async def scenario():
++        parent, child = multiprocessing.Pipe()
++        try:
++            assert not await _wait_readable(parent, 0.01)
++            pending = asyncio.create_task(_wait_readable(parent, 5))
++            await asyncio.sleep(0)
++            pending.cancel()
++            with pytest.raises(asyncio.CancelledError):
++                await pending
++            child.send(("ready", None))
++            assert await _wait_readable(parent, 0.1)
++            assert parent.recv() == ("ready", None)
++            child.close()
++            assert await _wait_readable(parent, 0.1)
++            with pytest.raises(EOFError):
++                parent.recv()
++        finally:
++            parent.close()
++            child.close()
++
++    asyncio.run(scenario())
++
++
++def test_preflight_shared_cli_and_portal_check_model_path(tmp_path):
++    from test_execution_backends import make_config
++
++    from robosys.runtime.config import load_application_config
++    from robosys.runtime.preflight import check_preflight
++    from robosys.runtime.runner_cli import main
++
++    config = make_config(tmp_path)
++    value = json.loads(config.read_text())
++    value["parameters"]["model"] = {"path": str(tmp_path / "missing-model")}
++    config.write_text(json.dumps(value))
++    report = check_preflight(
++        load_application_config(config), output_root=tmp_path, probe_gpu=False
++    )
++    assert any(
++        item["name"] == "model.path" and item["status"] == "error"
++        for item in report["checks"]
++    )
++    assert (
++        main(["--preflight", "--config", str(config), "--output-dir", str(tmp_path)])
++        == 1
++    )
++    manager = ExperimentManager(
++        project_root=tmp_path, config_root=tmp_path, output_root=tmp_path / "runs"
++    )
++    assert not manager.preflight(config)["ok"]
++    assert not manager._jobs
++
++
++def test_runtime_phase_waits_for_worker_ready_snapshot(tmp_path):
++    manager, root = manager_job(tmp_path)
++    live = root / "live.json"
++    status = {
++        "status": "running",
++        "active": [
++            {"adapter_id": "a", "global_index": 0, "live_status_path": str(live)}
++        ],
++    }
++    (root / "status.json").write_text(json.dumps(status))
++    assert manager.get_job("run")["phase"] == "loading"
++    live.write_text(json.dumps({"status": "running"}))
++    assert manager.get_job("run")["phase"] == "executing"
++
++
++def test_bulk_controls_validate_identities_without_listing_full_history(
++    tmp_path, monkeypatch
++):
++    manager, root = manager_job(tmp_path, "completed")
++    index = ResultIndex(root)
++    index.initialize(
++        {"adapter_id": "a", "global_index": i, "status": "completed"}
++        for i in range(1000)
++    )
++    monkeypatch.setattr(
++        manager,
++        "list_episodes",
++        lambda *a, **k: pytest.fail("must use indexed identity lookup"),
++    )
++    assert index.contains_all([{"adapter_id": "a", "global_index": 999}])
++    assert not index.contains_all([{"adapter_id": "a", "global_index": 1000}])
++    result = manager.stop_job("run", tasks=[{"adapter_id": "a", "global_index": 999}])
++    assert result["already_finished"]
+--- a/tests/test_portal_server.py
++++ b/tests/test_portal_server.py
+@@ -39,7 +39,7 @@
+         assert f'id="{field}"' in HTML
+     assert "parseLabelFilters" in HTML
+     assert "getJson('/api/metrics?limit=300')" in HTML
+-    assert "getJson('/api/traces?limit=100')" in HTML
++    assert "'/api/traces')+'?limit=100&offset='" in HTML
+     # Refreshing is single-flight and scheduled adaptively with setTimeout;
+     # a fixed interval could stack slow requests over the SSH tunnel.
+     assert "setInterval(refresh,2000)" not in HTML
+--- /dev/null
++++ b/configs/operations/retention-policy.json
+@@ -0,0 +1,6 @@
++{
++  "logs_days": 30,
++  "traces_days": 30,
++  "videos_days": 7,
++  "failed_days": 90
++}
+--- /dev/null
++++ b/scripts/benchmark_runtime.py
+@@ -0,0 +1,332 @@
++"""Repeatable synthetic runtime/Portal baseline; never connects to hardware.
++
++Run from the checkout being measured. Output records raw samples and workload
++parameters; wall-clock results are local measurements, not GPU capacity claims.
++"""
++
++import argparse
++import asyncio
++import http.client
++import json
++import math
++import platform
++import sqlite3
++import sys
++import tempfile
++import threading
++import time
++import tracemalloc
++from pathlib import Path
++from types import SimpleNamespace
++from uuid import uuid4
++
++sys.path.insert(0, str(Path.cwd()))
++
++
++def percentiles(samples):
++    values = sorted(samples)
++    return {
++        label: round(
++            values[min(len(values) - 1, max(0, math.ceil(len(values) * fraction) - 1))],
++            3,
++        )
++        for label, fraction in [("p50", 0.50), ("p95", 0.95), ("p99", 0.99)]
++    }
++
++
++async def batch_benchmark(root, count, workers):
++    from robosys.infra.params import Params
++    from robosys.task_adapters import evaluator
++    from robosys.task_adapters.base import (
++        BaseTaskAdapter,
++        ConfiguredTaskAdapter,
++        TaskCase,
++    )
++
++    class Adapter(BaseTaskAdapter):
++        def enumerate_cases(self, *, adapter_id, params):
++            for i in range(count):
++                yield TaskCase(
++                    adapter_id=adapter_id,
++                    task_id="bench",
++                    environment_id="fake",
++                    index=i,
++                    episode=i,
++                )
++
++    class Backend:
++        max_workers = workers
++
++        async def execute(self, configured, case, context):
++            await asyncio.sleep(0.001)
++            return {"task_success": True, "env_steps": 1}
++
++    writes = {"bytes": 0, "calls": 0, "summary_bytes": 0, "summary_calls": 0}
++    original = evaluator.write_json
++
++    def measured(path, value):
++        original(path, value)
++        size = path.stat().st_size
++        writes["bytes"] += size
++        writes["calls"] += 1
++        if path.name == "summary.json":
++            writes["summary_bytes"] += size
++            writes["summary_calls"] += 1
++
++    evaluator.write_json = measured
++    started = time.perf_counter()
++    backlog = []
++    try:
++        result = await evaluator.evaluate_task_adapters(
++            config_path=root / "config.json",
++            params=Params({}),
++            adapters=[
++                ConfiguredTaskAdapter("bench", SimpleNamespace(name="bench"), Adapter())
++            ],
++            output_dir=root,
++            run_id="batch",
++            run_episode=None,
++            execution_backend=Backend(),
++            options={"memory_mode": "disabled"},
++            on_case_complete=lambda done, total, record: backlog.append(
++                [round(time.perf_counter() - started, 4), total - done]
++            ),
++        )
++    finally:
++        evaluator.write_json = original
++    elapsed = time.perf_counter() - started
++    return {
++        "cases": count,
++        "workers": workers,
++        "elapsed_s": elapsed,
++        "tasks_per_s": count / elapsed,
++        "completed": result["num_episodes"],
++        "writes": writes,
++        "writes_scope": "JSON serialization only; SQLite writes excluded",
++        "backlog": backlog,
++        "index_retained_bytes": sum(
++            p.stat().st_size for p in (root / "batch").glob("episodes.sqlite3*")
++        ),
++        "retained_bytes": sum(
++            p.stat().st_size for p in (root / "batch").rglob("*") if p.is_file()
++        ),
++    }
++
++
++async def action_benchmark(count=200):
++    from robosys.runtime.safety import SafetyStateStore
++    from robosys.schemas import Action, ActionChunk
++    from robosys.services.body import InProcessBodyService
++
++    async def driver(action):
++        await asyncio.sleep(0.001)
++
++    body = InProcessBodyService(driver, safety_state=SafetyStateStore())
++    sid, samples = uuid4(), []
++    try:
++        for _ in range(count):
++            chunk = ActionChunk(session_id=sid, actions=[Action(session_id=sid)])
++            started = time.perf_counter()
++            result = await body.execute(chunk)
++            assert result.status == "succeeded"
++            samples.append((time.perf_counter() - started) * 1000)
++    finally:
++        await body.close()
++    return {"samples_ms": samples, **percentiles(samples)}
++
++
++def portal_benchmark(root, history=300):
++    from robosys.web.experiments import ExperimentManager
++    from robosys.web.query import PortalData
++    from robosys.web.server import build_server
++
++    manager = ExperimentManager(project_root=root, output_root=root / "portal")
++    manager._dispatch_waiting = lambda: None
++    for i in range(history):
++        run = root / "portal" / str(i)
++        manager._jobs[str(i)] = {
++            "job_id": str(i),
++            "status": "waiting",
++            "submitted_at": str(i).zfill(8),
++            "output_root": str(run),
++            "status_path": str(run / "status.json"),
++            "summary_path": str(run / "summary.json"),
++        }
++    target = root / "portal/stop"
++    manager._jobs["stop"] = {
++        "job_id": "stop",
++        "status": "running",
++        "output_root": str(target),
++        "status_path": str(target / "status.json"),
++        "summary_path": str(target / "summary.json"),
++    }
++    entered = threading.Event()
++
++    def terminate(*args, **kwargs):
++        entered.set()
++        time.sleep(0.5)
++        return {"terminated": True, "forced": False, "pid": None}
++
++    manager._terminate_process_group = terminate
++    data = PortalData(root / "metrics.jsonl", root / "trace.jsonl")
++    server = build_server("127.0.0.1", 0, data, experiment_manager=manager)
++    thread = threading.Thread(target=server.serve_forever, daemon=True)
++    thread.start()
++
++    def request(method, path):
++        client = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
++        started = time.perf_counter()
++        try:
++            client.request(
++                method,
++                path,
++                body="{}" if method == "POST" else None,
++                headers={"Content-Type": "application/json"},
++            )
++            response = client.getresponse()
++            payload = response.read()
++            assert response.status in {200, 202}, payload
++            return (
++                (time.perf_counter() - started) * 1000,
++                len(payload),
++                json.loads(payload),
++            )
++        finally:
++            client.close()
++
++    stop_result = []
++    stop = threading.Thread(
++        target=lambda: stop_result.append(request("POST", "/api/experiments/stop/stop"))
++    )
++    try:
++        before = [request("GET", "/api/experiments?limit=25") for _ in range(5)]
++        stop.start()
++        assert entered.wait(2)
++        during = [request("GET", "/api/experiments?limit=25") for _ in range(8)]
++        stop.join(3)
++        deadline = time.monotonic() + 3
++        while (
++            manager._jobs["stop"]["status"] == "stopping"
++            and time.monotonic() < deadline
++        ):
++            time.sleep(0.01)
++        return {
++            "history": history,
++            "normal_ms": percentiles([x[0] for x in before]),
++            "during_stop_ms": percentiles([x[0] for x in during]),
++            "during_stop_samples_ms": [x[0] for x in during],
++            "stop_response_ms": stop_result[0][0],
++            "list_bytes": before[0][1],
++            "list_items": len(before[0][2]["experiments"]),
++        }
++    finally:
++        server.shutdown()
++        server.server_close()
++        thread.join()
++        manager.close()
++        data.traces.close()
++
++
++def cache_benchmark(root, rounds=3, files=400):
++    from robosys.web.experiments import ExperimentManager
++
++    manager = ExperimentManager(project_root=root, output_root=root / "cache")
++    tracemalloc.start()
++    samples = []
++    for cycle in range(rounds):
++        for i in range(files):
++            path = root / "cache" / f"{cycle}-{i}.json"
++            path.write_text(json.dumps({"payload": "x" * 8192}))
++            manager._read_json_cached(path)
++        current, peak = tracemalloc.get_traced_memory()
++        samples.append(
++            {
++                "round": cycle + 1,
++                "cached_entries": len(manager._json_cache),
++                "allocated_bytes": current,
++                "peak_bytes": peak,
++                "disk_bytes": sum(
++                    p.stat().st_size for p in (root / "cache").glob("*.json")
++                ),
++            }
++        )
++    tracemalloc.stop()
++    return {"rounds": rounds, "files_per_round": files, "samples": samples}
++
++
++def trace_benchmark(root):
++    from robosys.infra.trace_query import TraceQuery
++
++    db = root / "trace-query.sqlite3"
++    connection = sqlite3.connect(db)
++    connection.execute("CREATE TABLE samples(id INTEGER PRIMARY KEY, value TEXT)")
++    connection.executemany(
++        "INSERT INTO samples VALUES (?,?)", ((i, "x" * 256) for i in range(20000))
++    )
++    connection.commit()
++    connection.close()
++    started = time.perf_counter()
++    reader = TraceQuery(db)
++    page = (
++        reader.sql_page("SELECT * FROM samples", limit=1000)
++        if hasattr(reader, "sql_page")
++        else {"rows": reader.sql("SELECT * FROM samples"), "truncated": False}
++    )
++    rows = page["rows"]
++    return {
++        "elapsed_ms": (time.perf_counter() - started) * 1000,
++        "returned_rows": len(rows),
++        "returned_bytes": len(json.dumps(rows)),
++        "truncated": page["truncated"],
++        "requested_limit": 1000,
++    }
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--output", required=True)
++    parser.add_argument("--cases", type=int, default=300)
++    parser.add_argument("--workers", type=int, default=8)
++    args = parser.parse_args()
++    with tempfile.TemporaryDirectory(prefix="robosys-bench-", dir="/tmp") as directory:
++        root = Path(directory)
++        results = {
++            "platform": platform.platform(),
++            "python": sys.version,
++            "cwd": str(Path.cwd()),
++            "workload": "synthetic fake tasks/driver, loopback HTTP, temporary local files; no GPU or hardware",
++            "batch": asyncio.run(batch_benchmark(root, args.cases, args.workers)),
++            "action": asyncio.run(action_benchmark()),
++            "portal": portal_benchmark(root),
++            "cache_growth": cache_benchmark(root),
++            "trace": trace_benchmark(root),
++        }
++    output = Path(args.output)
++    output.parent.mkdir(parents=True, exist_ok=True)
++    output.write_text(json.dumps(results, indent=2) + "\n")
++    print(
++        json.dumps(
++            {
++                key: value
++                for key, value in results.items()
++                if key not in {"batch", "action", "cache_growth"}
++            },
++            indent=2,
++        )
++    )
++    print(
++        json.dumps(
++            {
++                "tasks_per_s": results["batch"]["tasks_per_s"],
++                "writes": results["batch"]["writes"],
++                "action_ms": {
++                    key: results["action"][key] for key in ("p50", "p95", "p99")
++                },
++                "cache_growth": results["cache_growth"],
++            }
++        )
++    )
++
++
++if __name__ == "__main__":
++    main()
+--- /dev/null
++++ b/scripts/benchmark_workers.py
+@@ -0,0 +1,152 @@
++"""Measure real resident Worker idle CPU/RSS and the parent IPC receive delay.
++
++No model or robot is started. Requires psutil. Run from the checkout measured.
++"""
++
++import argparse
++import asyncio
++import json
++import multiprocessing
++import sys
++import tempfile
++import time
++from pathlib import Path
++from types import SimpleNamespace
++
++sys.path.insert(0, str(Path.cwd()))
++
++
++def fake_config(root):
++    value = {
++        "modules": [{"name": "echo", "id": "echo"}],
++        "tools": [],
++        "monitors": [],
++        "bodies": [],
++        "environments": [{"name": "fake", "id": "env"}],
++        "task_adapters": [{"name": "single-task"}],
++        "graphs": [
++            {
++                "id": "test",
++                "entry": "echo",
++                "nodes": [{"id": "echo", "module": "echo"}],
++                "outputs": {
++                    "success": {
++                        "source": "nodes.echo.outputs.success",
++                        "default": False,
++                    }
++                },
++            }
++        ],
++        "parameters": {
++            "runtime": {
++                "graph_id": "test",
++                "environment_id": "env",
++                "monitor_enabled": False,
++            }
++        },
++        "observation_cache": {"enabled": False},
++        "safety_state": {"backend": "memory"},
++    }
++    path = root / "config.json"
++    path.write_text(json.dumps(value))
++    return path
++
++
++async def idle(root, count, seconds):
++    import psutil
++
++    from robosys.runtime.execution import ExecutionOptions
++    from robosys.runtime.parallel import ProcessSlot
++    from robosys.runtime.runner import EpisodeRequest
++
++    profile = EpisodeRequest(config=fake_config(root), output=root / "result.json")
++    options = ExecutionOptions(
++        backend="process", max_workers=count, shutdown_timeout_s=1
++    )
++    slots = [ProcessSlot(profile, None, options) for _ in range(count)]
++    try:
++        await asyncio.gather(*(slot.start() for slot in slots))
++        procs = [psutil.Process(slot.process.pid) for slot in slots]
++        await asyncio.sleep(0.3)
++
++        def measure():
++            return [
++                {
++                    "cpu_s": p.cpu_times().user + p.cpu_times().system,
++                    "rss": p.memory_info().rss,
++                }
++                for p in procs
++            ]
++
++        before, start = measure(), time.perf_counter()
++        await asyncio.sleep(seconds)
++        after, elapsed = measure(), time.perf_counter() - start
++        cpu = sum(b["cpu_s"] - a["cpu_s"] for a, b in zip(before, after))
++        return {
++            "workers": count,
++            "idle_s": elapsed,
++            "cpu_s": cpu,
++            "cpu_core_percent": 100 * cpu / elapsed,
++            "rss_before": sum(p["rss"] for p in before),
++            "rss_after": sum(p["rss"] for p in after),
++            "receive_mode": "connection_readiness"
++            if hasattr(
++                __import__("robosys.runtime.parallel", fromlist=["_wait_readable"]),
++                "_wait_readable",
++            )
++            else "20ms_polling",
++        }
++    finally:
++        await asyncio.gather(*(slot.close() for slot in slots))
++
++
++async def parent_receive(samples=50):
++    from benchmark_runtime import percentiles
++
++    from robosys.runtime.parallel import ProcessSlot
++
++    parent, child = multiprocessing.Pipe()
++    slot = ProcessSlot(SimpleNamespace(output=None), None, None)
++    slot.connection = parent
++    slot.process = SimpleNamespace(is_alive=lambda: True)
++    delays = []
++    try:
++        for _ in range(samples):
++
++            async def send():
++                await asyncio.sleep(0.003)
++                child.send(("result", None, time.perf_counter()))
++
++            producer = asyncio.create_task(send())
++            message = await slot.receive(1)
++            delays.append((time.perf_counter() - message[2]) * 1000)
++            await producer
++    finally:
++        parent.close()
++        child.close()
++    return {
++        "samples_ms": delays,
++        **percentiles(delays),
++        "scope": "actual parent receive path; synthetic Pipe sender",
++    }
++
++
++async def main_async(args):
++    with tempfile.TemporaryDirectory(prefix="rc-worker-bench-") as directory:
++        root = Path(directory)
++        measured = [await idle(root, count, args.idle_seconds) for count in (1, 4, 8)]
++        return {
++            "idle": measured,
++            "parent_receive": await parent_receive(),
++            "scope": "real idle WorkerRuntime/process slots, fake configuration, no model/GPU workload",
++        }
++
++
++if __name__ == "__main__":
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--output", required=True)
++    parser.add_argument("--idle-seconds", type=float, default=3)
++    args = parser.parse_args()
++    result = asyncio.run(main_async(args))
++    Path(args.output).write_text(json.dumps(result, indent=2) + "\n")
++    print(json.dumps(result["idle"], indent=2))
+--- /dev/null
++++ b/scripts/maintain_experiments.py
+@@ -0,0 +1,78 @@
++"""Preview/apply artifact retention or rebuild an episode index for a legacy run."""
++
++import argparse
++import json
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from robosys.runtime.retention import RetentionPolicy, _terminal_lease, prune_artifacts
++from robosys.task_adapters.evaluator import _compact_episode
++from robosys.task_adapters.result_index import ResultIndex
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--output-root", default="data/experiments")
++    parser.add_argument(
++        "--policy", help="JSON with logs_days, traces_days, videos_days and failed_days"
++    )
++    parser.add_argument(
++        "--apply",
++        action="store_true",
++        help="delete eligible artifacts; otherwise preview only",
++    )
++    parser.add_argument(
++        "--index-run",
++        help="rebuild the query index for a terminal run (does not prune artifacts)",
++    )
++    args = parser.parse_args()
++    if args.index_run:
++        root = Path(args.index_run).resolve()
++        with _terminal_lease(root) as safe:
++            if not safe:
++                parser.error(
++                    "run is active, queued for resume, or has no verifiable run lease"
++                )
++            summary = json.loads((root / "summary.json").read_text())
++            from robosys.web.experiments import ExperimentManager
++
++            records = [
++                dict(
++                    item,
++                    adapter_id=adapter,
++                    global_index=ExperimentManager._episode_index(item, seq),
++                )
++                for seq, (adapter, item) in enumerate(
++                    ExperimentManager._iter_summary_episodes(summary)
++                )
++            ]
++            ResultIndex(root).initialize(_compact_episode(item) for item in records)
++            status_path = root / "status.json"
++            if status_path.exists():
++                from robosys.task_adapters.evaluator import write_json
++
++                status = json.loads(status_path.read_text())
++                status["summary"] = ExperimentManager._compact_summary(summary)
++                write_json(status_path, status)
++        print(
++            json.dumps(
++                {"indexed": len(records), "path": str(root / "episodes.sqlite3")}
++            )
++        )
++    else:
++        policy = RetentionPolicy(
++            **(json.loads(Path(args.policy).read_text()) if args.policy else {})
++        )
++        print(
++            json.dumps(
++                prune_artifacts(args.output_root, policy, apply=args.apply),
++                ensure_ascii=False,
++                indent=2,
++            )
++        )
++
++
++if __name__ == "__main__":
++    main()

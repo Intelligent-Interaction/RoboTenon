@@ -1,0 +1,13 @@
+{
+  "episodes_per_task": 1,
+  "params": {
+    "tasks": [
+      "reach_target"
+    ],
+    "render_resolution": 256,
+    "max_steps": 200
+  },
+  "benchmark_id": "rlbench_benchmark",
+  "source_config": "configs/benchmarks/rlbench/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

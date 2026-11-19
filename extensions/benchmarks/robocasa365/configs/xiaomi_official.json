@@ -1,0 +1,10 @@
+{
+  "benchmark_id": "robocasa365_benchmark",
+  "episodes_per_task": 50,
+  "params": {
+    "split": "pretrain",
+    "seed": 7,
+    "camera_size": 256,
+    "episode_seed_stride": 50
+  }
+}

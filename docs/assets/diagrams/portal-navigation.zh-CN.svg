@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520" role="img" aria-labelledby="title desc">
+<title id="title">轨迹页阅读顺序（界面示意）</title><desc id="desc">先选 TaskAdapter，再选任务；任务状态、观测和节点信息应对应同一次执行。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="520" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">轨迹页阅读顺序（界面示意）</text>
+<text x="36" y="78" class="sub" fill="#586779">先选 TaskAdapter，再选任务；任务状态、观测和节点信息应对应同一次执行。</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="139" width="1048" height="72" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 153 v44" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="171" class="head" fill="#3458a4">实验详情</text>
+<text x="54" y="200" class="body" fill="#172b46">运行详情  /  轨迹  /  打点监控  /  Trace 查询</text>
+<rect x="36" y="240" width="235" height="178" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 254 v150" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="272" class="head" fill="#3458a4">1. 任务列表</text>
+<text x="54" y="301" class="body" fill="#172b46">TaskAdapter</text>
+<text x="54" y="327" class="body" fill="#172b46">任务编号 / 状态</text>
+<text x="54" y="353" class="body" fill="#172b46">筛选与分页</text>
+<rect x="300" y="240" width="455" height="178" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M301 254 v150" stroke="#3458a4" stroke-width="3"/>
+<text x="318" y="272" class="head" fill="#3458a4">2. 观测与视频</text>
+<text x="318" y="301" class="body" fill="#172b46">查看当前任务的相机帧或运行视频</text>
+<text x="318" y="327" class="body" fill="#172b46">CPU 示例没有相机图像</text>
+<text x="318" y="353" class="body" fill="#172b46">媒体缺失时检查保存选项与路径</text>
+<rect x="784" y="240" width="300" height="178" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M785 254 v150" stroke="#3458a4" stroke-width="3"/>
+<text x="802" y="272" class="head" fill="#3458a4">3. 节点与状态</text>
+<text x="802" y="301" class="body" fill="#172b46">查看执行过的节点</text>
+<text x="802" y="327" class="body" fill="#172b46">展开节点详情</text>
+<text x="802" y="353" class="body" fill="#172b46">核对 inputs / outputs</text>
+<text x="36" y="464" class="head" fill="#29735c">4. 调用耗时：结合 Trace 定位耗时长或失败的节点。</text>
+<text x="36" y="496" class="small" fill="#586779">这是一张导航示意图，不是仿真或真机运行截图。</text>
+</svg>

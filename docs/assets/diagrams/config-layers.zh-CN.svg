@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="400" viewBox="0 0 1120 400" role="img" aria-labelledby="title desc">
+<title id="title">配置合并与插件装配</title><desc id="desc">路径相对主配置解析；JSON 只描述组件选择和参数，实际对象由工厂创建。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="400" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">配置合并与插件装配</text>
+<text x="36" y="78" class="sub" fill="#586779">路径相对主配置解析；JSON 只描述组件选择和参数，实际对象由工厂创建。</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="147" width="230" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 161 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="179" class="head" fill="#3458a4">主配置与子清单</text>
+<text x="54" y="208" class="body" fill="#172b46">组件与 Graph</text>
+<text x="54" y="234" class="body" fill="#172b46">插件导入路径</text>
+<rect x="315" y="147" width="230" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M316 161 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="333" y="179" class="head" fill="#3458a4">实验覆盖层</text>
+<text x="333" y="208" class="body" fill="#172b46">对象递归合并</text>
+<text x="333" y="234" class="body" fill="#172b46">数组与标量整体替换</text>
+<rect x="594" y="147" width="230" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M595 161 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="612" y="179" class="head" fill="#3458a4">有效配置</text>
+<text x="612" y="208" class="body" fill="#172b46">预检与快照</text>
+<text x="612" y="234" class="body" fill="#172b46">参数及组件选择</text>
+<rect x="873" y="147" width="211" height="127" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M874 161 v99" stroke="#3458a4" stroke-width="3"/>
+<text x="891" y="179" class="head" fill="#3458a4">Worker 装配</text>
+<text x="891" y="208" class="body" fill="#172b46">加载注册表</text>
+<text x="891" y="234" class="body" fill="#172b46">创建运行对象</text>
+<path d="M266 210 L315 210" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M545 210 L594 210" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M824 210 L873 210" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="376" class="small" fill="#586779">覆盖 task_adapters / tools / graphs 数组时，要提供本次运行所需的完整数组。</text>
+</svg>

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robotenon-robodojo-office"
+version = "0.1.0"
+description = "Official RoboDojo benchmark integration for RoboTenon"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["robotenon>=0.1.0"]
+
+[project.optional-dependencies]
+server = ["msgpack>=1.0", "numpy>=1.24", "websockets>=12", "PyYAML>=6"]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

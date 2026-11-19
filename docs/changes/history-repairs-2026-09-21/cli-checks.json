@@ -1,0 +1,60 @@
+{
+  "recover": {
+    "indexed": 1,
+    "counts": {
+      "completed": 1
+    },
+    "summary": {
+      "num_episodes": 1,
+      "num_completed": 1,
+      "num_errors": 0,
+      "num_cancelled": 0,
+      "successes": 1,
+      "episode_success_rate": 1.0,
+      "task_adapters": {
+        "a": {
+          "num_cases": 1,
+          "num_episodes": 1,
+          "num_completed": 1,
+          "num_errors": 0,
+          "num_cancelled": 0,
+          "successes": 1,
+          "success_rate": 1.0
+        }
+      }
+    },
+    "path": "/tmp/example-run/run/episodes.sqlite3"
+  },
+  "preview": {
+    "applied": false,
+    "files": [
+      "run/old.log"
+    ],
+    "bytes": 7,
+    "skipped_runs": [],
+    "truncated": false,
+    "disk": {
+      "free_bytes": 620415557632,
+      "total_bytes": 994610155520,
+      "low_space": false
+    },
+    "inspected": 9,
+    "next_job_after": "run"
+  },
+  "apply": {
+    "applied": true,
+    "files": [
+      "run/old.log"
+    ],
+    "bytes": 7,
+    "skipped_runs": [],
+    "truncated": false,
+    "disk": {
+      "free_bytes": 620415438848,
+      "total_bytes": 994610155520,
+      "low_space": false
+    },
+    "inspected": 9,
+    "next_job_after": "run"
+  }
+}

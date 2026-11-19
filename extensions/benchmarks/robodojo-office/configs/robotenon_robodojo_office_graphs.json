@@ -1,0 +1,19 @@
+{
+  "config_version": 1,
+  "graphs": [
+    {
+      "id": "robodojo_office_external_benchmark",
+      "entry": "external_benchmark",
+      "backend": "fallback",
+      "max_steps": 1,
+      "nodes": [
+        {"id": "external_benchmark", "module": "echo"}
+      ],
+      "outputs": {
+        "success": {"source": "nodes.external_benchmark.outputs.success", "default": false},
+        "reason": {"source": "nodes.external_benchmark.outputs.reason", "default": "external_task_adapter"},
+        "env_steps": {"source": "nodes.external_benchmark.outputs.env_steps", "default": 0}
+      }
+    }
+  ]
+}

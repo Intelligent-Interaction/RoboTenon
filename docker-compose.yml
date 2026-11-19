@@ -1,0 +1,109 @@
+services:
+  metricsd:
+    build: .
+    command:
+      - python
+      - -m
+      - robotenon.daemons.metrics_daemon
+      - --socket
+      - /run/robotenon/metrics.sock
+      - --wal
+      - /data/runs/metrics.jsonl
+      - --http-host
+      - 0.0.0.0
+      - --http-port
+      - "9100"
+    volumes:
+      - ./runs:/data/runs
+      - robotenon-runtime:/run/robotenon
+    ports:
+      - "127.0.0.1:9100:9100"
+
+  traced:
+    build: .
+    command:
+      - python
+      - -m
+      - robotenon.daemons.trace_daemon
+      - --socket
+      - /run/robotenon/trace.sock
+      - --wal
+      - /data/runs/trace.jsonl
+      - --db
+      - /data/runs/trace.sqlite3
+    volumes:
+      - ./runs:/data/runs
+      - robotenon-runtime:/run/robotenon
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      - metricsd
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      # Anonymous embedded dashboards are read-only, even on localhost.
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+
+  portal:
+    build: .
+    environment:
+      # Grafana is already a Compose dependency; do not make the portal
+      # container try to invoke Docker from inside itself.
+      ROBOTENON_AUTO_GRAFANA: "0"
+    command:
+      - python
+      - -m
+      - robotenon.web.server
+      - --host
+      - 0.0.0.0
+      - --loopback-published
+      - --port
+      - "8765"
+      - --run-root
+      - /data/runs
+      - --metrics-wal
+      - /data/runs/metrics.jsonl
+      - --trace-wal
+      - /data/runs/trace.jsonl
+      - --trace-db
+      - /data/runs/trace.sqlite3
+      - --grafana-url
+      - http://localhost:3000/d/robotenon-overview/robotenon-overview?orgId=1&refresh=5s
+    volumes:
+      # TraceDaemon rebuilds the SQLite index on startup; the HTTP API itself remains read-only.
+      - ./runs:/data/runs
+    ports:
+      - "127.0.0.1:8765:8765"
+    depends_on:
+      - metricsd
+      - traced
+      - grafana
+
+volumes:
+  robotenon-runtime:
+  prometheus-data:
+  grafana-data:

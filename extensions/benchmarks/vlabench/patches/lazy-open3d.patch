@@ -1,0 +1,133 @@
+--- a/VLABench/algorithms/motion_planning/rrt.py
++++ b/VLABench/algorithms/motion_planning/rrt.py
+@@ -1,5 +1,12 @@
+ import numpy as np
+-import open3d as o3d
++import importlib
++
++class _LazyOpen3D:
++    """Load Open3D only when a point-cloud helper is actually used."""
++    def __getattr__(self, name):
++        return getattr(importlib.import_module("open3d"), name)
++
++o3d = _LazyOpen3D()
+ from rrt_algorithms.rrt.rrt import RRT
+ from rrt_algorithms.rrt.rrt_star import RRTStar
+ from rrt_algorithms.search_space.search_space import SearchSpace
+--- a/VLABench/robots/humanoid/h1.py
++++ b/VLABench/robots/humanoid/h1.py
+@@ -1,5 +1,12 @@
+ import numpy as np
+-import open3d as o3d
++import importlib
++
++class _LazyOpen3D:
++    """Load Open3D only when a point-cloud helper is actually used."""
++    def __getattr__(self, name):
++        return getattr(importlib.import_module("open3d"), name)
++
++o3d = _LazyOpen3D()
+ from scipy.spatial.transform import Rotation as R
+ from VLABench.robots.humanoid.base import Humanoid
+ from VLABench.utils.register import register
+--- a/VLABench/robots/single_arm/franka.py
++++ b/VLABench/robots/single_arm/franka.py
+@@ -1,5 +1,12 @@
+ import numpy as np
+-import open3d as o3d
++import importlib
++
++class _LazyOpen3D:
++    """Load Open3D only when a point-cloud helper is actually used."""
++    def __getattr__(self, name):
++        return getattr(importlib.import_module("open3d"), name)
++
++o3d = _LazyOpen3D()
+ from scipy.spatial.transform import Rotation as R
+ from VLABench.robots.single_arm.base import SingleArm
+ from VLABench.utils.register import register
+--- a/VLABench/robots/single_arm/widowx.py
++++ b/VLABench/robots/single_arm/widowx.py
+@@ -1,5 +1,12 @@
+ import numpy as np
+-import open3d as o3d
++import importlib
++
++class _LazyOpen3D:
++    """Load Open3D only when a point-cloud helper is actually used."""
++    def __getattr__(self, name):
++        return getattr(importlib.import_module("open3d"), name)
++
++o3d = _LazyOpen3D()
+ from scipy.spatial.transform import Rotation as R
+ from VLABench.robots.single_arm.base import SingleArm
+ from VLABench.utils.register import register
+--- a/VLABench/robots/single_arm/xarm.py
++++ b/VLABench/robots/single_arm/xarm.py
+@@ -1,5 +1,12 @@
+ import numpy as np
+-import open3d as o3d
++import importlib
++
++class _LazyOpen3D:
++    """Load Open3D only when a point-cloud helper is actually used."""
++    def __getattr__(self, name):
++        return getattr(importlib.import_module("open3d"), name)
++
++o3d = _LazyOpen3D()
+ from scipy.spatial.transform import Rotation as R
+ from dm_control.utils.inverse_kinematics import qpos_from_site_pose
+ from VLABench.robots.single_arm.base import SingleArm
+--- a/VLABench/utils/depth2cloud.py
++++ b/VLABench/utils/depth2cloud.py
+@@ -5,7 +5,14 @@
+ 
+ from PIL import Image as PIL_Image
+ 
+-import open3d as o3d
++import importlib
++
++class _LazyOpen3D:
++    """Load Open3D only when a point-cloud helper is actually used."""
++    def __getattr__(self, name):
++        return getattr(importlib.import_module("open3d"), name)
++
++o3d = _LazyOpen3D()
+ 
+ """
+ Generates numpy rotation matrix from quaternion
+--- a/VLABench/utils/interface.py
++++ b/VLABench/utils/interface.py
+@@ -4,7 +4,14 @@
+ import json
+ import os
+ import time
+-import open3d as o3d
++import importlib
++
++class _LazyOpen3D:
++    """Load Open3D only when a point-cloud helper is actually used."""
++    def __getattr__(self, name):
++        return getattr(importlib.import_module("open3d"), name)
++
++o3d = _LazyOpen3D()
+ from functools import partial
+ from pynput.keyboard import Key, Listener
+ from VLABench.utils.utils import euler_to_quaternion, quaternion_to_euler
+--- a/VLABench/utils/utils.py
++++ b/VLABench/utils/utils.py
+@@ -1,6 +1,13 @@
+ import numpy as np
+ from scipy.spatial.transform import Rotation as R
+-import open3d as o3d
++import importlib
++
++class _LazyOpen3D:
++    """Load Open3D only when a point-cloud helper is actually used."""
++    def __getattr__(self, name):
++        return getattr(importlib.import_module("open3d"), name)
++
++o3d = _LazyOpen3D()
+ import random
+ import copy
+ from scipy.spatial import cKDTree

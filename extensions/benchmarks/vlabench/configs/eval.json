@@ -1,0 +1,14 @@
+{
+  "episodes_per_task": 3,
+  "params": {
+    "tasks": [
+      "select_fruit",
+      "select_toy",
+      "select_drink"
+    ],
+    "robot": "franka"
+  },
+  "benchmark_id": "vlabench_benchmark",
+  "source_config": "configs/benchmarks/vlabench/eval.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

@@ -1,0 +1,32 @@
+{
+  "benchmark": "robodojo",
+  "registry": "robodojo_benchmark",
+  "class": "robotenon_robodojo.benchmark:RoboDojoBenchmark",
+  "source_repository": "https://github.com/allenai/vla-evaluation-harness",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09",
+  "files": [
+    {
+      "source": "src/vla_eval/benchmarks/robodojo/benchmark.py",
+      "target": "src/robotenon_robodojo/benchmark.py",
+      "sha256": "1a2bbef80859bf0e6ae0bb56da22ae389cf772f610a464fcecead305cb012d4e",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.robodojo.utils": "robotenon_robodojo._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_robodojo._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_robodojo._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    }
+  ],
+  "profiles": [
+    "eval-0",
+    "eval-1",
+    "eval-2",
+    "eval-3",
+    "smoke_test"
+  ],
+  "simulation_validation": "deferred_by_user",
+  "score_reproduction": "pending",
+  "source_alignment": "sha256_and_ast_verified",
+  "package_validation": "wheel_build_and_isolated_import_passed"
+}

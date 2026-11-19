@@ -1,0 +1,72 @@
+{
+  "config_version": 1,
+  "graphs_config": "graphs.json",
+  "plugin_modules": [
+    "robotenon.modules.plan",
+    "robotenon_robocasa_system.modules"
+  ],
+  "modules": [
+    {
+      "id": "plan",
+      "name": "plan",
+      "kind": "planner"
+    },
+    {
+      "id": "robocasa_system_plan",
+      "name": "robocasa_system_plan",
+      "kind": "planner"
+    },
+    {
+      "id": "robocasa_system_action",
+      "name": "robocasa_system_action",
+      "kind": "agent"
+    },
+    {
+      "id": "robocasa_system_verify",
+      "name": "robocasa_system_verify",
+      "kind": "evaluator"
+    },
+    {
+      "id": "robocasa_system_terminal",
+      "name": "robocasa_system_terminal",
+      "kind": "evaluator"
+    },
+    {
+      "id": "native_benchmark_terminal",
+      "name": "native_benchmark_terminal",
+      "kind": "evaluator"
+    }
+  ],
+  "plugin_tools": [
+    "robotenon.tools.qwen35_9b"
+  ],
+  "tools": [
+    {
+      "id": "reasoner",
+      "name": "Qwen3.5-VL",
+      "kind": "model",
+      "params": {
+        "timeout_s": 180,
+        "max_completion_tokens": 1024,
+        "temperature": 0.0,
+        "dry_run": false
+      }
+    }
+  ],
+  "parameters": {
+    "runtime": {
+      "graph_id": "xr365_single_task_reference",
+      "monitor_enabled": false
+    },
+    "model": {
+      "hlp_tool": "reasoner",
+      "verify_tool": "reasoner",
+      "vla_tool": "policy"
+    },
+    "policy": {
+      "planner_stop_requires_environment_success": true,
+      "progress_check_interval_chunks": 3,
+      "verify_enabled": false
+    }
+  }
+}

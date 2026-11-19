@@ -1,0 +1,40 @@
+{
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "python": "3.11.10 | packaged by conda-forge | (main, Oct 16 2024, 01:26:25) [Clang 17.0.6 ]",
+  "cwd": "/path/to/RoboClaw",
+  "workload": "synthetic fake tasks/driver, loopback HTTP, temporary local files; no GPU or hardware",
+  "portal": {
+    "history": 300,
+    "normal_ms": {
+      "p50": 1.45,
+      "p95": 3.085,
+      "p99": 3.085
+    },
+    "during_stop_ms": {
+      "p50": 1.206,
+      "p95": 1.692,
+      "p99": 1.692
+    },
+    "during_stop_samples_ms": [
+      1.692042002105154,
+      1.3469999976223335,
+      1.2975830031791702,
+      1.1494160135043785,
+      1.1523749999469146,
+      1.2063330068485811,
+      1.1300410114927217,
+      1.2687499984167516
+    ],
+    "stop_response_ms": 1.8060409929603338,
+    "list_bytes": 7353,
+    "list_items": 25
+  },
+  "trace": {
+    "elapsed_ms": 2.4455829989165068,
+    "returned_rows": 1000,
+    "returned_bytes": 281890,
+    "truncated": true,
+    "requested_limit": 1000
+  }
+}
+{"tasks_per_s": 599.8025653824727, "writes": {"bytes": 3612022, "calls": 1506, "summary_bytes": 251192, "summary_calls": 2}, "action_ms": {"p50": 1.223, "p95": 1.259, "p99": 1.285}, "cache_growth": {"rounds": 3, "files_per_round": 400, "samples": [{"round": 1, "cached_entries": 256, "allocated_bytes": 2346282, "peak_bytes": 2371863, "disk_bytes": 3282800}, {"round": 2, "cached_entries": 256, "allocated_bytes": 2354880, "peak_bytes": 2444441, "disk_bytes": 6565600}, {"round": 3, "cached_entries": 256, "allocated_bytes": 2355255, "peak_bytes": 2543699, "disk_bytes": 9848400}]}}

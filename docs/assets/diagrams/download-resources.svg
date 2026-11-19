@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="395" viewBox="0 0 1120 395" role="img" aria-labelledby="title desc">
+<title id="title">Demo resources and storage</title>
+<desc id="desc">The CPU example runs without downloads. RoboCasa requires scene assets and two models. Training and replay use demonstrations.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif}.title{font-size:27px;font-weight:600}.sub{font-size:16px}.head{font-size:19px;font-weight:600}.body{font-size:16px}.small{font-size:14px}</style>
+<rect width="1120" height="395" fill="#fff"/>
+<text x="36" y="45" class="title" fill="#172b46">Demo resources and storage</text>
+<text x="36" y="73" class="sub" fill="#586779">Install assets in the RoboCasa environment. Weights and demonstration data can live outside the repository.</text>
+<path d="M36 92 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="130" width="255" height="185" rx="9" fill="#f8fafc" stroke="#d9e1eb"/>
+<text x="56" y="164" class="head" fill="#3458a4">CPU Demo</text>
+<text x="56" y="198" class="body" fill="#172b46">CLI / Web Portal</text>
+<text x="56" y="231" class="body" fill="#172b46">Fake environment and results</text>
+<text x="56" y="277" class="small" fill="#586779">No assets or weights required</text>
+<rect x="342" y="112" width="365" height="235" rx="9" fill="#f8fafc" stroke="#d9e1eb"/>
+<text x="362" y="147" class="head" fill="#3458a4">RoboCasa simulation</text>
+<text x="362" y="181" class="body" fill="#172b46">Scenes and objects in the RoboCasa package</text>
+<text x="362" y="213" class="body" fill="#172b46">Xiaomi and Qwen weights in a data directory</text>
+<text x="362" y="245" class="body" fill="#172b46">Outputs include episodes, traces, and video</text>
+<text x="362" y="300" class="small" fill="#586779">Requires rendering and model services</text>
+<rect x="758" y="145" width="326" height="165" rx="9" fill="#f8fafc" stroke="#d9e1eb"/>
+<text x="779" y="179" class="head" fill="#3458a4">Optional demonstrations</text>
+<text x="779" y="214" class="body" fill="#172b46">Training, analysis, or replay</text>
+<text x="779" y="248" class="body" fill="#172b46">datasets/ beside the checkout</text>
+<text x="779" y="281" class="small" fill="#586779">Optional for online evaluation</text>
+<path d="M291 222 H342" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M707 222 H758" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+</svg>

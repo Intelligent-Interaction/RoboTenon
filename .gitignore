@@ -1,0 +1,22 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.tmp.*
+runs/
+*.sqlite3
+build/
+dist/
+*.egg-info/
+.ruff_cache/
+.mypy_cache/
+.env
+extensions/*
+!extensions/benchmarks/
+extensions/benchmarks/*/build/
+extensions/benchmarks/*/dist/
+extensions/benchmarks/*/src/*.egg-info/
+extensions/benchmarks/**/__pycache__/
+
+# Preserve the pre-existing local-only legacy HLP integration.
+extensions/benchmarks/robocasa-hlp/

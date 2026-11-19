@@ -1,0 +1,28 @@
+{
+  "benchmark": "calvin",
+  "registry": "calvin_benchmark",
+  "class": "robotenon_calvin.benchmark:CALVINBenchmark",
+  "source_repository": "https://github.com/allenai/vla-evaluation-harness",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09",
+  "files": [
+    {
+      "source": "src/vla_eval/benchmarks/calvin/benchmark.py",
+      "target": "src/robotenon_calvin/benchmark.py",
+      "sha256": "d23f11b1bd77124fa494aad50b20189ad9cc2d7f44adbd9b2353136a7edf568b",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.calvin.utils": "robotenon_calvin._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_calvin._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_calvin._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    }
+  ],
+  "profiles": [
+    "eval"
+  ],
+  "simulation_validation": "pending",
+  "score_reproduction": "pending",
+  "source_alignment": "sha256_and_ast_verified",
+  "package_validation": "wheel_build_and_isolated_import_passed"
+}

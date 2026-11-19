@@ -1,0 +1,1524 @@
+[
+  {
+    "benchmark": "robocasa",
+    "seed": 0,
+    "status": "exact_match",
+    "comparisons": [
+      {
+        "stage": "task-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "reset_state-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-001",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-002",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-003",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-004",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-005",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "action-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "action-001",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "action-002",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "action-003",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "action-004",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "step-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/physical/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "step-001",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/physical/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "step-002",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/physical/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "step-003",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/physical/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "step-004",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/physical/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "policy_input-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "policy_input-001",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "policy_input-002",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "policy_input-003",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "policy_input-004",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      }
+    ],
+    "metrics": {
+      "upstream": {
+        "success": false
+      },
+      "roboclaw": {
+        "success": false
+      },
+      "equal": true
+    },
+    "observations": 6,
+    "actions": 5
+  },
+  {
+    "benchmark": "robocasa",
+    "seed": 11,
+    "status": "exact_match",
+    "comparisons": [
+      {
+        "stage": "task-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "reset_state-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-001",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-002",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-003",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-004",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "observation-005",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "action-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "action-001",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "action-002",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "action-003",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "action-004",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {}
+      },
+      {
+        "stage": "step-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/physical/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "step-001",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/physical/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "step-002",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/physical/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "step-003",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/physical/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "step-004",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/physical/native/_env/layout_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/style_id": {
+            "equal": true,
+            "shape": [],
+            "dtype": "int64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qpos": {
+            "equal": true,
+            "shape": [
+              83
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/qvel": {
+            "equal": true,
+            "shape": [
+              79
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/ctrl": {
+            "equal": true,
+            "shape": [
+              13
+            ],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/physical/native/_env/sim/data/time": {
+            "equal": true,
+            "shape": [],
+            "dtype": "float64",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "policy_input-000",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "policy_input-001",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "policy_input-002",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "policy_input-003",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      },
+      {
+        "stage": "policy_input-004",
+        "metadata_equal": true,
+        "array_keys_equal": true,
+        "arrays": {
+          "root/images/robot0_agentview_left": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          },
+          "root/images/robot0_eye_in_hand": {
+            "equal": true,
+            "shape": [
+              64,
+              64,
+              3
+            ],
+            "dtype": "uint8",
+            "max_abs": 0.0,
+            "mean_abs": 0.0,
+            "different_fraction": 0.0
+          }
+        }
+      }
+    ],
+    "metrics": {
+      "upstream": {
+        "success": false
+      },
+      "roboclaw": {
+        "success": false
+      },
+      "equal": true
+    },
+    "observations": 6,
+    "actions": 5
+  }
+]

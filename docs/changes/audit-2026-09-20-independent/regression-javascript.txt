@@ -1,0 +1,28 @@
+✔ graph display preserves next, goto, self loop and default separately (4.913208ms)
+✔ same target next and goto remain distinct in the display (1.535708ms)
+✔ loop tooltip explains condition trigger separately from execution trigger (0.3455ms)
+✔ long graphs wrap into compact bands without overlapping nodes (1.32275ms)
+✔ configured entry graph wins over a larger registered graph (0.301416ms)
+✔ preloading stays bounded to two observation groups (2.335792ms)
+✔ playback waits for the left camera along with the other cameras (0.56025ms)
+✔ video binding loads once, retries once and reports persistent errors (0.701875ms)
+✔ running trajectories follow new visits but preserve manual selection and playback (0.383125ms)
+✔ task search and status filters compose without changing the source list (0.352708ms)
+✔ timeline retains submillisecond precision and avoids rounded zero labels (0.518541ms)
+✔ JSON paths disambiguate dotted keys and arrays (0.270083ms)
+✔ nested JSON overrides preserve array siblings and do not mutate the source (0.445042ms)
+✔ timeline resolves repeated nodes by invocation path rather than display order (0.718792ms)
+✔ timeline keeps first selected call when adding and promotes next when removing (0.418042ms)
+✔ experiment search filters before paging and clamps page after refresh (0.474667ms)
+✔ bulk task targets keep all checked cases and reset between experiments (0.352625ms)
+✔ graph playback follows media from arbitrary nodes and skips repeated captures (0.925ms)
+✔ a new attempt discards old playback and image caches (0.712792ms)
+✔ hour-long timing traces zoom beyond 6x down to a 100-millisecond window (0.915583ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 56.503458

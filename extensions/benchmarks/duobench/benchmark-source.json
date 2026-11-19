@@ -1,0 +1,41 @@
+{
+  "benchmark": "duobench",
+  "registry": "duobench_benchmark",
+  "class": "robotenon_duobench.benchmark:DuoBenchBenchmark",
+  "source_repository": "https://github.com/allenai/vla-evaluation-harness",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09",
+  "files": [
+    {
+      "source": "src/vla_eval/benchmarks/duobench/benchmark.py",
+      "target": "src/robotenon_duobench/benchmark.py",
+      "sha256": "518d9f1d380998313e467d86aaf93e66b7775d087a04bef3b7809dfb101e3661",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.duobench.utils": "robotenon_duobench._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_duobench._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_duobench._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    },
+    {
+      "source": "src/vla_eval/benchmarks/duobench/utils.py",
+      "target": "src/robotenon_duobench/_internal/utils.py",
+      "sha256": "c6889be50e8bddee46d3b4cd7f59b050306f7b16379f5df3a661a06580f14adb",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.duobench.utils": "robotenon_duobench._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_duobench._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_duobench._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    }
+  ],
+  "profiles": [
+    "eval",
+    "smoke_test"
+  ],
+  "simulation_validation": "pending",
+  "score_reproduction": "pending",
+  "source_alignment": "sha256_and_ast_verified",
+  "package_validation": "wheel_build_and_isolated_import_passed"
+}

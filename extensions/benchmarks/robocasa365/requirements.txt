@@ -1,0 +1,4 @@
+# Python 3.11; run RoboCasa's macro setup and official asset downloader after install.
+gymnasium==0.29.1
+git+https://github.com/ARISE-Initiative/robosuite.git@5ce6643f3092639d08f7b0f90ed1c6a84f50552c
+git+https://github.com/robocasa/robocasa.git@b4684e6ee37d377cc392e98302a6b916d588b415

@@ -1,0 +1,69 @@
+{
+  "benchmark": "libero",
+  "class": "robosys_libero.native.benchmark:LIBEROBenchmark",
+  "upstream_class": "vla_eval.benchmarks.libero.benchmark:LIBEROBenchmark",
+  "params": {
+    "suite": "libero_spatial",
+    "send_state": true,
+    "seed": 11
+  },
+  "actions": [
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        -0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    }
+  ],
+  "seed": 11,
+  "render": "gpu"
+}

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560" role="img" aria-labelledby="title desc">
+<title id="title">从第一次运行到设备部署</title><desc id="desc">Python API、extension 与 Web Portal 使用同一套配置和运行时；选择适合当前阶段的教程。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="560" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">从第一次运行到设备部署</text>
+<text x="36" y="78" class="sub" fill="#586779">Python API、extension 与 Web Portal 共用配置、Worker 和实验产物。</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="205" width="215" height="130" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 219 v102" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="237" class="head" fill="#3458a4">01 安装与检查</text>
+<text x="54" y="266" class="body" fill="#172b46">Python 环境</text>
+<text x="54" y="292" class="body" fill="#172b46">Fake 冒烟</text>
+<rect x="308" y="120" width="210" height="90" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M309 134 v62" stroke="#3458a4" stroke-width="3"/>
+<text x="326" y="152" class="head" fill="#3458a4">Python API</text>
+<text x="326" y="181" class="body" fill="#172b46">import 并 await 运行</text>
+<rect x="308" y="225" width="210" height="90" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M309 239 v62" stroke="#3458a4" stroke-width="3"/>
+<text x="326" y="257" class="head" fill="#3458a4">Extensions</text>
+<text x="326" y="286" class="body" fill="#172b46">安装并显式加载</text>
+<rect x="308" y="330" width="210" height="90" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M309 344 v62" stroke="#3458a4" stroke-width="3"/>
+<text x="326" y="362" class="head" fill="#3458a4">Web Portal</text>
+<text x="326" y="391" class="body" fill="#172b46">检查、提交、可视化</text>
+<rect x="575" y="208" width="215" height="125" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M576 222 v97" stroke="#3458a4" stroke-width="3"/>
+<text x="593" y="240" class="head" fill="#3458a4">统一运行时</text>
+<text x="593" y="269" class="body" fill="#172b46">TaskAdapter + Worker</text>
+<text x="593" y="295" class="body" fill="#172b46">Graph + Environment</text>
+<rect x="846" y="208" width="238" height="125" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M847 222 v97" stroke="#3458a4" stroke-width="3"/>
+<text x="864" y="240" class="head" fill="#3458a4">查看结果</text>
+<text x="864" y="269" class="body" fill="#172b46">摘要 → episode</text>
+<text x="864" y="295" class="body" fill="#172b46">轨迹 / Trace / 视频</text>
+<path d="M251 270 L278 270 L278 165 L308 165" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M278 270 L308 270" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M278 270 L278 375 L308 375" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M518 165 L544 165 L544 270 L575 270" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M518 270 L575 270" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M518 375 L544 375 L544 270" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M790 270 L846 270" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="310" y="475" class="head" fill="#29735c">CPU 示例 → 仿真 extension → 自有机器人接入</text>
+<text x="36" y="535" class="small" fill="#586779">run-fake 用于冒烟；cpu-demo.json 使用统一运行时并保存可查询的实验产物。</text>
+</svg>

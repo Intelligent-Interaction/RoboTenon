@@ -1,0 +1,21 @@
+# Python 3.10; run VLABench's official asset downloader after install.
+mujoco==3.2.2
+dm_control==1.0.22
+numpy==1.25.0
+gym==0.26.2
+gymnasium==0.29.1
+opencv-python
+scipy==1.14.0
+h5py==3.11.0
+mediapy==1.2.0
+imageio
+gdown
+colorlog
+colorama
+ipdb
+Pillow
+open3d==0.18.0
+scikit-learn
+openai
+git+https://github.com/motion-planning/rrt-algorithms.git@e51d95ee489a225220d6ae2a764c4111f6ba7d85
+git+https://github.com/OpenMOSS/VLABench.git@cf588fe60c0c7282174fe979f5913170cfe69017

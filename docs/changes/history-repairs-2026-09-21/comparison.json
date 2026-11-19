@@ -1,0 +1,106 @@
+{
+  "before": {
+    "startup_ms": {
+      "median": 175.883125004475,
+      "min": 148.65604200167581,
+      "max": 178.5281659977045
+    },
+    "startup_allocated_bytes": {
+      "median": 64775693,
+      "min": 64775626,
+      "max": 64775693
+    },
+    "list_25_median_ms": {
+      "median": 46.37837500195019,
+      "min": 41.27524999785237,
+      "max": 48.688666996895336
+    },
+    "single_update_ms": {
+      "median": 862.471500004176,
+      "min": 835.7199589954689,
+      "max": 988.3387919981033
+    },
+    "batch_memory_peak_allocated_bytes": {
+      "median": 27181094,
+      "min": 27175890,
+      "max": 27187962
+    },
+    "batch_memory_elapsed_s": {
+      "median": 0.5203345830086619,
+      "min": 0.4910329589911271,
+      "max": 0.5441230830037966
+    },
+    "synthetic_tasks_per_s": {
+      "median": 388.141396409195,
+      "min": 376.7067168716645,
+      "max": 456.0110810665845
+    },
+    "synthetic_elapsed_s": {
+      "median": 0.7729142080061138,
+      "min": 0.6578787500038743,
+      "max": 0.7963754999946104
+    },
+    "fake_action_p95": {
+      "median": 1.367,
+      "min": 1.302,
+      "max": 1.46
+    },
+    "fake_action_p99": {
+      "median": 1.531,
+      "min": 1.389,
+      "max": 1.589
+    }
+  },
+  "after": {
+    "startup_ms": {
+      "median": 1.694833001238294,
+      "min": 1.688042000751011,
+      "max": 2.1074579999549314
+    },
+    "startup_allocated_bytes": {
+      "median": 15161,
+      "min": 15161,
+      "max": 15161
+    },
+    "list_25_median_ms": {
+      "median": 3.1081670022103935,
+      "min": 2.829999997629784,
+      "max": 3.314665998914279
+    },
+    "single_update_ms": {
+      "median": 1.451124990126118,
+      "min": 1.3784170005237684,
+      "max": 1.476207995438017
+    },
+    "batch_memory_peak_allocated_bytes": {
+      "median": 2064213,
+      "min": 2063577,
+      "max": 2072980
+    },
+    "batch_memory_elapsed_s": {
+      "median": 0.5608248329954222,
+      "min": 0.5530457090062555,
+      "max": 0.6194388330040965
+    },
+    "synthetic_tasks_per_s": {
+      "median": 588.1501957082368,
+      "min": 513.9832721345056,
+      "max": 594.6908970216906
+    },
+    "synthetic_elapsed_s": {
+      "median": 0.5100737909961026,
+      "min": 0.5044637499959208,
+      "max": 0.5836765830026707
+    },
+    "fake_action_p95": {
+      "median": 1.469,
+      "min": 1.419,
+      "max": 2.679
+    },
+    "fake_action_p99": {
+      "median": 2.598,
+      "min": 1.54,
+      "max": 5.021
+    }
+  }
+}

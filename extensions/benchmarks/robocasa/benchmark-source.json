@@ -1,0 +1,29 @@
+{
+  "benchmark": "robocasa",
+  "registry": "robocasa_benchmark",
+  "class": "robotenon_robocasa.benchmark:RoboCasaBenchmark",
+  "source_repository": "https://github.com/allenai/vla-evaluation-harness",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09",
+  "files": [
+    {
+      "source": "src/vla_eval/benchmarks/robocasa/benchmark.py",
+      "target": "src/robotenon_robocasa/benchmark.py",
+      "sha256": "4dedf23052900a3b2286854c73709f44ac1337f905a1118549b9245356a78b07",
+      "import_rewrites": {
+        "vla_eval.benchmarks.base": "robotenon_benchmark_support.base",
+        "vla_eval.benchmarks.robocasa.utils": "robotenon_robocasa._internal.utils",
+        "vla_eval.benchmarks.libero.benchmark": "robotenon_robocasa._internal.libero_base",
+        "vla_eval.benchmarks.libero.utils": "robotenon_robocasa._internal.libero_utils",
+        "vla_eval.dirs": "robotenon_benchmark_support.licenses"
+      }
+    }
+  ],
+  "profiles": [
+    "eval",
+    "smoke"
+  ],
+  "simulation_validation": "alternate_scene_backend_advanced_only_requires_robocasa_v0.2",
+  "score_reproduction": "pending",
+  "source_alignment": "sha256_and_ast_verified",
+  "package_validation": "wheel_build_and_isolated_import_passed"
+}

@@ -1,0 +1,8 @@
+{
+  "model_path": "/path/to/Xiaomi-Robotics-1-VLABench",
+  "rng_mode": "official_stream",
+  "vlabench_image_size": 480,
+  "vlabench_cot": false,
+  "vlabench_position_offset": [0.0, -0.4, 0.78],
+  "vlabench_gripper_threshold": 0.2
+}

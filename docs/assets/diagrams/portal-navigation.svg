@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520" role="img" aria-labelledby="title desc">
+<title id="title">Reading the trajectory view</title><desc id="desc">Select the TaskAdapter and task. Check that the state, observations, and node records refer to the same attempt.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="520" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">Reading the trajectory view</text>
+<text x="36" y="78" class="sub" fill="#586779">Select the TaskAdapter and task. Check that the state, observations, and node records refer to the same attempt.</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="139" width="1048" height="72" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 153 v44" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="171" class="head" fill="#3458a4">Experiment details</text>
+<text x="54" y="200" class="body" fill="#172b46">Run details  /  Trajectories  /  Metrics  /  Trace query</text>
+<rect x="36" y="240" width="235" height="178" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 254 v150" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="272" class="head" fill="#3458a4">1. Task list</text>
+<text x="54" y="301" class="body" fill="#172b46">TaskAdapter</text>
+<text x="54" y="327" class="body" fill="#172b46">Task ID and status</text>
+<text x="54" y="353" class="body" fill="#172b46">Filters and pages</text>
+<rect x="300" y="240" width="455" height="178" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M301 254 v150" stroke="#3458a4" stroke-width="3"/>
+<text x="318" y="272" class="head" fill="#3458a4">2. Observations and video</text>
+<text x="318" y="301" class="body" fill="#172b46">Inspect camera frames or a recording</text>
+<text x="318" y="327" class="body" fill="#172b46">The CPU example has no camera</text>
+<text x="318" y="353" class="body" fill="#172b46">Check media settings and paths</text>
+<rect x="784" y="240" width="300" height="178" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M785 254 v150" stroke="#3458a4" stroke-width="3"/>
+<text x="802" y="272" class="head" fill="#3458a4">3. Nodes and status</text>
+<text x="802" y="301" class="body" fill="#172b46">Inspect executed nodes</text>
+<text x="802" y="327" class="body" fill="#172b46">Open node details</text>
+<text x="802" y="353" class="body" fill="#172b46">Verify inputs and outputs</text>
+<text x="36" y="464" class="head" fill="#29735c">4. Use trace timings to identify slow or failed calls.</text>
+<text x="36" y="496" class="small" fill="#586779">Schematic of the Portal navigation.</text>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="630" viewBox="0 0 1120 630" role="img" aria-labelledby="title desc">
+<title id="title">结果目录：先找到实验，再找到一次执行</title><desc id="desc">以 CPU 批量教程的 data/tutorial/cli/cpu-demo 为例。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="630" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">结果目录：先找到实验，再找到一次执行</text>
+<text x="36" y="78" class="sub" fill="#586779">以 CPU 批量教程的 data/tutorial/cli/cpu-demo 为例。</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="130" width="486" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 144 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="162" class="head" fill="#3458a4">summary.json / status.json</text>
+<text x="54" y="191" class="body" fill="#172b46">结束摘要 / 运行进度</text>
+<rect x="36" y="246" width="486" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 260 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="278" class="head" fill="#3458a4">cpu-demo/episode_000_seed_7.json</text>
+<text x="54" y="307" class="body" fill="#172b46">单个任务结果：status、task_success</text>
+<text x="54" y="333" class="body" fill="#172b46">result.identity、result.outputs</text>
+<rect x="36" y="382" width="486" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 396 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="414" class="head" fill="#3458a4">cpu-demo/…/attempts/&lt;id&gt;/</text>
+<text x="54" y="443" class="body" fill="#172b46">每次执行的 episode.json 与数据源</text>
+<rect x="36" y="498" width="486" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 512 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="530" class="head" fill="#3458a4">observability.json</text>
+<text x="54" y="559" class="body" fill="#172b46">Trace / Metrics 实际文件位置</text>
+<rect x="615" y="130" width="469" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M616 144 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="633" y="162" class="head" fill="#3458a4">1. 看整体结果</text>
+<text x="633" y="191" class="body" fill="#172b46">完成数、成功数、异常数</text>
+<rect x="615" y="246" width="469" height="112" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M616 260 v84" stroke="#3458a4" stroke-width="3"/>
+<text x="633" y="278" class="head" fill="#3458a4">2. 定位问题任务</text>
+<text x="633" y="307" class="body" fill="#172b46">adapter / global_index / seed</text>
+<text x="633" y="333" class="body" fill="#172b46">流程状态与任务成功分别检查</text>
+<rect x="615" y="382" width="469" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M616 396 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="633" y="414" class="head" fill="#3458a4">3. 区分执行尝试</text>
+<text x="633" y="443" class="body" fill="#172b46">用 attempt_id 区分失败与重试</text>
+<rect x="615" y="498" width="469" height="92" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M616 512 v64" stroke="#3458a4" stroke-width="3"/>
+<text x="633" y="530" class="head" fill="#3458a4">4. 追踪调用与媒体</text>
+<text x="633" y="559" class="body" fill="#172b46">按数据源查 Trace；按 video_path 找视频</text>
+<path d="M522 176 L615 176" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M522 302 L615 302" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M522 428 L615 428" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M522 544 L615 544" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="606" class="small" fill="#586779">这里省略内部锁、索引和日志；真实路径以输出 JSON 为准，视频需要单独启用。</text>
+</svg>

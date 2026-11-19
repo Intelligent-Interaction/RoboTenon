@@ -1,0 +1,9 @@
+{
+  "episodes_per_task": 24,
+  "params": {
+    "task_name": "widowx_put_eggplant_in_basket"
+  },
+  "benchmark_id": "simpler_benchmark",
+  "source_config": "configs/benchmarks/simpler/widowx_vm.yaml",
+  "source_commit": "6cc3e1bd9fc4bed26fb0a3aabd342c5fed11ca09"
+}

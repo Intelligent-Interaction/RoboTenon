@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="390" viewBox="0 0 1120 390" role="img" aria-labelledby="title desc">
+<title id="title">节点私有上下文：执行与发布</title><desc id="desc">每次节点调用使用自己的工作区；成功提交后才向其他节点公开。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif} .title{font-size:27px;font-weight:600} .sub{font-size:16px} .head{font-size:20px;font-weight:600} .body{font-size:17px} .small{font-size:15px}</style>
+<rect width="1120" height="390" fill="#fff"/>
+<text x="36" y="48" class="title" fill="#172b46">节点私有上下文：执行与发布</text>
+<text x="36" y="78" class="sub" fill="#586779">每次节点调用使用自己的工作区；成功提交后才向其他节点公开。</text>
+<path d="M36 99 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="145" width="205" height="123" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M37 159 v95" stroke="#3458a4" stroke-width="3"/>
+<text x="54" y="177" class="head" fill="#3458a4">读取快照</text>
+<text x="54" y="206" class="body" fill="#172b46">inputs 与前驱记录</text>
+<text x="54" y="232" class="body" fill="#172b46">恢复本节点状态</text>
+<rect x="317" y="145" width="205" height="123" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M318 159 v95" stroke="#3458a4" stroke-width="3"/>
+<text x="335" y="177" class="head" fill="#3458a4">节点执行</text>
+<text x="335" y="206" class="body" fill="#172b46">临时 values / 内部状态</text>
+<text x="335" y="232" class="body" fill="#172b46">形成返回结果</text>
+<rect x="598" y="145" width="205" height="123" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M599 159 v95" stroke="#3458a4" stroke-width="3"/>
+<text x="616" y="177" class="head" fill="#3458a4">提交上下文</text>
+<text x="616" y="206" class="body" fill="#172b46">revision / CAS</text>
+<text x="616" y="232" class="body" fill="#172b46">保存调用记录</text>
+<rect x="879" y="145" width="205" height="123" rx="9" fill="#f8fafc" stroke="#d9e1eb"/><path d="M880 159 v95" stroke="#3458a4" stroke-width="3"/>
+<text x="897" y="177" class="head" fill="#3458a4">发布 outputs</text>
+<text x="897" y="206" class="body" fill="#172b46">后继节点可读取</text>
+<text x="897" y="232" class="body" fill="#172b46">更新 checkpoint</text>
+<path d="M241 205 L317 205" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M522 205 L598 205" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M803 205 L879 205" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="36" y="321" class="head" fill="#29735c">并行节点各自写入；冲突与恢复按提交规则处理。</text>
+<text x="36" y="366" class="small" fill="#586779">不要依赖其他节点未提交的 values；通过显式公开输出建立业务依赖。</text>
+</svg>

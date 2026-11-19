@@ -1,0 +1,71 @@
+{
+  "benchmark": "robocerebra",
+  "class": "robosys_robocerebra.native.benchmark:RoboCerebraBenchmark",
+  "upstream_class": "vla_eval.benchmarks.robocerebra.benchmark:RoboCerebraBenchmark",
+  "params": {
+    "robocerebra_root": "/path/to/workspace/work/robocerebra-data",
+    "task_types": [
+      "Ideal"
+    ],
+    "seed": 0
+  },
+  "actions": [
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        -0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        0.0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "actions": [
+        0.01,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ]
+    }
+  ],
+  "seed": 0,
+  "render": "gpu"
+}

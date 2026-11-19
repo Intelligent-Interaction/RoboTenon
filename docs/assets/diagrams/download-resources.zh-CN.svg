@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="395" viewBox="0 0 1120 395" role="img" aria-labelledby="title desc">
+<title id="title">Demo 所需资源与保存位置</title>
+<desc id="desc">CPU 示例不需下载；RoboCasa 仿真要准备场景资产和两个模型，演示轨迹只在训练或回放时下载。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#586779"/></marker></defs>
+<style>text{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif}.title{font-size:27px;font-weight:600}.sub{font-size:16px}.head{font-size:19px;font-weight:600}.body{font-size:16px}.small{font-size:14px}</style>
+<rect width="1120" height="395" fill="#fff"/>
+<text x="36" y="45" class="title" fill="#172b46">Demo 所需资源与保存位置</text>
+<text x="36" y="73" class="sub" fill="#586779">Fake 示例不需要下载；仿真资产装在 RoboCasa 环境，模型和演示数据可放在仓库之外。</text>
+<path d="M36 92 H1084" stroke="#d9e1eb"/>
+<rect x="36" y="130" width="255" height="185" rx="9" fill="#f8fafc" stroke="#d9e1eb"/>
+<text x="56" y="164" class="head" fill="#3458a4">CPU Demo</text>
+<text x="56" y="198" class="body" fill="#172b46">CLI / Web Portal</text>
+<text x="56" y="231" class="body" fill="#172b46">Fake 环境与任务结果</text>
+<text x="56" y="277" class="small" fill="#586779">无需权重、场景或轨迹</text>
+<rect x="342" y="112" width="365" height="235" rx="9" fill="#f8fafc" stroke="#d9e1eb"/>
+<text x="362" y="147" class="head" fill="#3458a4">RoboCasa 仿真</text>
+<text x="362" y="181" class="body" fill="#172b46">场景与物体资产 · RoboCasa 包目录</text>
+<text x="362" y="213" class="body" fill="#172b46">Xiaomi / Qwen 权重 · 数据目录</text>
+<text x="362" y="245" class="body" fill="#172b46">运行实验 · episode / Trace / 视频</text>
+<text x="362" y="300" class="small" fill="#586779">需仿真环境、渲染支持和模型服务</text>
+<rect x="758" y="145" width="326" height="165" rx="9" fill="#f8fafc" stroke="#d9e1eb"/>
+<text x="779" y="179" class="head" fill="#3458a4">可选：演示轨迹</text>
+<text x="779" y="214" class="body" fill="#172b46">训练、分析或轨迹回放</text>
+<text x="779" y="248" class="body" fill="#172b46">RoboCasa 项目旁的 datasets/</text>
+<text x="779" y="281" class="small" fill="#586779">只跑在线任务无需下载</text>
+<path d="M291 222 H342" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+<path d="M707 222 H758" fill="none" stroke="#586779" stroke-width="1.7" marker-end="url(#arrow)"/>
+</svg>

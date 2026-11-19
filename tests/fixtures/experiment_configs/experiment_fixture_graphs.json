@@ -1,0 +1,111 @@
+{
+  "config_version": 1,
+  "graphs": [
+    {
+      "id": "fixture_loop",
+      "entry": "step",
+      "max_steps": 2,
+      "nodes": [
+        {
+          "id": "step",
+          "module": "fixture_echo"
+        }
+      ],
+      "outputs": {
+        "success": {
+          "source": "nodes.step.outputs.success",
+          "default": false
+        }
+      }
+    },
+    {
+      "id": "fixture_reference",
+      "entry": "reset",
+      "max_steps": 7,
+      "nodes": [
+        {
+          "id": "reset",
+          "module": "fixture_echo",
+          "next": [
+            {
+              "node": "plan"
+            }
+          ]
+        },
+        {
+          "id": "plan",
+          "module": "fixture_echo",
+          "predecessors": [
+            "reset"
+          ],
+          "next": [
+            {
+              "node": "action"
+            }
+          ]
+        },
+        {
+          "id": "action",
+          "module": "fixture_echo",
+          "predecessors": [
+            "plan"
+          ],
+          "next": [
+            {
+              "node": "execute"
+            }
+          ]
+        },
+        {
+          "id": "execute",
+          "module": "fixture_echo",
+          "predecessors": [
+            "action"
+          ],
+          "next": [
+            {
+              "node": "observe"
+            }
+          ]
+        },
+        {
+          "id": "observe",
+          "module": "fixture_echo",
+          "predecessors": [
+            "execute"
+          ],
+          "next": [
+            {
+              "node": "terminal"
+            }
+          ]
+        },
+        {
+          "id": "terminal",
+          "module": "fixture_echo",
+          "predecessors": [
+            "observe"
+          ],
+          "next": [
+            {
+              "node": "finish"
+            }
+          ]
+        },
+        {
+          "id": "finish",
+          "module": "fixture_echo",
+          "predecessors": [
+            "terminal"
+          ]
+        }
+      ],
+      "outputs": {
+        "success": {
+          "source": "nodes.finish.outputs.success",
+          "default": false
+        }
+      }
+    }
+  ]
+}

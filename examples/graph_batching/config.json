@@ -1,0 +1,105 @@
+{
+  "config_version": 1,
+  "plugin_modules": [
+    "examples.graph_batching.providers"
+  ],
+  "modules": [
+    {
+      "id": "ask",
+      "name": "batch_example",
+      "kind": "agent"
+    }
+  ],
+  "tools": [
+    {
+      "id": "model",
+      "name": "shared_batch_model",
+      "kind": "model",
+      "params": {
+        "service": "echo"
+      }
+    }
+  ],
+  "environments": [
+    {
+      "id": "env",
+      "name": "fake"
+    }
+  ],
+  "bodies": [],
+  "monitors": [],
+  "task_adapters": [
+    {
+      "name": "single-task",
+      "params": {
+        "num_trials": 7
+      }
+    }
+  ],
+  "graphs": [
+    {
+      "id": "example",
+      "entry": "reset",
+      "nodes": [
+        {
+          "id": "reset",
+          "type": "system",
+          "operation": "env.reset",
+          "next": [
+            {
+              "node": "ask"
+            }
+          ]
+        },
+        {
+          "id": "ask",
+          "type": "module",
+          "module": "ask",
+          "predecessors": [
+            "reset"
+          ]
+        }
+      ],
+      "outputs": {
+        "success": {
+          "source": "nodes.ask.outputs.success"
+        },
+        "batch_size": {
+          "source": "nodes.ask.outputs.batch_size"
+        }
+      }
+    }
+  ],
+  "parameters": {
+    "task": {
+      "task_id": "example",
+      "env_id": "fake"
+    },
+    "runtime": {
+      "graph_id": "example",
+      "environment_id": "env",
+      "monitor_enabled": false,
+      "execution": {
+        "backend": "process",
+        "max_workers": 4,
+        "max_retries": 0,
+        "memory_mode": "disabled",
+        "batch_services": [
+          {
+            "name": "echo",
+            "factory": "examples.graph_batching.providers:EchoModel",
+            "mode": "batch",
+            "max_batch_size": 4,
+            "max_wait_ms": 25
+          }
+        ]
+      }
+    }
+  },
+  "observation_cache": {
+    "enabled": false
+  },
+  "safety_state": {
+    "backend": "memory"
+  }
+}

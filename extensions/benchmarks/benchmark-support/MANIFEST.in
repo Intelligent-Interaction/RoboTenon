@@ -1,0 +1,4 @@
+include README.md
+recursive-include src *.py LICENSE.upstream NOTICE.upstream
+recursive-include tests *.py *.txt *.md LICENSE
+recursive-include scripts *.py
